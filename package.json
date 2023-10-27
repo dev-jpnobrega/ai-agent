@@ -1,0 +1,40 @@
+{
+  "name": "agent",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./build/index.js",
+  "license": "Apache",
+  "scripts": {
+    "test:integration": "jest --config test.json --forceExit --collectCoverage true test/integration",
+    "test:unit": "jest --config test.json --forceExit --testPathIgnorePatterns test/integration --collectCoverage true",
+    "test": "glob -c \"node --loader tsx --no-warnings --test\" \"./tests/**/*.test.ts\"",
+    "build": "tsc",
+    "transpile": "babel src --quiet --out-dir build --ignore '**/*.spec.js'",
+    "lint": "eslint ./src ./test",
+    "lint:fix": "eslint --fix ./src ./test"
+  },
+  "keywords": [],
+  "author": "",
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "ai": "^2.2.10",
+    "ioredis": "^5.3.2",
+    "langchain": "^0.0.174",
+    "lodash": "^4.17.21",
+    "typeorm": "0.3.17"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.18.2",
+    "@types/lodash": "^4.14.198",
+    "@types/node": "^20.6.3",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "@typescript-eslint/parser": "^6.7.2",
+    "glob": "^10.3.10",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
+    "tsx": "^3.14.0",
+    "typescript": "^5.2.2"
+  }
+}
