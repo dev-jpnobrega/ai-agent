@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - run: npm i && npm test && npm run build  
+      - run: npm i && npm test 
 
   publish-npm:
     needs: build
