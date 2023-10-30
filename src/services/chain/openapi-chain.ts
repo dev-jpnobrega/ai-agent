@@ -1,8 +1,9 @@
 import { BaseChain, createOpenAPIChain } from 'langchain/chains';
 import { IDataSourceConfig } from '../../interface/agent.interface';
-import { PromptTemplate } from 'langchain';
+
 import { BaseChatModel } from 'langchain/chat_models/base';
 import { ChatOpenAI } from 'langchain/chat_models/openai';
+import { PromptTemplate } from 'langchain/prompts';
 
 const SYSTEM_MESSAGE_DEFAULT = `
   Answer the users question as best as possible.\n
