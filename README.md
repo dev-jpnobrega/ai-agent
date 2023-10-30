@@ -1,9 +1,10 @@
 <img src="ai-agent.png" align="right" width="250" />
 
+[![Publish new version to NPM](https://github.com/dev-jpnobrega/ai-agent/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/dev-jpnobrega/ai-agent/actions/workflows/npm-publish.yml)
+
 # AI Agent
 
-> AI agent was inspired by the project [autogent](https://github.com/microsoft/autogen)
-
+AI Agent simplifies the implementation and use of generative AI with LangChain, was inspired by the project [autogent](https://github.com/microsoft/autogen)
 
 --- INIT REPO ---
 
@@ -30,6 +31,6 @@ See the [contributing docs](CONTRIBUTING.md) for more information
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ## License
-[MIT](https://github.com/all-contributors/all-contributors/blob/master/LICENSE)
+[Apache-2.0](LICENSE)
 
 
