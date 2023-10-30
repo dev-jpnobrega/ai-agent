@@ -1,11 +1,11 @@
 {
   "name": "ai-agent-enterprise",
   "description": "AI Agent simplifies the implementation and use of generative AI with LangChain",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
   "files": [
-    "/build"
+    "build"
   ],
   "license": "Apache-2.0",
   "repository": {
