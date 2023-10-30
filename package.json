@@ -1,7 +1,7 @@
 {
   "name": "ai-agent-enterprise",
   "description": "AI Agent simplifies the implementation and use of generative AI with LangChain",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
   "files": [
@@ -19,8 +19,7 @@
     "build": "tsc",
     "lint": "eslint ./src ./test",
     "lint:fix": "eslint --fix ./src ./test",
-    "prepublish": "npm run build",
-    "publish": "npm publish"
+    "prepublish": "npm run build"
   },
   "keywords": [
     "ai",
