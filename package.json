@@ -1,5 +1,5 @@
 {
-  "name": "ai-agent",
+  "name": "ai-agent-enterprise",
   "description": "AI Agent simplifies the implementation and use of generative AI with LangChain",
   "version": "0.0.1",
   "main": "./build/index.js",
