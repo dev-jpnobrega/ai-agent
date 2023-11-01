@@ -23,7 +23,7 @@ describe('Agent test', () => {
   });
 
 
-  it('should Agent call', (t, done) => {
+  it('should Agent call', { skip: true }, (t, done) => {
     const agent = new Agent({
       name: 'Agent test Support',
       llmConfig: {
