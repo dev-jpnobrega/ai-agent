@@ -3,7 +3,7 @@ import { DataSource } from 'typeorm';
 export type LLM_TYPE = 'azure' | 'gpt' | 'aws';
 export type DATABASE_TYPE = 'cosmos' | 'redis' | 'postgres';
 
-const SYSTEM_MESSAGE_DEFAULT = `
+export const SYSTEM_MESSAGE_DEFAULT = `
   You are a helpful AI assistant.
   Solve tasks using your coding and language skills.
   In the following cases, suggest python code (in a python coding block) or shell script (in a sh coding block) or javascript (in a javascript coding block) for the user to execute.

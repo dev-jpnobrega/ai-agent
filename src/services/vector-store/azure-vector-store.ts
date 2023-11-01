@@ -183,13 +183,11 @@ const fetcher = async (url: string, body: any, apiKey: string) => {
     },
   };
 
-  console.log('fetcher', url, options);
-
   const response = await fetch(url, options);
 
   if (!response.ok) {
     const err = await response.json();
-    console.log('fetch.error', err, url, options);
+
     throw new Error(JSON.stringify(err));
   }
 

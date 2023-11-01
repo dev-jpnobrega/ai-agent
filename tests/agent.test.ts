@@ -21,4 +21,43 @@ describe('Agent test', () => {
 
     done();
   });
+
+
+  it('should Agent call', { skip: true }, (t, done) => {
+    const agent = new Agent({
+      name: 'Agent test Support',
+      llmConfig: {
+        type: 'azure',
+        model: process.env.OPENAI_API_DEPLOYMENT_NAME || 'test',
+        instance: process.env.OPENAI_API_INSTANCE_NAME || 'test',
+        apiKey: process.env.OPENAI_API_KEY || 'test',
+        apiVersion: process.env.OPENAI_API_VERSION || 'test',
+      },
+      chatConfig: {
+        temperature: 0,
+      },
+      vectorStoreConfig: {
+        apiKey: process.env.SEARCH_API_KEY || 'test',
+        apiVersion: process.env.SEARCH_API_VERSION || 'test',
+        name: process.env.SEARCH_NAME || 'test',
+        type: 'azure',
+        vectorFieldName: 'embedding',
+        indexes: [
+            'index-gdp'
+        ],
+        model: process.env.AZURE_SEARCH_MODEL || 'test'
+      },
+    });
+
+    agent.on('onMessage', async (message) => {
+      assert.ok(message, 'message is not null');
+      console.warn('MESSAGE:', message);
+      done();
+    });
+
+    agent.call({
+      question: 'What is the best way to get started with Azure?',
+      chatThreadID: '123',
+    });
+  });
 });

@@ -4,7 +4,7 @@ import { BaseChain, SequentialChain, loadQAMapReduceChain } from 'langchain/chai
 
 import { BasePromptTemplate, ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate } from 'langchain/prompts';
 
-import { IAgentConfig } from '../../interface/agent.interface';
+import { IAgentConfig, SYSTEM_MESSAGE_DEFAULT } from '../../interface/agent.interface';
 import SqlChain from './sql-chain';
 import OpenAPIChain from './openapi-chain';
 
@@ -80,10 +80,10 @@ class ChainService implements IChainService {
 
   private async buildChains(llm: BaseChatModel, ...args: any): Promise<BaseChain[]> {
     const chains = this.checkEnabledChains(this._settings);
-
+    console.warn(`this._settings.systemMesssage`,this._settings.systemMesssage)
     const chain = loadQAMapReduceChain(llm, {
       combinePrompt: this.buildPromptTemplate(
-        this._settings.systemMesssage,
+        this._settings.systemMesssage || SYSTEM_MESSAGE_DEFAULT,
       ),
     });
 

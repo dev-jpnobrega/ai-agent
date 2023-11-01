@@ -1,6 +1,6 @@
 import { VectorStore } from 'langchain/vectorstores/base';
 import { AzureCogSearch } from './azure-vector-store';
-import { IVectorStoreConfig } from '../../interface/agent.interface';
+import { ILLMConfig, IVectorStoreConfig } from '../../interface/agent.interface';
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 
 const ServiceEmbeddings = { 
@@ -12,8 +12,14 @@ const ServiceVectores = {
 } as any;
 
 class VectorStoreFactory {
-  public static create(settings: IVectorStoreConfig): VectorStore {
-    const embedding = new ServiceEmbeddings[settings.type]();
+  public static create(settings: IVectorStoreConfig, llmSettings: ILLMConfig): VectorStore {
+    const embedding = new ServiceEmbeddings[settings.type]({
+      ...llmSettings,
+      azureOpenAIApiVersion: llmSettings.apiVersion,
+      azureOpenAIApiKey: llmSettings.apiKey,
+      azureOpenAIApiInstanceName: llmSettings.instance,
+      azureOpenAIApiDeploymentName: llmSettings.model,
+    });
     
     const service = new ServiceVectores[settings.type](
       embedding,
