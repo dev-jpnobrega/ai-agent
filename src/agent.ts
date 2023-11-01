@@ -45,7 +45,7 @@ class Agent extends AgentBaseCommand implements IAgent {
     this._chainService = new ChainService(settings);
 
     if (settings?.vectorStoreConfig)
-      this._vectorService = VectorStoreFactory.create(settings.vectorStoreConfig);
+      this._vectorService = VectorStoreFactory.create(settings.vectorStoreConfig, settings.llmConfig);
   }
  
   private async buildHistory(userSessionId: string, settings: IDatabaseConfig): Promise<BufferMemory> {
