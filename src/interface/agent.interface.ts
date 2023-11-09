@@ -36,6 +36,7 @@ export interface IDataSourceConfig {
   includesTables?: string[],
   ignoreTables?: string[],
   customizeSystemMessage?: string,
+  ssl?: boolean,
 }
 
 export interface IChatConfig {
