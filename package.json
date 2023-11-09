@@ -1,7 +1,7 @@
 {
   "name": "ai-agent-enterprise",
   "description": "AI Agent simplifies the implementation and use of generative AI with LangChain",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
   "files": [
@@ -35,7 +35,7 @@
   "dependencies": {
     "ai": "^2.2.10",
     "ioredis": "^5.3.2",
-    "langchain": "^0.0.174",
+    "langchain": "0.0.163",
     "typeorm": "0.3.17"
   },
   "devDependencies": {
