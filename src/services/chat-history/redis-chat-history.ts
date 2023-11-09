@@ -1,18 +1,17 @@
 import { BaseChatMessageHistory } from 'langchain/schema';
 import { IDatabaseConfig } from '../../interface/agent.interface';
 
-let redisClient: any;
-
 class RedisChatHistory {
   private _settings: IDatabaseConfig;
+  private _redisClientInstance: any;
 
   constructor(settings: IDatabaseConfig) {
     this._settings = settings;
   }
 
   private async createClient(): Promise<any> {
-    if (redisClient) {
-      return redisClient;
+    if (this._redisClientInstance) {
+      return this._redisClientInstance;
     };
 
     const { Redis } = (await import('ioredis'));
@@ -23,9 +22,9 @@ class RedisChatHistory {
       tls: {}
     });
 
-    redisClient = client;
+    this._redisClientInstance = client;
 
-    return client;
+    return this._redisClientInstance;
   }
  
   async build(): Promise<BaseChatMessageHistory> {

@@ -23,10 +23,9 @@ const SYSTEM_MESSAGE_DEFAULT = `
   \n
 `;
 
-let dataSourceInstance: any;
-
 class SqlChain {
   private _settings: IDataSourceConfig;
+  private _dataSourceInstance: SqlDatabase;
   
   constructor(settings: IDataSourceConfig) {
     this._settings = settings;
@@ -38,14 +37,14 @@ class SqlChain {
 
   private async getDataSourceInstance(): Promise<SqlDatabase> {
     // TODO: define db a singleton ou instance
-    dataSourceInstance = dataSourceInstance || await SqlDatabase.fromDataSourceParams({
+    this._dataSourceInstance = this._dataSourceInstance || await SqlDatabase.fromDataSourceParams({
       appDataSource: this._settings.dataSource,
       ...this._settings,
     });
 
-    dataSourceInstance = dataSourceInstance;
+    this._dataSourceInstance = this._dataSourceInstance;
 
-    return dataSourceInstance;
+    return this._dataSourceInstance;
   }
 
   public async create(llm: BaseChatModel, ...args: any): Promise<BaseChain> {
