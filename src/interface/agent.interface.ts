@@ -63,6 +63,7 @@ export interface IVectorStoreConfig {
   indexes: string[] | string,
   vectorFieldName: string,
   model?: string,
+  customFilters?: string,
 }
 
 export interface IAgentConfig {
@@ -76,13 +77,13 @@ export interface IAgentConfig {
   dataSourceConfig?: IDataSourceConfig;
 };
 
-export interface IInputProps { 
+export interface IInputProps {
   question?: string,
   userSessionId?: string,
   chatThreadID?: string,
 }
 
-export interface TModel extends Record<string, unknown> {}
+export interface TModel extends Record<string, unknown> { }
 
 export interface IAgent {
   call(input: IInputProps): Promise<void>;
