@@ -10,6 +10,7 @@ import ChatHistoryFactory from './services/chat-history';
 import LLMFactory from './services/llm';
 import { ChainService, IChainService } from './services/chain';
 import { nanoid } from 'ai';
+import { interpolate } from './helpers/string.helpers';
 
 const EVENTS_NAME = {
   onMessage: 'onMessage',
@@ -73,13 +74,7 @@ class Agent extends AgentBaseCommand implements IAgent {
   private generateFilters(args: IInputProps, stringFilter: string): string {
     if (!stringFilter || stringFilter == '') return '';
 
-    let interpolatedString = stringFilter;
-
-    for (let key in args) {
-      interpolatedString = interpolatedString.replace(`(${key})`, args[key as keyof IInputProps]);
-    }
-
-    return interpolatedString;
+    return interpolate<IInputProps>(stringFilter, args);
   }
 
   private async buildRelevantDocs(args: IInputProps, settings: IVectorStoreConfig): Promise<any> {
