@@ -71,18 +71,14 @@ class Agent extends AgentBaseCommand implements IAgent {
     return this._bufferMemory;
   }
 
-  private generateFilters(args: IInputProps, stringFilter: string): string {
-    if (!stringFilter || stringFilter == '') return '';
-
-    return interpolate<IInputProps>(stringFilter, args);
-  }
-
   private async buildRelevantDocs(args: IInputProps, settings: IVectorStoreConfig): Promise<any> {
     if (!settings) return { relevantDocs: [], referenciesDocs: [] };
 
+    const { customFilters = null } = settings;
+
     const relevantDocs = await this._vectorService.similaritySearch(args.question, 10, {
       vectorFields: settings.vectorFieldName,
-      filter: this.generateFilters(args, settings.customFilters || ''),
+      filter: customFilters ? interpolate<IInputProps>(customFilters, args) : '',
     });
 
     const referenciesDocs = relevantDocs.map((doc: { metadata: unknown; }) => doc.metadata).join(', ');
