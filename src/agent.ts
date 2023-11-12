@@ -10,6 +10,7 @@ import ChatHistoryFactory from './services/chat-history';
 import LLMFactory from './services/llm';
 import { ChainService, IChainService } from './services/chain';
 import { nanoid } from 'ai';
+import { interpolate } from './helpers/string.helpers';
 
 const EVENTS_NAME = {
   onMessage: 'onMessage',
@@ -32,7 +33,7 @@ class Agent extends AgentBaseCommand implements IAgent {
 
   constructor(settings: IAgentConfig) {
     super();
-    
+
     this._logger = console;
     this._settings = settings;
 
@@ -47,14 +48,14 @@ class Agent extends AgentBaseCommand implements IAgent {
     if (settings?.vectorStoreConfig)
       this._vectorService = VectorStoreFactory.create(settings.vectorStoreConfig, settings.llmConfig);
   }
- 
+
   private async buildHistory(userSessionId: string, settings: IDatabaseConfig): Promise<BufferMemory> {
     if (this._bufferMemory && !settings)
       return this._bufferMemory;
-    
+
     if (!this._bufferMemory && !settings) {
       this._bufferMemory = new BufferMemory({ returnMessages: true, memoryKey: 'chat_history' });
-      
+
       return this._bufferMemory;
     }
 
@@ -64,18 +65,20 @@ class Agent extends AgentBaseCommand implements IAgent {
       chatHistory: await ChatHistoryFactory.create({
         ...settings,
         sessionId: userSessionId || nanoid(), // TODO
-      }), 
+      }),
     });
 
     return this._bufferMemory;
   }
 
-  private async buildRelevantDocs(question: string, settings: IVectorStoreConfig): Promise<any> {
+  private async buildRelevantDocs(args: IInputProps, settings: IVectorStoreConfig): Promise<any> {
     if (!settings) return { relevantDocs: [], referenciesDocs: [] };
 
-    const relevantDocs = await this._vectorService.similaritySearch(question, 10, {
+    const { customFilters = null } = settings;
+
+    const relevantDocs = await this._vectorService.similaritySearch(args.question, 10, {
       vectorFields: settings.vectorFieldName,
-      filter: `index: ${settings.indexes[0]}` // `user eq '${1}' and chatThreadId eq 'global'`, // TODO
+      filter: customFilters ? interpolate<IInputProps>(customFilters, args) : '',
     });
 
     const referenciesDocs = relevantDocs.map((doc: { metadata: unknown; }) => doc.metadata).join(', ');
@@ -91,10 +94,10 @@ class Agent extends AgentBaseCommand implements IAgent {
 
       memoryChat.chatHistory?.addUserMessage(question);
 
-      const { relevantDocs, referenciesDocs } = await this.buildRelevantDocs(question, this._settings.vectorStoreConfig);
+      const { relevantDocs, referenciesDocs } = await this.buildRelevantDocs(args, this._settings.vectorStoreConfig);
 
       const chain = await this._chainService.build(this._llm, question);
-  
+
       const result = await chain.call({
         referencies: referenciesDocs,
         input_documents: relevantDocs,
@@ -106,7 +109,7 @@ class Agent extends AgentBaseCommand implements IAgent {
       await memoryChat.chatHistory?.addAIChatMessage(result?.text);
 
       this.emit(EVENTS_NAME.onMessage, result?.text);
-  
+
       this.emit(EVENTS_NAME.onEnd, 'terminated');
     } catch (error) {
       this._logger.error(error);
