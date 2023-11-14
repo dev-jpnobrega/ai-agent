@@ -16,11 +16,16 @@ class RedisChatHistory {
 
     const { Redis } = (await import('ioredis'));
 
-    const client = new Redis({
+    const options = (!this._settings?.ssl) ? {
+      ...this._settings,
+      db: this._settings.database as number,
+    } : {
       ...this._settings,
       db: this._settings.database as number,
       tls: {}
-    });
+    }
+
+    const client = new Redis(options);
 
     this._redisClientInstance = client;
 
