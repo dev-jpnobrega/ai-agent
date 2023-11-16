@@ -6,7 +6,44 @@
 
 AI Agent simplifies the implementation and use of generative AI with LangChain, was inspired by the project [autogent](https://github.com/microsoft/autogen)
 
---- INIT REPO ---
+
+
+## Installation
+
+Use the package manager [npm](https://www.npmjs.com/) to install AI Agent.
+
+```bash
+npm install ai-agent
+```
+
+## Usage
+
+-- Simple use
+```javascript
+  const agent = new Agent({
+      name: 'Assistent Agent',
+      systemMesssage: '<a message that will specialize your agent>',
+      llmConfig: {
+        type: '<cloud-provider-llm-service>', // Check availability at <link>
+        model: '<llm-model>',
+        instance: '<instance-name>', // Optional
+        apiKey: '<key-your-llm-service>', // Optional
+      },
+      chatConfig: {
+        temperature: 0,
+      }
+  });
+
+  agent.on('onMessage', async (message) => {
+    console.warn('MESSAGE:', message);
+  });
+
+  await agent.call({
+    question: 'What is the best way to get started with Azure?',
+    chatThreadID: '<chat-id>',
+  });
+```
+
 
 ## Contributing
 
