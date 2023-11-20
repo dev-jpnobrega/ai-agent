@@ -1,44 +1,23 @@
-import { BaseChain, createOpenAPIChain } from 'langchain/chains';
-import { IDataSourceConfig } from '../../interface/agent.interface';
+import { APIChain, BaseChain } from 'langchain/chains';
+import { IOpenAPIConfig } from '../../interface/agent.interface';
 
 import { BaseChatModel } from 'langchain/chat_models/base';
-import { ChatOpenAI } from 'langchain/chat_models/openai';
-import { PromptTemplate } from 'langchain/prompts';
-
-const SYSTEM_MESSAGE_DEFAULT = `
-  Answer the users question as best as possible.\n
-  If the response the API is JSON, format it in a friendly sentence.\n
-  {format_instructions}\n
-  {question}
-`;
 
 class OpenAPIChain {
-  private _settings: IDataSourceConfig;
-  
-  constructor(settings: IDataSourceConfig) {
+  private _settings: IOpenAPIConfig;
+
+  constructor(settings: IOpenAPIConfig) {
     this._settings = settings;
+    console.log("ENABLE OPENAPI CHAIN");
   }
 
-  private getSystemMessage(): string { 
-    return SYSTEM_MESSAGE_DEFAULT.concat(this._settings.customizeSystemMessage || '');
-  }
 
   public async create(llm: BaseChatModel, ...args: any): Promise<BaseChain> {
-    const systemTemplate = this.getSystemMessage();
 
-    const chainOpenAPI = await createOpenAPIChain(
-      '',
-      {
-        llm: llm as ChatOpenAI,
-        prompt: new PromptTemplate({
-          template: systemTemplate,
-          inputVariables: ['question'],
-          // partialVariables: { format_instructions: template },
-        }),
-      }, 
-    );
+    const llmOpenAPI = APIChain.fromLLMAndAPIDocs(llm, this._settings.data, { outputKey: 'openAPIResult' });
 
-    return chainOpenAPI;
+    console.log(llmOpenAPI);
+    return llmOpenAPI;
   }
 }
 
