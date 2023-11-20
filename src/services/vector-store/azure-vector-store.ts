@@ -21,7 +21,7 @@ type DocumentSearchModel = {
   '@search.score': number;
 };
 
-export interface AzureCogDocument extends Record<string, unknown> {}
+export interface AzureCogDocument extends Record<string, unknown> { }
 
 type AzureCogVectorField = {
   value: number[];
@@ -53,7 +53,7 @@ export interface FaqDocumentIndex extends AzureCogDocument {
   embedding: number[];
   pageContent: string;
   metadata: any;
- }
+}
 
 export class AzureCogSearch<TModel extends Record<string, unknown>> extends VectorStore {
   private _config: AzureSearchConfig;
@@ -158,7 +158,7 @@ export class AzureCogSearch<TModel extends Record<string, unknown>> extends Vect
     const searchBody: AzureCogRequestObject = {
       search: filter?.search || '*',
       facets: filter?.facets || [],
-      filter: '',
+      filter: filter?.filter || '',
       vectors: [{ value: query, fields: filter?.vectorFields || '', k: k }],
       top: filter?.top || k,
     };
