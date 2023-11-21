@@ -42,6 +42,8 @@ export interface IDataSourceConfig {
 export interface IOpenAPIConfig {
   data: string,
   customizeSystemMessage?: string,
+  xApiKey?: string,
+  authorization?: string,
 }
 
 export interface IChatConfig {

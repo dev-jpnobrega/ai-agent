@@ -8,16 +8,36 @@ class OpenAPIChain {
 
   constructor(settings: IOpenAPIConfig) {
     this._settings = settings;
-    console.log("ENABLE OPENAPI CHAIN");
   }
 
+  private getHeaders(): any {
+    if (!this._settings.xApiKey && !this._settings.authorization) 
+      return undefined;
+
+    const temp: any = {};
+
+    if (!this._settings?.xApiKey)
+      temp['x-api-key'] = this._settings.xApiKey;
+
+    if (!this._settings?.authorization)
+      temp['Authorization'] = this._settings.authorization;  
+
+    return {
+      ...temp,
+    }
+  }
 
   public async create(llm: BaseChatModel, ...args: any): Promise<BaseChain> {
+    const chainOpenAPI = APIChain.fromLLMAndAPIDocs(
+      llm,
+      this._settings.data,
+      {
+        outputKey: 'openAPIResult',
+        headers: this.getHeaders(),
+      },
+    );
 
-    const llmOpenAPI = APIChain.fromLLMAndAPIDocs(llm, this._settings.data, { outputKey: 'openAPIResult' });
-
-    console.log(llmOpenAPI);
-    return llmOpenAPI;
+    return chainOpenAPI;
   }
 }
 
