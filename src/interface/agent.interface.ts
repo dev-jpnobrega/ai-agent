@@ -39,6 +39,13 @@ export interface IDataSourceConfig {
   ssl?: boolean,
 }
 
+export interface IOpenAPIConfig {
+  data: string,
+  customizeSystemMessage?: string,
+  xApiKey?: string,
+  authorization?: string,
+}
+
 export interface IChatConfig {
   temperature: number,
   topP?: number,
@@ -75,6 +82,7 @@ export interface IAgentConfig {
   dbHistoryConfig?: IDatabaseConfig,
   vectorStoreConfig?: IVectorStoreConfig;
   dataSourceConfig?: IDataSourceConfig;
+  openAPIConfig?: IOpenAPIConfig;
 };
 
 export interface IInputProps {
