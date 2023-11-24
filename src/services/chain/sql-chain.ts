@@ -1,6 +1,6 @@
 import { BaseChain } from 'langchain/chains';
 import { IDataSourceConfig } from '../../interface/agent.interface';
-import { SqlDatabaseChain } from 'langchain/chains/sql_db';
+import SqlDatabaseChain from './sql-database-chain';
 import { SqlDatabase } from 'langchain/sql_db';
 import { BaseChatModel } from 'langchain/chat_models/base';
 import { PromptTemplate } from 'langchain/prompts';
@@ -51,11 +51,11 @@ class SqlChain {
     const database = await this.getDataSourceInstance();
     const systemTemplate = this.getSystemMessage();
 
-    const chainSQL = new SqlDatabaseChain({
+    const chainSQL =  new SqlDatabaseChain({
       llm,
       database,
       outputKey: 'sqlResult',
-      sqlOutputKey: 'sql',
+      sqlOutputKey: 'sqlCommand',
       prompt: new PromptTemplate({
         inputVariables: ['input', 'chat_history', 'dialect', 'table_info'],
         template: systemTemplate,
