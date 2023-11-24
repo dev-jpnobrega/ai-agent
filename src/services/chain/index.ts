@@ -1,6 +1,6 @@
 
 import { BaseChatModel } from 'langchain/chat_models/base';
-import { BaseChain, SequentialChain, loadQAMapReduceChain } from 'langchain/dist/chains';
+import { BaseChain, SequentialChain, loadQAMapReduceChain } from 'langchain/chains';
 
 import { BasePromptTemplate, ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate } from 'langchain/prompts';
 
