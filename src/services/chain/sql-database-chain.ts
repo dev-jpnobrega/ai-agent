@@ -1,4 +1,4 @@
-import { DEFAULT_SQL_DATABASE_PROMPT, SqlDatabaseChainInput } from "langchain/chains/sql_db.js";
+import { DEFAULT_SQL_DATABASE_PROMPT, SqlDatabaseChainInput } from "langchain/chains/sql_db";
 import { RunnableSequence } from "langchain/schema/runnable.js";
 import { StringOutputParser } from "langchain/schema/output_parser.js";
 import { SqlDatabase } from "langchain/sql_db";
