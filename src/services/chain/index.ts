@@ -1,6 +1,6 @@
 
 import { BaseChatModel } from 'langchain/chat_models/base';
-import { BaseChain, SequentialChain, loadQAMapReduceChain } from 'langchain/chains';
+import { BaseChain, SequentialChain, loadQAMapReduceChain } from 'langchain/dist/chains';
 
 import { BasePromptTemplate, ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate } from 'langchain/prompts';
 
@@ -38,10 +38,10 @@ class ChainService implements IChainService {
   }
 
   private buildSystemMessages(systemMessages: string): string {
-    let buildedMessage = systemMessages;
+    let builtMessage = systemMessages;
 
-    buildedMessage += '\n';
-    buildedMessage += `
+    builtMessage += '\n';
+    builtMessage += `
       --------------------------------------
       Context found in documents:
       {summaries}
@@ -51,18 +51,18 @@ class ChainService implements IChainService {
     `;
 
     if (this._isSQLChainEnabled) {
-      buildedMessage += `
+      builtMessage += `
         --------------------------------------
         This was the answer found in the database:
         {sqlResult}\n
         --------------------------------------
         Query executed:
-        {sql}\n
+        {sqlCommand}\n
       `;
     }
   
     if (this._isOpenAPIChainEnabled) {
-      buildedMessage += `
+      builtMessage += `
         --------------------------------------
         This was the answer found in the API:
         {openAPIResult}\n
@@ -70,7 +70,7 @@ class ChainService implements IChainService {
       `;
     }
 
-    return buildedMessage;
+    return builtMessage;
   }
 
   private buildPromptTemplate(systemMessages: string): BasePromptTemplate {
@@ -109,7 +109,9 @@ class ChainService implements IChainService {
 
     const enhancementChain = new SequentialChain({
       chains,
-      inputVariables: ['query', 'referencies', 'input_documents', 'question', 'chat_history'],
+      inputVariables: [
+        'query', 'referencies', 'input_documents', 'question', 'chat_history',
+      ],
       verbose: this._settings.debug || false,
     });
 
