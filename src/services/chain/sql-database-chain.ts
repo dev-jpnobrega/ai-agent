@@ -8,8 +8,6 @@ import { ChainValues } from "langchain/schema";
 import { CallbackManagerForChainRun } from "langchain/callbacks";
 import { PromptTemplate } from "langchain/prompts";
 
-const CONTEXTUAL_ERROR = 'There is no specific information in the provided SQL table schema';
-
 /**
  * Class that represents a SQL database chain in the LangChain framework.
  * It extends the BaseChain class and implements the functionality
@@ -110,9 +108,13 @@ export default class SqlDatabaseChain extends BaseChain {
         question: (input) => input.question,
         query: (input) => input.query,
         response: (input) => {
-          if (input.query.content.includes(CONTEXTUAL_ERROR)) return null;
+          const sql = input.query.content.toLowerCase();
 
-          return this.database.run(input.query)
+          if (sql.includes('select') && sql.includes('from')) {
+            return this.database.run(input.query);
+          }
+
+          return null;
         },
       },
       {
