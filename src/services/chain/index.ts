@@ -57,7 +57,7 @@ class ChainService implements IChainService {
         {sqlResult}\n
         --------------------------------------
         Query executed:
-        {sqlCommand}\n
+        {sqlQuery}\n
       `;
     }
   
@@ -90,8 +90,6 @@ class ChainService implements IChainService {
 
   private async buildChains(llm: BaseChatModel, ...args: any): Promise<BaseChain[]> {
     const chains = this.checkEnabledChains(this._settings);
-
-    console.warn(`this._settings.systemMesssage`, this._settings.systemMesssage);
 
     const chain = loadQAMapReduceChain(llm, {
       combinePrompt: this.buildPromptTemplate(
