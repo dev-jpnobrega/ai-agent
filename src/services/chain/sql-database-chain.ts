@@ -81,6 +81,26 @@ export default class SqlDatabaseChain extends BaseChain {
     SQL QUERY:`);
   }
 
+
+  parserSQL(sql: string) {
+    const sqlL = sql.toLowerCase();
+
+    if (sqlL.startsWith('select') || sqlL.startsWith('update') || sqlL.startsWith('delete') || sqlL.startsWith('insert')) {
+      return sql;
+    }
+
+    if (sqlL.startsWith('```')) {
+      const regex = /```(.*?)```/gs;
+      const matches = [...sqlL.matchAll(regex)];
+      const codeBlocks = matches.map(match => match[1]);
+      const sqlBlock = codeBlocks[0].replace('sql', '');
+
+      return sqlBlock;
+    }
+
+    return null;
+  }
+
   async _call(values: ChainValues, runManager?: CallbackManagerForChainRun): Promise<ChainValues> {
     const question: string = values[this.inputKey];
     const table_schema = await this.database.getTableInfo();
@@ -106,23 +126,24 @@ export default class SqlDatabaseChain extends BaseChain {
         question: (input) => input.question,
         query: (input) => input.query,
         response: async (input) => {
-          const sql = input.query.content.toLowerCase();
+          const sql = input.query.content;
 
-          console.log(`SQL`, sql);
+          try {
+            const sqlParserd = this.parserSQL(sql);
 
-          if (sql.includes('select') && sql.includes('from')) {
-            try {
-              const queryResult = await this.database.run(input.query);
+            if (!sqlParserd) return '';
 
-              return queryResult;
-            } catch (error) { 
-              console.error(error);
+            console.log(`SQL`, sqlParserd);
 
-              return '';
-            }
+            const queryResult = await this.database.run(sqlParserd);
+
+            return queryResult;
+          } catch (error) { 
+            console.error(error);
+
+            return '';
           }
 
-          return '';
         },
       },
       {
