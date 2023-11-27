@@ -49,13 +49,15 @@ export default class SqlDatabaseChain extends BaseChain {
     inputKey = "query";
   
     outputKey = "result";
+
+    customMessage = '';
   
     sqlOutputKey: string | undefined = undefined;
   
     // Whether to return the result of querying the SQL table directly.
     returnDirect = false;
 
-  constructor(fields: SqlDatabaseChainInput) {
+  constructor(fields: SqlDatabaseChainInput, customMessage?: string) {
     super(fields);
     this.llm = fields.llm;
     this.database = fields.database;
@@ -64,39 +66,33 @@ export default class SqlDatabaseChain extends BaseChain {
     this.outputKey = fields.outputKey ?? this.outputKey;
     this.sqlOutputKey = fields.sqlOutputKey ?? this.sqlOutputKey;
     this.prompt = fields.prompt;
+    this.customMessage = customMessage || '';
   }
 
-  async _call(values: ChainValues, runManager?: CallbackManagerForChainRun): Promise<ChainValues> {
-    const question: string = values[this.inputKey];
-
-    const prompt =
-    PromptTemplate.fromTemplate(`Based on the provided SQL table schema below, write a SQL query that would answer the user's question.
+  getSQLPrompt(): PromptTemplate { 
+    return PromptTemplate.fromTemplate(`Based on the provided SQL table schema below, write a SQL query that would answer the user's question.\n
+    -------------------------------------------
+    ${this.customMessage}\n
     ------------
     SCHEMA: {schema}
     ------------
     QUESTION: {question}
     ------------
     SQL QUERY:`);
+  }
+
+  async _call(values: ChainValues, runManager?: CallbackManagerForChainRun): Promise<ChainValues> {
+    const question: string = values[this.inputKey];
+    const table_schema = await this.database.getTableInfo();
 
     const sqlQueryChain = RunnableSequence.from([
       {
-        schema: async () => this.database.getTableInfo(),
+        schema: () => table_schema,
         question: (input: { question: string }) => input.question,
       },
-      prompt,
+      this.getSQLPrompt(),
       this.llm.bind({ stop: ["\nSQLResult:"] })
     ]);
-
-    const responsePrompt =
-    PromptTemplate.fromTemplate(`Based on the table schema below, question, SQL query, and SQL response, write a natural language response:
-    ------------
-    SCHEMA: {schema}
-    ------------
-    QUESTION: {question}
-    ------------
-    SQL QUERY: {query}
-    ------------
-    SQL RESPONSE: {response}`);
 
     const finalChain = RunnableSequence.from([
       {
@@ -104,26 +100,42 @@ export default class SqlDatabaseChain extends BaseChain {
         query: sqlQueryChain,
       },
       {
-        schema: async () => this.database.getTableInfo(),
+        table_info: () => table_schema,
+        input: () => question,
+        schema: () => table_schema,
         question: (input) => input.question,
         query: (input) => input.query,
-        response: (input) => {
+        response: async (input) => {
           const sql = input.query.content.toLowerCase();
 
+          console.log(`SQL`, sql);
+
           if (sql.includes('select') && sql.includes('from')) {
-            return this.database.run(input.query);
+            try {
+              const queryResult = await this.database.run(input.query);
+
+              return queryResult;
+            } catch (error) { 
+              console.error(error);
+
+              return '';
+            }
           }
 
-          return null;
+          return '';
         },
       },
       {
-        [this.outputKey]: responsePrompt.pipe(this.llm).pipe(new StringOutputParser()),
-        [this.sqlOutputKey]: (previousStepResult) => previousStepResult.query,
+        [this.outputKey]: this.prompt.pipe(this.llm).pipe(new StringOutputParser()),
+        [this.sqlOutputKey]: (previousStepResult) => {
+          return previousStepResult?.query?.content;
+        },
       },
     ]);
 
-    return finalChain.invoke({ question });
+    const result = await finalChain.invoke({ question });
+
+    return result;
   }
 
   _chainType(): string {
