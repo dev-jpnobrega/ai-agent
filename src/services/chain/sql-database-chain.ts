@@ -78,7 +78,7 @@ export default class SqlDatabaseChain extends BaseChain {
     ------------
     QUESTION: {question}
     ------------
-    SQL QUERY:`);
+    SQL QUERY: `);
   }
 
 
@@ -114,6 +114,7 @@ export default class SqlDatabaseChain extends BaseChain {
       this.llm.bind({ stop: ["\nSQLResult:"] })
     ]);
 
+
     const finalChain = RunnableSequence.from([
       {
         question: (input) => input.question,
@@ -131,7 +132,7 @@ export default class SqlDatabaseChain extends BaseChain {
           try {
             const sqlParserd = this.parserSQL(sql);
 
-            if (!sqlParserd) return '';
+            if (!sqlParserd) return null;
 
             console.log(`SQL`, sqlParserd);
 
@@ -141,7 +142,7 @@ export default class SqlDatabaseChain extends BaseChain {
           } catch (error) { 
             console.error(error);
 
-            return '';
+            return null;
           }
 
         },
