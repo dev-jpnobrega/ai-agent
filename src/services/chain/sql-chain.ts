@@ -5,21 +5,17 @@ import { SqlDatabase } from 'langchain/sql_db';
 import { BaseChatModel } from 'langchain/chat_models/base';
 import { PromptTemplate } from 'langchain/prompts';
 
-const SYSTEM_MESSAGE_DEFAULT = `
-  Given an input question, first create a syntactically correct postgres query to be performed, then execute a query after observing the query results and return the answer.\n
-  Never query all columns in a table. You should only query the possible columns to answer the question. Enclose each column name in double quotation marks (") to denote the delimited identifiers.\n
-  Pay attention to only use the column names that you can see in the tables below. Be careful not to query columns that don't exist. Also, pay attention to which column is in which table.\n
-  \n
-  Use the following format:\n
-  SCHEMA: {schema}
-  ------------
-  QUESTION: {question}
-  ------------
-  SQL QUERY: {query}
-  ------------
-  SQL RESPONSE: {response}
-  \n\n
-`;
+const SYSTEM_MESSAGE_DEFAULT = `Based on the table schema below, question, SQL query, and SQL response, write a natural language response:
+------------\n
+SCHEMA: {schema}\n
+------------\n
+QUESTION: {question}\n
+------------\n
+SQL QUERY: {query}\n
+------------\n
+SQLResult: {response}\n
+------------\n
+NATURAL LANGUAGE RESPONSE:`;
 
 class SqlChain {
   private _settings: IDataSourceConfig;
@@ -55,7 +51,7 @@ class SqlChain {
       outputKey: 'sqlResult',
       sqlOutputKey: 'sqlQuery',
       prompt: new PromptTemplate({
-        inputVariables: ['question', 'response', 'schema', 'query'],
+        inputVariables: ['question', 'response', 'schema', 'query', 'chat_history'],
         template: systemTemplate,
       }),
     }, this._settings?.customizeSystemMessage);
