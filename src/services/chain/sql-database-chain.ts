@@ -51,6 +51,8 @@ export default class SqlDatabaseChain extends BaseChain {
     outputKey = "result";
 
     customMessage = '';
+
+    maxDataExamples = 30; // TODO add config in agent settings
   
     sqlOutputKey: string | undefined = undefined;
   
@@ -70,15 +72,19 @@ export default class SqlDatabaseChain extends BaseChain {
   }
 
   getSQLPrompt(): PromptTemplate { 
-    return PromptTemplate.fromTemplate(`Based on the provided SQL table schema below, write a SQL query that would answer the user's question.\n
-    -------------------------------------------
-    ${this.customMessage}\n
-    ------------
-    SCHEMA: {schema}
-    ------------
-    QUESTION: {question}
-    ------------
-    SQL QUERY: `);
+    return PromptTemplate.fromTemplate(`
+      Based on the SQL table schema provided below, write an SQL query that answers the user's question.\n
+      Your response must only be a valid SQL query, based on the schema provided.\n
+      -------------------------------------------\n
+      Here are some important observations for generating the query:\n
+      ${this.customMessage}\n
+      -------------------------------------------\n
+      SCHEMA: {schema}\n
+      -------------------------------------------\n
+      QUESTION: {question}\n
+      ------------------------------------------\n
+      SQL QUERY:
+    `);
   }
 
 
@@ -89,7 +95,7 @@ export default class SqlDatabaseChain extends BaseChain {
       return sql;
     }
 
-    if (sqlL.startsWith('```')) {
+    if (sqlL.includes('```sql')) {
       const regex = /```(.*?)```/gs;
       const matches = [...sqlL.matchAll(regex)];
       const codeBlocks = matches.map(match => match[1]);
@@ -99,6 +105,26 @@ export default class SqlDatabaseChain extends BaseChain {
     }
 
     return null;
+  }
+
+  private async checkResultDatabase(database: SqlDatabase, sql: string) {
+    const prepareSql = sql.replace(';', '');
+    const prepareCount = `SELECT COUNT(*) as resultCount FROM (${prepareSql}) as tableCount;`;
+    
+    try {
+      const countResult = await database.run(prepareCount);
+
+      const data = JSON.parse(countResult);
+      const result = parseInt(data[0]?.resultcount, 10);
+
+      if (result >= this.maxDataExamples) {
+        throw new Error('Data result is too big. Please, be more specific.');
+      }
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
   }
 
   async _call(values: ChainValues, runManager?: CallbackManagerForChainRun): Promise<ChainValues> {
@@ -113,7 +139,6 @@ export default class SqlDatabaseChain extends BaseChain {
       this.getSQLPrompt(),
       this.llm.bind({ stop: ["\nSQLResult:"] })
     ]);
-
 
     const finalChain = RunnableSequence.from([
       {
@@ -136,15 +161,16 @@ export default class SqlDatabaseChain extends BaseChain {
 
             console.log(`SQL`, sqlParserd);
 
+            await this.checkResultDatabase(this.database, sqlParserd);
+
             const queryResult = await this.database.run(sqlParserd);
 
             return queryResult;
           } catch (error) { 
             console.error(error);
 
-            return null;
+            return error?.message;
           }
-
         },
       },
       {
