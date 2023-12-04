@@ -8,6 +8,12 @@ import { ChainValues } from "langchain/schema";
 import { CallbackManagerForChainRun } from "langchain/callbacks";
 import { PromptTemplate } from "langchain/prompts";
 
+
+const MESSAGES_ERRORS = {
+  dataTooBig: 'Data result is too big. Please, be more specific.',
+  dataEmpty: 'Data result is empty. Please, be more specific.',
+}
+
 /**
  * Class that represents a SQL database chain in the LangChain framework.
  * It extends the BaseChain class and implements the functionality
@@ -52,7 +58,7 @@ export default class SqlDatabaseChain extends BaseChain {
 
     customMessage = '';
 
-    maxDataExamples = 30; // TODO add config in agent settings
+    maxDataExamples = 10; // TODO add config in agent settings
   
     sqlOutputKey: string | undefined = undefined;
   
@@ -104,7 +110,7 @@ export default class SqlDatabaseChain extends BaseChain {
       return sqlBlock;
     }
 
-    return null;
+    throw new Error(MESSAGES_ERRORS.dataEmpty);
   }
 
   private async checkResultDatabase(database: SqlDatabase, sql: string) {
@@ -118,7 +124,7 @@ export default class SqlDatabaseChain extends BaseChain {
       const result = parseInt(data[0]?.resultcount, 10);
 
       if (result >= this.maxDataExamples) {
-        throw new Error('Data result is too big. Please, be more specific.');
+        throw new Error(MESSAGES_ERRORS.dataTooBig);
       }
 
       return result;
