@@ -8,11 +8,15 @@ import { IAgentConfig, SYSTEM_MESSAGE_DEFAULT } from '../../interface/agent.inte
 import SqlChain from './sql-chain';
 import OpenAPIChain from './openapi-chain';
 
+interface IChain {
+  create(llm: BaseChatModel, ...args: any): Promise<BaseChain>
+}
+
 interface IChainService {
   build(llm: BaseChatModel, ...args: any): Promise<BaseChain>
 }
 
-class ChainService implements IChainService {
+class ChainService {
   private _settings: IAgentConfig;
   private _isSQLChainEnabled: boolean;
   private _isOpenAPIChainEnabled: boolean;
@@ -21,8 +25,8 @@ class ChainService implements IChainService {
     this._settings = settings;
   }
 
-  private checkEnabledChains(settings: IAgentConfig): any {
-    const enabledChains = [];
+  private checkEnabledChains(settings: IAgentConfig): IChain[] {
+    const enabledChains: IChain[] = [];
 
     if (settings.dataSourceConfig) {
       this._isSQLChainEnabled = true;
@@ -89,17 +93,21 @@ class ChainService implements IChainService {
   }
 
   private async buildChains(llm: BaseChatModel, ...args: any): Promise<BaseChain[]> {
-    const chains = this.checkEnabledChains(this._settings);
+    const enabledChains = this.checkEnabledChains(this._settings);
 
-    const chain = loadQAMapReduceChain(llm, {
+    const chainQA = loadQAMapReduceChain(llm, {
       combinePrompt: this.buildPromptTemplate(
         this._settings.systemMesssage || SYSTEM_MESSAGE_DEFAULT,
       ),
     });
 
-    const chainList = await Promise.all(chains.map(async (chain: any) => await chain.create(llm, ...args)));
+    const chains = await Promise.all(
+      enabledChains.map(
+        async (chain: IChain) => await chain.create(llm, ...args)
+      )
+    );
 
-    return chainList.concat(chain);
+    return chains.concat(chainQA);
   }
 
   public async build(llm: BaseChatModel, ...args: any): Promise<BaseChain> {
@@ -118,4 +126,4 @@ class ChainService implements IChainService {
   }
 }
 
-export { ChainService, IChainService };
+export { ChainService, IChainService, IChain };

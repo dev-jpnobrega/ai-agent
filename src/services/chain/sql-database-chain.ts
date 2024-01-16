@@ -40,30 +40,30 @@ const MESSAGES_ERRORS = {
  * ```
  */
 export default class SqlDatabaseChain extends BaseChain {
-    // LLM wrapper to use
-    llm: BaseLanguageModel;
+  // LLM wrapper to use
+  llm: BaseLanguageModel;
 
-    // SQL Database to connect to.
-    database: SqlDatabase;
-  
-    // Prompt to use to translate natural language to SQL.
-    prompt = DEFAULT_SQL_DATABASE_PROMPT;
-  
-    // Number of results to return from the query
-    topK = 5;
-  
-    inputKey = "query";
-  
-    outputKey = "result";
+  // SQL Database to connect to.
+  database: SqlDatabase;
 
-    customMessage = '';
+  // Prompt to use to translate natural language to SQL.
+  prompt = DEFAULT_SQL_DATABASE_PROMPT;
 
-    maxDataExamples = 10; // TODO add config in agent settings
-  
-    sqlOutputKey: string | undefined = undefined;
-  
-    // Whether to return the result of querying the SQL table directly.
-    returnDirect = false;
+  // Number of results to return from the query
+  topK = 5;
+
+  inputKey = "query";
+
+  outputKey = "result";
+
+  customMessage = '';
+
+  maxDataExamples = 10; // TODO add config in agent settings
+
+  sqlOutputKey: string | undefined = undefined;
+
+  // Whether to return the result of querying the SQL table directly.
+  returnDirect = false;
 
   constructor(fields: SqlDatabaseChainInput, customMessage?: string) {
     super(fields);

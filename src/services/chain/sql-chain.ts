@@ -4,6 +4,7 @@ import SqlDatabaseChain from './sql-database-chain';
 import { SqlDatabase } from 'langchain/sql_db';
 import { BaseChatModel } from 'langchain/chat_models/base';
 import { PromptTemplate } from 'langchain/prompts';
+import { IChain } from './';
 
 const SYSTEM_MESSAGE_DEFAULT = `Based on the table schema below, question, SQL query, and SQL response, write a natural language response:
 ------------\n
@@ -17,7 +18,7 @@ SQLResult: {response}\n
 ------------\n
 NATURAL LANGUAGE RESPONSE:`;
 
-class SqlChain {
+class SqlChain implements IChain {
   private _settings: IDataSourceConfig;
   private _dataSourceInstance: SqlDatabase;
   
