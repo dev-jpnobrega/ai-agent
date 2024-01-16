@@ -2,7 +2,6 @@ import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
 
 import Agent from'../src/agent';
-import { DataSource } from 'typeorm';
 
 describe('Agent test', () => {
   it('should Agent instance', (t, done) => {
@@ -49,4 +48,5 @@ describe('Agent test', () => {
         model: process.env.AZURE_SEARCH_MODEL || 'test'
       },
     });
+  });
 });
