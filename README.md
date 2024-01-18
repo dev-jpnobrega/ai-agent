@@ -18,10 +18,10 @@ npm install ai-agent
 
 ## Usage
 
--- Simple use
+### Simple use
 ```javascript
   const agent = new Agent({
-      name: 'Assistent Agent',
+      name: '<name>',
       systemMesssage: '<a message that will specialize your agent>',
       llmConfig: {
         type: '<cloud-provider-llm-service>', // Check availability at <link>
@@ -44,6 +44,43 @@ npm install ai-agent
   });
 ```
 
+### Using with Vector stores
+When using LLM + Vector stores the Agent finds the documents relevant to the requested input.
+The documents found are used for the context of the Agent.
+```javascript
+  const agent = new Agent({
+      name: '<name',
+      systemMesssage: '<a message that will specialize your agent>',
+      chatConfig: {
+        temperature: 0,
+      }
+      llmConfig: {
+        type: '<cloud-provider-llm-service>', // Check availability at <link>
+        model: '<llm-model>',
+        instance: '<instance-name>', // Optional
+        apiKey: '<key-your-llm-service>', // Optional
+      },
+      vectorStoreConfig: {
+        type: '<cloud-provider-llm-service>', // Check availability at <link>
+        apiKey: '<your-api-key>', // Optional
+        indexes: ['<index-name>'], // Your indexes name. Optional
+        vectorFieldName: "<vector-base-field>", // Optional
+        name: "<vector-service-name>", // Optional
+        apiVersion: "<api-version>", // Optional
+        model: "<llm-model>" // Optional
+      },
+    },
+  });
+
+  agent.on('onMessage', async (message) => {
+    console.warn('MESSAGE:', message);
+  });
+
+  await agent.call({
+    question: 'What is the best way to get started with Azure?',
+    chatThreadID: '<chat-id>',
+  });
+```
 
 ## Contributing
 
