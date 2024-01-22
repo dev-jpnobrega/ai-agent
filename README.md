@@ -49,7 +49,7 @@ When using LLM + Vector stores the Agent finds the documents relevant to the req
 The documents found are used for the context of the Agent.
 ```javascript
   const agent = new Agent({
-      name: '<name',
+      name: '<name>',
       systemMesssage: '<a message that will specialize your agent>',
       chatConfig: {
         temperature: 0,
