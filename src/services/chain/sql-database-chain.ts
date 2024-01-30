@@ -113,6 +113,7 @@ export default class SqlDatabaseChain extends BaseChain {
     throw new Error(MESSAGES_ERRORS.dataEmpty);
   }
 
+  // TODO: check implementation for big data
   private async checkResultDatabase(database: SqlDatabase, sql: string) {
     const prepareSql = sql.replace(';', '');
     const prepareCount = `SELECT COUNT(*) as resultCount FROM (${prepareSql}) as tableCount;`;

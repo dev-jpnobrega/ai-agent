@@ -31,7 +31,6 @@ class SqlChain implements IChain {
   }
 
   private async getDataSourceInstance(): Promise<SqlDatabase> {
-    // TODO: define db a singleton ou instance
     this._dataSourceInstance = this._dataSourceInstance || await SqlDatabase.fromDataSourceParams({
       appDataSource: this._settings.dataSource,
       ...this._settings,

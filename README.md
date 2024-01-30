@@ -64,10 +64,11 @@ The documents found are used for the context of the Agent.
         type: '<cloud-provider-llm-service>', // Check availability at <link>
         apiKey: '<your-api-key>', // Optional
         indexes: ['<index-name>'], // Your indexes name. Optional
-        vectorFieldName: "<vector-base-field>", // Optional
-        name: "<vector-service-name>", // Optional
+        vectorFieldName: '<vector-base-field>', // Optional
+        name: '<vector-service-name>', // Optional
         apiVersion: "<api-version>", // Optional
-        model: "<llm-model>" // Optional
+        model: '<llm-model>' // Optional
+        customFilters: '<custom-filter>' // Optional. Example: 'field-vector-store=(userSessionId)' check at <link>
       },
     },
   });
