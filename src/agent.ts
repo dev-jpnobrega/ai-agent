@@ -119,10 +119,6 @@ class Agent extends AgentBaseCommand implements IAgent {
     }
   }
 
-  private handleLLMNewToken(token: any) {
-    this.emit(EVENTS_NAME.onToken, token);
-  };
-
   execute(args: any): Promise<void> {
     throw new Error(args);
   }

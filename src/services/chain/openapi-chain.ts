@@ -2,8 +2,9 @@ import { APIChain, BaseChain } from 'langchain/chains';
 import { IOpenAPIConfig } from '../../interface/agent.interface';
 
 import { BaseChatModel } from 'langchain/chat_models/base';
+import { IChain } from './';
 
-class OpenAPIChain {
+class OpenAPIChain implements IChain {
   private _settings: IOpenAPIConfig;
 
   constructor(settings: IOpenAPIConfig) {

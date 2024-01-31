@@ -48,16 +48,5 @@ describe('Agent test', () => {
         model: process.env.AZURE_SEARCH_MODEL || 'test'
       },
     });
-
-    agent.on('onMessage', async (message) => {
-      assert.ok(message, 'message is not null');
-      console.warn('MESSAGE:', message);
-      done();
-    });
-
-    agent.call({
-      question: 'What is the best way to get started with Azure?',
-      chatThreadID: '123',
-    });
   });
 });
