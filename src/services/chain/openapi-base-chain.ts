@@ -15,7 +15,7 @@ export type OpenApiBaseChainInput = {
 
 export class OpenApiBaseChain extends BaseChain {
     readonly inputKey = "query";
-    readonly outputKey = "result";
+    readonly outputKey = "openAPIResult";
     private input: OpenApiBaseChainInput;
 
     constructor(input: OpenApiBaseChainInput) {
@@ -45,12 +45,16 @@ ${this.input.customMessage || ''}`;
 
     async _call(values: ChainValues, runManager?: CallbackManagerForChainRun): Promise<ChainValues> {
         const question = values[this.inputKey];
-        const chain = await createOpenAPIChain(this.input.spec, { 
+        const chain = await createOpenAPIChain(this.input.spec, {
             llm: this.input.llm,
             prompt: this.getOpenApiPrompt(),
             headers: this.input.headers
         });
-        return await chain.invoke({ question });
+        const answer = await chain.invoke({ question });
+
+        console.log("OPENAPI Resposta: ", answer);
+
+        return { [this.outputKey]: answer };
     }
 
     _chainType(): string {
