@@ -70,7 +70,6 @@ The documents found are used for the context of the Agent.
         model: '<llm-model>' // Optional
         customFilters: '<custom-filter>' // Optional. Example: 'field-vector-store=(userSessionId)' check at <link>
       },
-    },
   });
 
   agent.on('onMessage', async (message) => {

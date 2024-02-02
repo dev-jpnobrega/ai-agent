@@ -103,6 +103,7 @@ class Agent extends AgentBaseCommand implements IAgent {
         input_documents: relevantDocs,
         query: question,
         question: question,
+        summaries: relevantDocs,
         chat_history: await memoryChat.chatHistory?.getMessages(),
       });
 

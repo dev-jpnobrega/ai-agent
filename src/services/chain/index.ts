@@ -25,7 +25,7 @@ class ChainService {
     this._settings = settings;
   }
 
-  private checkEnabledChains(settings: IAgentConfig): IChain[] {
+  private checkEnabledChains(settings: IAgentConfig, prompt: BasePromptTemplate): IChain[] {
     const enabledChains: IChain[] = [];
 
     if (settings.dataSourceConfig) {
@@ -35,7 +35,7 @@ class ChainService {
 
     if (settings.openAPIConfig) {
       this._isOpenAPIChainEnabled = true;
-      enabledChains.push(new OpenAPIChain(settings.openAPIConfig));
+      enabledChains.push(new OpenAPIChain(settings.openAPIConfig, prompt));
     }
 
     return enabledChains;
@@ -93,12 +93,13 @@ class ChainService {
   }
 
   private async buildChains(llm: BaseChatModel, ...args: any): Promise<BaseChain[]> {
-    const enabledChains = this.checkEnabledChains(this._settings);
+    const prompt = this.buildPromptTemplate(
+      this._settings.systemMesssage || SYSTEM_MESSAGE_DEFAULT,
+    );
+    const enabledChains = this.checkEnabledChains(this._settings, prompt);
 
     const chainQA = loadQAMapReduceChain(llm, {
-      combinePrompt: this.buildPromptTemplate(
-        this._settings.systemMesssage || SYSTEM_MESSAGE_DEFAULT,
-      ),
+      combinePrompt: prompt,
     });
 
     const chains = await Promise.all(
