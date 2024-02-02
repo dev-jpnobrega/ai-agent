@@ -2,7 +2,7 @@ import { CallbackManagerForChainRun } from "langchain/callbacks";
 import { BaseChain, createOpenAPIChain } from "langchain/chains";
 import { BaseChatModel } from "langchain/chat_models/base";
 import { BaseFunctionCallOptions } from "langchain/dist/base_language";
-import { ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate } from "langchain/prompts";
+import { ChatPromptTemplate, HumanMessagePromptTemplate, PromptTemplate, SystemMessagePromptTemplate } from "langchain/prompts";
 import { ChainValues } from "langchain/schema";
 import type { OpenAPIV3_1 } from "openapi-types";
 
@@ -31,26 +31,30 @@ export class OpenApiBaseChain extends BaseChain {
         return [this.outputKey];
     }
 
-    private getOpenApiPrompt(): ChatPromptTemplate {
-        const prompt = `You are an AI with expertise in OpenApi and Swagger.
-Always answer the question in the language in which the question was asked.
-- Always respond with the URL;
-- Never put information or explanations in the answer;
-${this.input.customMessage || ''}`;
-        return ChatPromptTemplate.fromMessages([
-            SystemMessagePromptTemplate.fromTemplate(prompt),
-            HumanMessagePromptTemplate.fromTemplate('{question}'),
-        ]);
+    private getOpenApiPrompt(): PromptTemplate {
+        const prompt = `You are an AI with expertise in OpenApi and Swagger.\n
+                        Always answer the question in the language in which the question was asked.\n
+                        - Always respond with the URL;\n
+                        - Never put information or explanations in the answer;\n
+                        -  SCHEMA: {schema}\n
+                        -  QUESTION: {question}\n
+                        ${this.input.customMessage || ''}`;
+        return PromptTemplate.fromTemplate(prompt);
+        //ChatPromptTemplate.fromMessages([]);
     }
 
     async _call(values: ChainValues, runManager?: CallbackManagerForChainRun): Promise<ChainValues> {
+        console.log("Values: ", values);
+        console.log("OPENAPI Input: ", values[this.inputKey]);
         const question = values[this.inputKey];
+        const schema = this.input.spec;
         const chain = await createOpenAPIChain(this.input.spec, {
             llm: this.input.llm,
             prompt: this.getOpenApiPrompt(),
-            headers: this.input.headers
+            headers: this.input.headers,
+            verbose: true
         });
-        const answer = await chain.invoke({ question });
+        const answer = await chain.invoke({ question, schema});
 
         console.log("OPENAPI Resposta: ", answer);
 
