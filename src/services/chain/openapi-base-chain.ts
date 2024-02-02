@@ -2,14 +2,14 @@ import { CallbackManagerForChainRun } from "langchain/callbacks";
 import { BaseChain, createOpenAPIChain } from "langchain/chains";
 import { BaseChatModel } from "langchain/chat_models/base";
 import { BaseFunctionCallOptions } from "langchain/dist/base_language";
-import { ChatPromptTemplate, HumanMessagePromptTemplate, PromptTemplate, SystemMessagePromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "langchain/prompts";
 import { ChainValues } from "langchain/schema";
 import type { OpenAPIV3_1 } from "openapi-types";
 
 export type OpenApiBaseChainInput = {
     spec: string | OpenAPIV3_1.Document<{}>;
     llm?: BaseChatModel<BaseFunctionCallOptions>;
-    customMessage?: string;
+    customizeSystemMessage?: string;
     headers: Record<string, string>;
 };
 
@@ -32,15 +32,17 @@ export class OpenApiBaseChain extends BaseChain {
     }
 
     private getOpenApiPrompt(): PromptTemplate {
-        const prompt = `You are an AI with expertise in OpenApi and Swagger.\n
-                        Always answer the question in the language in which the question was asked.\n
-                        - Always respond with the URL;\n
-                        - Never put information or explanations in the answer;\n
-                        -  SCHEMA: {schema}\n
-                        -  QUESTION: {question}\n
-                        ${this.input.customMessage || ''}`;
-        return PromptTemplate.fromTemplate(prompt);
-        //ChatPromptTemplate.fromMessages([]);
+        return PromptTemplate.fromTemplate(`You are an AI with expertise in OpenApi and Swagger.\n
+        Always answer the question in the language in which the question was asked.\n
+        - Always respond with the URL;\n
+        - Never put information or explanations in the answer;\n
+        ${this.input.customizeSystemMessage || ''}
+        -------------------------------------------\n
+        SCHEMA: {schema}\n
+        -------------------------------------------\n
+        QUESTION: {question}\n
+        ------------------------------------------\n
+        API ANSWER:`);
     }
 
     async _call(values: ChainValues, runManager?: CallbackManagerForChainRun): Promise<ChainValues> {
@@ -54,7 +56,7 @@ export class OpenApiBaseChain extends BaseChain {
             headers: this.input.headers,
             verbose: true
         });
-        const answer = await chain.invoke({ question, schema});
+        const answer = await chain.invoke({ question, schema });
 
         console.log("OPENAPI Resposta: ", answer);
 

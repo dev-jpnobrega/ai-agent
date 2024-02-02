@@ -9,7 +9,6 @@ class OpenAPIChain {
 
   constructor(settings: IOpenAPIConfig) {
     this._settings = settings;
-    console.log(this._settings);
   }
 
   private getHeaders(): Record<string, string> | undefined {
@@ -31,7 +30,7 @@ class OpenAPIChain {
     return new OpenApiBaseChain({
       llm,
       spec: this._settings.data,
-      customMessage: this._settings.customizeSystemMessage || '',
+      customizeSystemMessage: this._settings.customizeSystemMessage || '',
       headers: this.getHeaders(),
     });
   }
