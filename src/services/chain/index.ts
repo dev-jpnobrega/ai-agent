@@ -43,29 +43,24 @@ class ChainService implements IChainService {
     builtMessage += '\n';
     builtMessage += `
       --------------------------------------
-      Context found in documents:
-      {summaries}
+      Context found in documents: {summaries}\n
       --------------------------------------
-      Name of reference files:
-      {referencies}
+      Name of reference files: {referencies}\n
     `;
 
     if (this._isSQLChainEnabled) {
       builtMessage += `
         --------------------------------------
-        This was the answer found in the database:
-        {sqlResult}\n
+        Database Result: {sqlResult}\n
+        Query executed: {sqlQuery}\n
         --------------------------------------
-        Query executed:
-        {sqlQuery}\n
       `;
     }
   
     if (this._isOpenAPIChainEnabled) {
       builtMessage += `
         --------------------------------------
-        This was the answer found in the API:
-        {openAPIResult}\n
+        API Result: {openAPIResult}\n
         --------------------------------------        
       `;
     }
@@ -97,7 +92,9 @@ class ChainService implements IChainService {
       ),
     });
 
-    const chainList = await Promise.all(chains.map(async (chain: any) => await chain.create(llm, ...args)));
+    const chainList = await Promise.all(
+      chains.map(async (chain: any) => await chain.create(llm, ...args))
+    );
 
     return chainList.concat(chain);
   }

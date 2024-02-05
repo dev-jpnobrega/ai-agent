@@ -16,11 +16,11 @@ export type OpenApiBaseChainInput = {
 export class OpenApiBaseChain extends BaseChain {
     readonly inputKey = "query";
     readonly outputKey = "openAPIResult";
-    private input: OpenApiBaseChainInput;
+    private _input: OpenApiBaseChainInput;
 
     constructor(input: OpenApiBaseChainInput) {
         super();
-        this.input = input;
+        this._input = input;
     }
 
     get inputKeys(): string[] {
@@ -32,11 +32,11 @@ export class OpenApiBaseChain extends BaseChain {
     }
 
     private getOpenApiPrompt(): PromptTemplate {
-        return PromptTemplate.fromTemplate(`You are an AI with expertise in OpenApi and Swagger.\n
+        return PromptTemplate.fromTemplate(`You are an AI with expertise in OpenAPI and Swagger.\n
         Always answer the question in the language in which the question was asked.\n
         - Always respond with the URL;\n
         - Never put information or explanations in the answer;\n
-        ${this.input.customizeSystemMessage || ''}
+        ${this._input.customizeSystemMessage || ''}
         -------------------------------------------\n
         SCHEMA: {schema}\n
         -------------------------------------------\n
@@ -48,19 +48,22 @@ export class OpenApiBaseChain extends BaseChain {
     async _call(values: ChainValues, runManager?: CallbackManagerForChainRun): Promise<ChainValues> {
         console.log("Values: ", values);
         console.log("OPENAPI Input: ", values[this.inputKey]);
+
         const question = values[this.inputKey];
-        const schema = this.input.spec;
-        const chain = await createOpenAPIChain(this.input.spec, {
-            llm: this.input.llm,
+        const schema = this._input.spec;
+
+        const chain = await createOpenAPIChain(this._input.spec, {
+            llm: this._input.llm,
             prompt: this.getOpenApiPrompt(),
-            headers: this.input.headers,
-            verbose: true
+            headers: this._input.headers,
+            verbose: true 
         });
+
         const answer = await chain.invoke({ question, schema });
 
         console.log("OPENAPI Resposta: ", answer);
 
-        return { [this.outputKey]: answer };
+        return { [this.outputKey]: answer?.response };
     }
 
     _chainType(): string {
