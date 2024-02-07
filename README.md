@@ -21,17 +21,17 @@ npm install ai-agent
 ### Simple use
 ```javascript
   const agent = new Agent({
-      name: '<name>',
-      systemMesssage: '<a message that will specialize your agent>',
-      llmConfig: {
-        type: '<cloud-provider-llm-service>', // Check availability at <link>
-        model: '<llm-model>',
-        instance: '<instance-name>', // Optional
-        apiKey: '<key-your-llm-service>', // Optional
-      },
-      chatConfig: {
-        temperature: 0,
-      }
+    name: '<name>',
+    systemMesssage: '<a message that will specialize your agent>',
+    llmConfig: {
+      type: '<cloud-provider-llm-service>', // Check availability at <link>
+      model: '<llm-model>',
+      instance: '<instance-name>', // Optional
+      apiKey: '<key-your-llm-service>', // Optional
+    },
+    chatConfig: {
+      temperature: 0,
+    },
   });
 
   agent.on('onMessage', async (message) => {
@@ -49,27 +49,26 @@ When using LLM + Vector stores the Agent finds the documents relevant to the req
 The documents found are used for the context of the Agent.
 ```javascript
   const agent = new Agent({
-      name: '<name>',
-      systemMesssage: '<a message that will specialize your agent>',
-      chatConfig: {
-        temperature: 0,
-      }
-      llmConfig: {
-        type: '<cloud-provider-llm-service>', // Check availability at <link>
-        model: '<llm-model>',
-        instance: '<instance-name>', // Optional
-        apiKey: '<key-your-llm-service>', // Optional
-      },
-      vectorStoreConfig: {
-        type: '<cloud-provider-llm-service>', // Check availability at <link>
-        apiKey: '<your-api-key>', // Optional
-        indexes: ['<index-name>'], // Your indexes name. Optional
-        vectorFieldName: '<vector-base-field>', // Optional
-        name: '<vector-service-name>', // Optional
-        apiVersion: "<api-version>", // Optional
-        model: '<llm-model>' // Optional
-        customFilters: '<custom-filter>' // Optional. Example: 'field-vector-store=(userSessionId)' check at <link>
-      },
+    name: '<name>',
+    systemMesssage: '<a message that will specialize your agent>',
+    chatConfig: {
+      temperature: 0,
+    }
+    llmConfig: {
+      type: '<cloud-provider-llm-service>', // Check availability at <link>
+      model: '<llm-model>',
+      instance: '<instance-name>', // Optional
+      apiKey: '<key-your-llm-service>', // Optional
+    },
+    vectorStoreConfig: {
+      type: '<cloud-provider-llm-service>', // Check availability at <link>
+      apiKey: '<your-api-key>', // Optional
+      indexes: ['<index-name>'], // Your indexes name. Optional
+      vectorFieldName: '<vector-base-field>', // Optional
+      name: '<vector-service-name>', // Optional
+      apiVersion: "<api-version>", // Optional
+      model: '<llm-model>' // Optional
+      customFilters: '<custom-filter>' // Optional. Example: 'field-vector-store=(userSessionId)' check at <link>
     },
   });
 

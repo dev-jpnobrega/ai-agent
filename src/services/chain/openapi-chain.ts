@@ -1,8 +1,9 @@
-import { APIChain, BaseChain } from 'langchain/chains';
+import { BaseChain } from 'langchain/chains';
 import { IOpenAPIConfig } from '../../interface/agent.interface';
 
 import { BaseChatModel } from 'langchain/chat_models/base';
-import { IChain } from './';
+import { OpenApiBaseChain } from './openapi-base-chain';
+import { IChain } from '.';
 
 class OpenAPIChain implements IChain {
   private _settings: IOpenAPIConfig;
@@ -11,8 +12,8 @@ class OpenAPIChain implements IChain {
     this._settings = settings;
   }
 
-  private getHeaders(): any {
-    if (!this._settings.xApiKey && !this._settings.authorization) 
+  private getHeaders(): Record<string, string> | undefined {
+    if (!this._settings.xApiKey && !this._settings.authorization)
       return undefined;
 
     const temp: any = {};
@@ -21,24 +22,18 @@ class OpenAPIChain implements IChain {
       temp['x-api-key'] = this._settings.xApiKey;
 
     if (!this._settings?.authorization)
-      temp['Authorization'] = this._settings.authorization;  
+      temp['Authorization'] = this._settings.authorization;
 
-    return {
-      ...temp,
-    }
+    return { ...temp };
   }
 
   public async create(llm: BaseChatModel, ...args: any): Promise<BaseChain> {
-    const chainOpenAPI = APIChain.fromLLMAndAPIDocs(
+    return new OpenApiBaseChain({
       llm,
-      this._settings.data,
-      {
-        outputKey: 'openAPIResult',
-        headers: this.getHeaders(),
-      },
-    );
-
-    return chainOpenAPI;
+      spec: this._settings.data,
+      customizeSystemMessage: this._settings.customizeSystemMessage || '',
+      headers: this.getHeaders(),
+    });
   }
 }
 
