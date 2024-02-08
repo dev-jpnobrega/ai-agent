@@ -1,19 +1,31 @@
-
+import {
+  BaseChain,
+  SequentialChain,
+  loadQAMapReduceChain,
+} from 'langchain/chains';
 import { BaseChatModel } from 'langchain/chat_models/base';
-import { BaseChain, SequentialChain, loadQAMapReduceChain } from 'langchain/chains';
 
-import { BasePromptTemplate, ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate } from 'langchain/prompts';
+import {
+  BasePromptTemplate,
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  MessagesPlaceholder,
+  SystemMessagePromptTemplate,
+} from 'langchain/prompts';
 
-import { IAgentConfig, SYSTEM_MESSAGE_DEFAULT } from '../../interface/agent.interface';
-import SqlChain from './sql-chain';
+import {
+  IAgentConfig,
+  SYSTEM_MESSAGE_DEFAULT,
+} from '../../interface/agent.interface';
 import OpenAPIChain from './openapi-chain';
+import SqlChain from './sql-chain';
 
 interface IChain {
-  create(llm: BaseChatModel, ...args: any): Promise<BaseChain>
+  create(llm: BaseChatModel, ...args: any): Promise<BaseChain>;
 }
 
 interface IChainService {
-  build(llm: BaseChatModel, ...args: any): Promise<BaseChain>
+  build(llm: BaseChatModel, ...args: any): Promise<BaseChain>;
 }
 
 class ChainService {
@@ -60,12 +72,12 @@ class ChainService {
         --------------------------------------
       `;
     }
-  
+
     if (this._isOpenAPIChainEnabled) {
       builtMessage += `
         --------------------------------------
         API Result: {openAPIResult}\n
-        --------------------------------------        
+        --------------------------------------
       `;
     }
 
@@ -87,12 +99,15 @@ class ChainService {
     return CHAT_COMBINE_PROMPT;
   }
 
-  private async buildChains(llm: BaseChatModel, ...args: any): Promise<BaseChain[]> {
+  private async buildChains(
+    llm: BaseChatModel,
+    ...args: any
+  ): Promise<BaseChain[]> {
     const enabledChains = this.checkEnabledChains(this._settings);
 
     const chainQA = loadQAMapReduceChain(llm, {
       combinePrompt: this.buildPromptTemplate(
-        this._settings.systemMesssage || SYSTEM_MESSAGE_DEFAULT,
+        this._settings.systemMesssage || SYSTEM_MESSAGE_DEFAULT
       ),
     });
 
@@ -106,19 +121,24 @@ class ChainService {
   }
 
   public async build(llm: BaseChatModel, ...args: any): Promise<BaseChain> {
+    const { memoryChat } = args;
     const chains = await this.buildChains(llm, args);
 
     const enhancementChain = new SequentialChain({
       chains,
       inputVariables: [
-        'query', 'referencies', 'input_documents', 'question', 'chat_history',
+        'query',
+        'referencies',
+        'input_documents',
+        'question',
+        'chat_history',
       ],
       verbose: this._settings.debug || false,
+      memory: memoryChat,
     });
-
 
     return enhancementChain;
   }
 }
 
-export { ChainService, IChainService, IChain };
+export { ChainService, IChain, IChainService };

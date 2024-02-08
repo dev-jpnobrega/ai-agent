@@ -18,85 +18,86 @@ export const SYSTEM_MESSAGE_DEFAULT = `
 `;
 
 export interface IDatabaseConfig {
-  type: DATABASE_TYPE,
-  host: string,
-  port: number,
-  ssl?: boolean,
-  sessionId?: string,
-  sessionTTL?: number,
-  username?: string,
-  password?: string,
-  database?: string | number,
-  container?: string,
-  synchronize?: boolean,
+  type: DATABASE_TYPE;
+  host: string;
+  port: number;
+  ssl?: boolean;
+  sessionId?: string;
+  sessionTTL?: number;
+  username?: string;
+  password?: string;
+  database?: string | number;
+  container?: string;
+  synchronize?: boolean;
+  limit?: number;
 }
 
 export interface IDataSourceConfig {
-  dataSource: DataSource,
-  includesTables?: string[],
-  ignoreTables?: string[],
-  customizeSystemMessage?: string,
-  ssl?: boolean,
+  dataSource: DataSource;
+  includesTables?: string[];
+  ignoreTables?: string[];
+  customizeSystemMessage?: string;
+  ssl?: boolean;
 }
 
 export interface IOpenAPIConfig {
-  data: string,
-  customizeSystemMessage?: string,
-  xApiKey?: string,
-  authorization?: string,
+  data: string;
+  customizeSystemMessage?: string;
+  xApiKey?: string;
+  authorization?: string;
 }
 
 export interface IChatConfig {
-  temperature: number,
-  topP?: number,
-  frequencyPenalty?: number,
-  presencePenalty?: number,
-  maxTokens?: number,
+  temperature: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  maxTokens?: number;
 }
 
 export interface ILLMConfig {
-  type: LLM_TYPE,
-  model: string,
-  instance: string,
-  apiKey: string,
-  apiVersion: string,
+  type: LLM_TYPE;
+  model: string;
+  instance: string;
+  apiKey: string;
+  apiVersion: string;
 }
 
 export interface IVectorStoreConfig {
-  name: string,
-  type: LLM_TYPE,
-  apiKey: string,
-  apiVersion: string,
-  indexes: string[] | string,
-  vectorFieldName: string,
-  model?: string,
-  customFilters?: string,
+  name: string;
+  type: LLM_TYPE;
+  apiKey: string;
+  apiVersion: string;
+  indexes: string[] | string;
+  vectorFieldName: string;
+  model?: string;
+  customFilters?: string;
 }
 
 export interface IAgentConfig {
-  name?: string,
-  debug?: boolean,
-  systemMesssage?: string | typeof SYSTEM_MESSAGE_DEFAULT,
+  name?: string;
+  debug?: boolean;
+  systemMesssage?: string | typeof SYSTEM_MESSAGE_DEFAULT;
   llmConfig: ILLMConfig;
-  chatConfig: IChatConfig,
-  dbHistoryConfig?: IDatabaseConfig,
+  chatConfig: IChatConfig;
+  dbHistoryConfig?: IDatabaseConfig;
   vectorStoreConfig?: IVectorStoreConfig;
   dataSourceConfig?: IDataSourceConfig;
   openAPIConfig?: IOpenAPIConfig;
-};
-
-export interface IInputProps {
-  question?: string,
-  userSessionId?: string,
-  chatThreadID?: string,
 }
 
-export interface TModel extends Record<string, unknown> { }
+export interface IInputProps {
+  question?: string;
+  userSessionId?: string;
+  chatThreadID?: string;
+}
+
+export interface TModel extends Record<string, unknown> {}
 
 export interface IAgent {
   call(input: IInputProps): Promise<void>;
 
   emit(event: string, ...args: any[]): void;
 
-  on(eventName: string | symbol, listener: (...args: any[]) => void): this
+  on(eventName: string | symbol, listener: (...args: any[]) => void): this;
 }
