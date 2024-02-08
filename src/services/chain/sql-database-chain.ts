@@ -1,18 +1,26 @@
-import { DEFAULT_SQL_DATABASE_PROMPT, SqlDatabaseChainInput } from "langchain/chains/sql_db";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { SqlDatabase } from "langchain/sql_db";
-import { BaseLanguageModel } from "langchain/dist/base_language";
-import { BaseChain } from "langchain/chains";
-import { ChainValues } from "langchain/schema";
-import { CallbackManagerForChainRun } from "langchain/callbacks";
-import { PromptTemplate } from "langchain/prompts";
-
+import { CallbackManagerForChainRun } from 'langchain/callbacks';
+import { BaseChain } from 'langchain/chains';
+import {
+  DEFAULT_SQL_DATABASE_PROMPT,
+  SqlDatabaseChainInput,
+} from 'langchain/chains/sql_db';
+import { BaseLanguageModel } from 'langchain/dist/base_language';
+import {
+  BasePromptTemplate,
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  MessagesPlaceholder,
+  SystemMessagePromptTemplate,
+} from 'langchain/prompts';
+import { ChainValues } from 'langchain/schema';
+import { StringOutputParser } from 'langchain/schema/output_parser';
+import { RunnableSequence } from 'langchain/schema/runnable';
+import { SqlDatabase } from 'langchain/sql_db';
 
 const MESSAGES_ERRORS = {
   dataTooBig: 'Data result is too big. Please, be more specific.',
   dataEmpty: 'Data result is empty. Please, be more specific.',
-}
+};
 
 /**
  * Class that represents a SQL database chain in the LangChain framework.
@@ -52,9 +60,9 @@ export default class SqlDatabaseChain extends BaseChain {
   // Number of results to return from the query
   topK = 5;
 
-  inputKey = "query";
+  inputKey = 'query';
 
-  outputKey = "result";
+  outputKey = 'result';
 
   customMessage = '';
 
@@ -77,8 +85,8 @@ export default class SqlDatabaseChain extends BaseChain {
     this.customMessage = customMessage || '';
   }
 
-  getSQLPrompt(): PromptTemplate { 
-    return PromptTemplate.fromTemplate(`
+  getSQLPrompt(): string {
+    return `
       Based on the SQL table schema provided below, write an SQL query that answers the user's question.\n
       Your response must only be a valid SQL query, based on the schema provided.\n
       -------------------------------------------\n
@@ -87,24 +95,30 @@ export default class SqlDatabaseChain extends BaseChain {
       -------------------------------------------\n
       SCHEMA: {schema}\n
       -------------------------------------------\n
+      CHAT HISTORY: {chat_history}\n
+      -------------------------------------------\n
       QUESTION: {question}\n
       ------------------------------------------\n
       SQL QUERY:
-    `);
+    `;
   }
-
 
   parserSQL(sql: string) {
     const sqlL = sql.toLowerCase();
 
-    if (sqlL.startsWith('select') || sqlL.startsWith('update') || sqlL.startsWith('delete') || sqlL.startsWith('insert')) {
+    if (
+      sqlL.startsWith('select') ||
+      sqlL.startsWith('update') ||
+      sqlL.startsWith('delete') ||
+      sqlL.startsWith('insert')
+    ) {
       return sql;
     }
 
     if (sqlL.includes('```sql')) {
       const regex = /```(.*?)```/gs;
       const matches = [...sqlL.matchAll(regex)];
-      const codeBlocks = matches.map(match => match[1]);
+      const codeBlocks = matches.map((match) => match[1]);
       const sqlBlock = codeBlocks[0].replace('sql', '');
 
       return sqlBlock;
@@ -117,7 +131,7 @@ export default class SqlDatabaseChain extends BaseChain {
   private async checkResultDatabase(database: SqlDatabase, sql: string) {
     const prepareSql = sql.replace(';', '');
     const prepareCount = `SELECT COUNT(*) as resultCount FROM (${prepareSql}) as tableCount;`;
-    
+
     try {
       const countResult = await database.run(prepareCount);
 
@@ -134,7 +148,23 @@ export default class SqlDatabaseChain extends BaseChain {
     }
   }
 
-  async _call(values: ChainValues, runManager?: CallbackManagerForChainRun): Promise<ChainValues> {
+  private buildPromptTemplate(systemMessages: string): BasePromptTemplate {
+    const combine_messages = [
+      SystemMessagePromptTemplate.fromTemplate(systemMessages),
+      new MessagesPlaceholder('chat_history'),
+      HumanMessagePromptTemplate.fromTemplate('{question}'),
+    ];
+
+    const CHAT_COMBINE_PROMPT =
+      ChatPromptTemplate.fromPromptMessages(combine_messages);
+
+    return CHAT_COMBINE_PROMPT;
+  }
+
+  async _call(
+    values: ChainValues,
+    runManager?: CallbackManagerForChainRun
+  ): Promise<ChainValues> {
     const question: string = values[this.inputKey];
     const table_schema = await this.database.getTableInfo();
 
@@ -142,9 +172,10 @@ export default class SqlDatabaseChain extends BaseChain {
       {
         schema: () => table_schema,
         question: (input: { question: string }) => input.question,
+        chat_history: () => values?.chat_history,
       },
-      this.getSQLPrompt(),
-      this.llm.bind({ stop: ["\nSQLResult:"] })
+      this.buildPromptTemplate(this.getSQLPrompt()),
+      this.llm.bind({ stop: ['\nSQLResult:'] }),
     ]);
 
     const finalChain = RunnableSequence.from([
@@ -173,7 +204,7 @@ export default class SqlDatabaseChain extends BaseChain {
             const queryResult = await this.database.run(sqlParserd);
 
             return queryResult;
-          } catch (error) { 
+          } catch (error) {
             console.error(error);
 
             return error?.message;
@@ -181,7 +212,9 @@ export default class SqlDatabaseChain extends BaseChain {
         },
       },
       {
-        [this.outputKey]: this.prompt.pipe(this.llm).pipe(new StringOutputParser()),
+        [this.outputKey]: this.prompt
+          .pipe(this.llm)
+          .pipe(new StringOutputParser()),
         [this.sqlOutputKey]: (previousStepResult) => {
           return previousStepResult?.query?.content;
         },
@@ -194,7 +227,7 @@ export default class SqlDatabaseChain extends BaseChain {
   }
 
   _chainType(): string {
-    return "sql_chain" as const;
+    return 'sql_chain' as const;
   }
 
   get inputKeys(): string[] {
@@ -206,5 +239,5 @@ export default class SqlDatabaseChain extends BaseChain {
       return [this.outputKey, this.sqlOutputKey];
     }
     return [this.outputKey];
-  }  
+  }
 }
