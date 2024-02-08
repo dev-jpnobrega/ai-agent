@@ -1,17 +1,23 @@
 import { CallbackManagerForChainRun } from 'langchain/callbacks';
-import { BaseChain, createOpenAPIChain } from 'langchain/chains';
+import { BaseChain, ChainInputs, createOpenAPIChain } from 'langchain/chains';
 import { BaseChatModel } from 'langchain/chat_models/base';
 import { BaseFunctionCallOptions } from 'langchain/dist/base_language';
-import { PromptTemplate } from 'langchain/prompts';
+import {
+  BasePromptTemplate,
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  MessagesPlaceholder,
+  SystemMessagePromptTemplate,
+} from 'langchain/prompts';
 import { ChainValues } from 'langchain/schema';
 import type { OpenAPIV3_1 } from 'openapi-types';
 
-export type OpenApiBaseChainInput = {
+export interface OpenApiBaseChainInput extends ChainInputs {
   spec: string | OpenAPIV3_1.Document<{}>;
   llm?: BaseChatModel<BaseFunctionCallOptions>;
   customizeSystemMessage?: string;
   headers: Record<string, string>;
-};
+}
 
 export class OpenApiBaseChain extends BaseChain {
   readonly inputKey = 'query';
@@ -19,7 +25,7 @@ export class OpenApiBaseChain extends BaseChain {
   private _input: OpenApiBaseChainInput;
 
   constructor(input: OpenApiBaseChainInput) {
-    super();
+    super(input);
     this._input = input;
   }
 
@@ -31,8 +37,8 @@ export class OpenApiBaseChain extends BaseChain {
     return [this.outputKey];
   }
 
-  private getOpenApiPrompt(): PromptTemplate {
-    return PromptTemplate.fromTemplate(`You are an AI with expertise in OpenAPI and Swagger.\n
+  private getOpenApiPrompt(): string {
+    return `You are an AI with expertise in OpenAPI and Swagger.\n
         Always answer the question in the language in which the question was asked.\n
         - Always respond with the URL;\n
         - Never put information or explanations in the answer;\n
@@ -44,7 +50,20 @@ export class OpenApiBaseChain extends BaseChain {
         -------------------------------------------\n
         QUESTION: {question}\n
         ------------------------------------------\n
-        API ANSWER:`);
+        API ANSWER:`;
+  }
+
+  private buildPromptTemplate(systemMessages: string): BasePromptTemplate {
+    const combine_messages = [
+      SystemMessagePromptTemplate.fromTemplate(systemMessages),
+      new MessagesPlaceholder('chat_history'),
+      HumanMessagePromptTemplate.fromTemplate('{question}'),
+    ];
+
+    const CHAT_COMBINE_PROMPT =
+      ChatPromptTemplate.fromPromptMessages(combine_messages);
+
+    return CHAT_COMBINE_PROMPT;
   }
 
   async _call(
@@ -59,7 +78,7 @@ export class OpenApiBaseChain extends BaseChain {
 
     const chain = await createOpenAPIChain(this._input.spec, {
       llm: this._input.llm,
-      prompt: this.getOpenApiPrompt(),
+      prompt: this.buildPromptTemplate(this.getOpenApiPrompt()),
       headers: this._input.headers,
       verbose: true,
     });

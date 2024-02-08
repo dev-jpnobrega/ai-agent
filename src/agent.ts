@@ -3,14 +3,20 @@ import { BufferMemory } from 'langchain/memory';
 import { VectorStore } from 'langchain/vectorstores/base';
 
 import AgentBaseCommand from './agent.base';
-import { IAgentConfig, IDatabaseConfig, IInputProps, IAgent, IVectorStoreConfig } from './interface/agent.interface';
+import {
+  IAgent,
+  IAgentConfig,
+  IDatabaseConfig,
+  IInputProps,
+  IVectorStoreConfig,
+} from './interface/agent.interface';
 
-import VectorStoreFactory from './services/vector-store';
-import ChatHistoryFactory from './services/chat-history';
-import LLMFactory from './services/llm';
-import { ChainService, IChainService } from './services/chain';
 import { nanoid } from 'ai';
 import { interpolate } from './helpers/string.helpers';
+import { ChainService, IChainService } from './services/chain';
+import ChatHistoryFactory from './services/chat-history';
+import LLMFactory from './services/llm';
+import VectorStoreFactory from './services/vector-store';
 
 const EVENTS_NAME = {
   onMessage: 'onMessage',
@@ -18,7 +24,7 @@ const EVENTS_NAME = {
   onEnd: 'onEnd',
   onError: 'onError',
   onMessageSystem: 'onMessageSystem',
-  onMessageHuman: 'onMessageHuman'
+  onMessageHuman: 'onMessageHuman',
 };
 
 class Agent extends AgentBaseCommand implements IAgent {
@@ -46,15 +52,23 @@ class Agent extends AgentBaseCommand implements IAgent {
     this._chainService = new ChainService(settings);
 
     if (settings?.vectorStoreConfig)
-      this._vectorService = VectorStoreFactory.create(settings.vectorStoreConfig, settings.llmConfig);
+      this._vectorService = VectorStoreFactory.create(
+        settings.vectorStoreConfig,
+        settings.llmConfig
+      );
   }
 
-  private async buildHistory(userSessionId: string, settings: IDatabaseConfig): Promise<BufferMemory> {
-    if (this._bufferMemory && !settings)
-      return this._bufferMemory;
+  private async buildHistory(
+    userSessionId: string,
+    settings: IDatabaseConfig
+  ): Promise<BufferMemory> {
+    if (this._bufferMemory && !settings) return this._bufferMemory;
 
     if (!this._bufferMemory && !settings) {
-      this._bufferMemory = new BufferMemory({ returnMessages: true, memoryKey: 'chat_history' });
+      this._bufferMemory = new BufferMemory({
+        returnMessages: true,
+        memoryKey: 'chat_history',
+      });
 
       return this._bufferMemory;
     }
@@ -71,17 +85,28 @@ class Agent extends AgentBaseCommand implements IAgent {
     return this._bufferMemory;
   }
 
-  private async buildRelevantDocs(args: IInputProps, settings: IVectorStoreConfig): Promise<any> {
+  private async buildRelevantDocs(
+    args: IInputProps,
+    settings: IVectorStoreConfig
+  ): Promise<any> {
     if (!settings) return { relevantDocs: [], referenciesDocs: [] };
 
     const { customFilters = null } = settings;
 
-    const relevantDocs = await this._vectorService.similaritySearch(args.question, 10, {
-      vectorFields: settings.vectorFieldName,
-      filter: customFilters ? interpolate<IInputProps>(customFilters, args) : '',
-    });
+    const relevantDocs = await this._vectorService.similaritySearch(
+      args.question,
+      10,
+      {
+        vectorFields: settings.vectorFieldName,
+        filter: customFilters
+          ? interpolate<IInputProps>(customFilters, args)
+          : '',
+      }
+    );
 
-    const referenciesDocs = relevantDocs.map((doc: { metadata: unknown; }) => doc.metadata).join(', ');
+    const referenciesDocs = relevantDocs
+      .map((doc: { metadata: unknown }) => doc.metadata)
+      .join(', ');
 
     return { relevantDocs, referenciesDocs };
   }
@@ -90,20 +115,33 @@ class Agent extends AgentBaseCommand implements IAgent {
     const { question, chatThreadID } = args;
 
     try {
-      const memoryChat = await this.buildHistory(chatThreadID, this._settings.dbHistoryConfig);
+      const memoryChat = await this.buildHistory(
+        chatThreadID,
+        this._settings.dbHistoryConfig
+      );
 
       memoryChat.chatHistory?.addUserMessage(question);
 
-      const { relevantDocs, referenciesDocs } = await this.buildRelevantDocs(args, this._settings.vectorStoreConfig);
+      const { relevantDocs, referenciesDocs } = await this.buildRelevantDocs(
+        args,
+        this._settings.vectorStoreConfig
+      );
 
-      const chain = await this._chainService.build(this._llm, question);
+      const chain = await this._chainService.build(
+        this._llm,
+        question,
+        memoryChat
+      );
+      const chat_history = await memoryChat.chatHistory?.getMessages();
 
       const result = await chain.call({
         referencies: referenciesDocs,
         input_documents: relevantDocs,
         query: question,
         question: question,
-        chat_history: await memoryChat.chatHistory?.getMessages(),
+        chat_history: chat_history?.slice(
+          -(this._settings?.dbHistoryConfig?.limit || 5)
+        ),
       });
 
       await memoryChat.chatHistory?.addAIChatMessage(result?.text);
@@ -123,6 +161,5 @@ class Agent extends AgentBaseCommand implements IAgent {
     throw new Error(args);
   }
 }
-
 
 export default Agent;
