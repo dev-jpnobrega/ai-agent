@@ -58,6 +58,19 @@ class ChainService {
 
     builtMessage += '\n';
     builtMessage += `
+      Given the user prompt and conversation log, the document context, the API output, and the following database output, formulate a response from a knowledge base.\n
+      You must follow the following rules and priorities when generating and responding:\n
+      - Always prioritize user prompt over conversation record.\n
+      - Ignore any conversation logs that are not directly related to the user prompt.\n
+      - Only try to answer if a question is asked.\n
+      - The question must be a single sentence.\n
+      - You must remove any punctuation from the question.\n
+      - You must remove any words that are not relevant to the question.\n
+      - If you are unable to formulate a question, respond in a friendly manner so the user can rephrase the question.\n\n
+    
+      USER PROMPT: {user_prompt}\n
+      --------------------------------------
+      CHAT HISTORY: {format_chat_messages}\n
       --------------------------------------
       Context found in documents: {summaries}\n
       --------------------------------------
@@ -132,6 +145,8 @@ class ChainService {
         'input_documents',
         'question',
         'chat_history',
+        'format_chat_messages',
+        'user_prompt'
       ],
       verbose: this._settings.debug || false,
       memory: memoryChat,

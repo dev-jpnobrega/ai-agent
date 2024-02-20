@@ -91,11 +91,12 @@ export default class SqlDatabaseChain extends BaseChain {
       Your response must only be a valid SQL query, based on the schema provided.\n
       -------------------------------------------\n
       Here are some important observations for generating the query:\n
+      - Only execute the request on the service if the question is not in CHAT HISTORY, if the question has already been answered, use the same answer and do not make a query on the database.
       ${this.customMessage}\n
       -------------------------------------------\n
       SCHEMA: {schema}\n
       -------------------------------------------\n
-      CHAT HISTORY: {chat_history}\n
+      CHAT HISTORY: {format_chat_messages}\n
       -------------------------------------------\n
       QUESTION: {question}\n
       ------------------------------------------\n
@@ -123,8 +124,7 @@ export default class SqlDatabaseChain extends BaseChain {
 
       return sqlBlock;
     }
-
-    throw new Error(MESSAGES_ERRORS.dataEmpty);
+    return;
   }
 
   // TODO: check implementation for big data
@@ -173,6 +173,7 @@ export default class SqlDatabaseChain extends BaseChain {
         schema: () => table_schema,
         question: (input: { question: string }) => input.question,
         chat_history: () => values?.chat_history,
+        format_chat_messages: () => values?.format_chat_messages,
       },
       this.buildPromptTemplate(this.getSQLPrompt()),
       this.llm.bind({ stop: ['\nSQLResult:'] }),
@@ -190,12 +191,12 @@ export default class SqlDatabaseChain extends BaseChain {
         question: (input) => input.question,
         query: (input) => input.query,
         response: async (input) => {
-          const sql = input.query.content;
+          const text = input.query.content;
 
           try {
-            const sqlParserd = this.parserSQL(sql);
+            const sqlParserd = this.parserSQL(text);
 
-            if (!sqlParserd) return null;
+            if (!sqlParserd) return text;
 
             console.log(`SQL`, sqlParserd);
 
