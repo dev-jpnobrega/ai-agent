@@ -10,7 +10,7 @@ interface IChatHistory  {
   addUserMessage(message: string): Promise<void>;
   addAIChatMessage(message: string): Promise<void>;
   getMessages(): Promise<BaseMessage[]>;
-  getFormatedMessages(): Promise<string>;
+  getFormatedMessages(messages: BaseMessage[]): string;
   clear(): Promise<void>;
   getChatHistory(): BaseChatMessageHistory;
   getBufferMemory(): BufferMemory;

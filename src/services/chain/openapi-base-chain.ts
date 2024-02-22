@@ -23,10 +23,12 @@ export class OpenApiBaseChain extends BaseChain {
   readonly inputKey = 'query';
   readonly outputKey = 'openAPIResult';
   private _input: OpenApiBaseChainInput;
+  private _logger: Console;
 
   constructor(input: OpenApiBaseChainInput) {
     super(input);
     this._input = input;
+    this._logger = console;
   }
 
   get inputKeys(): string[] {
@@ -38,21 +40,23 @@ export class OpenApiBaseChain extends BaseChain {
   }
 
   private getOpenApiPrompt(): string {
-    return `You are an AI with expertise in OpenAPI and Swagger.\n
-        You should follow the following rules when generating and answer:\n
-        - Only execute the request on the service if the question is not in CHAT HISTORY, if the question has already been answered, use the same answer and do not make a request on the service.
-        - Only attempt to answer if a question was posed.\n
-        - Always answer the question in the language in which the question was asked.\n\n
-        -------------------------------------------
-        USER PROMPT: ${this._input.customizeSystemMessage || ''}
-        -------------------------------------------\n
-        SCHEMA: {schema}\n
-        -------------------------------------------\n
-        CHAT HISTORY: {format_chat_messages}\n
-        -------------------------------------------\n
-        QUESTION: {question}\n
-        ------------------------------------------\n
-        API ANSWER:`;
+    return `
+      You are an AI with expertise in OpenAPI and Swagger.\n
+      You should follow the following rules when generating and answer:\n
+      - Only execute the request on the service if the question is not in CHAT HISTORY, if the question has already been answered, use the same answer and do not make a request on the service.
+      - Only attempt to answer if a question was posed.\n
+      - Always answer the question in the language in which the question was asked.\n\n
+      -------------------------------------------\n
+      USER PROMPT: {user_prompt}\n
+      -------------------------------------------\n
+      SCHEMA: {schema}\n
+      -------------------------------------------\n
+      CHAT HISTORY: {format_chat_messages}\n
+      -------------------------------------------\n
+      QUESTION: {question}\n
+      ------------------------------------------\n
+      API ANSWER:
+    `;
   }
 
   private buildPromptTemplate(systemMessages: string): BasePromptTemplate {
@@ -83,13 +87,12 @@ export class OpenApiBaseChain extends BaseChain {
     return text;
   }
 
-
   async _call(
     values: ChainValues,
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
-    console.log('Values: ', values);
-    console.log('OPENAPI Input: ', values[this.inputKey]);
+    this._logger.log('Values: ', values);
+    this._logger.log('OPENAPI Input: ', values[this.inputKey]);
 
     const question = values[this.inputKey];
     const schema = this._input.spec;
@@ -109,13 +112,14 @@ export class OpenApiBaseChain extends BaseChain {
         schema,
         chat_history: values?.chat_history,
         format_chat_messages: values?.format_chat_messages,
+        user_prompt: this._input.customizeSystemMessage || '',
       });
   
-      console.log('OPENAPI Resposta: ', answer);
+      this._logger.log('OPENAPI Resposta: ', answer);
   
       answer = rs?.response;
     } catch (error) {
-      console.error('OPENAPI Error: ', error);
+      this._logger.error('OPENAPI Error: ', error);
 
       answer = this.tryParseText(error?.message);
     } finally { 

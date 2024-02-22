@@ -91,8 +91,8 @@ export default class SqlDatabaseChain extends BaseChain {
       Your response must only be a valid SQL query, based on the schema provided.\n
       -------------------------------------------\n
       Here are some important observations for generating the query:\n
-      - Only execute the request on the service if the question is not in CHAT HISTORY, if the question has already been answered, use the same answer and do not make a query on the database.
-      ${this.customMessage}\n
+      - Only execute the request on the service if the question is not in CHAT HISTORY, if the question has already been answered, use the same answer and do not make a query on the database.\n
+      {user_prompt}\n
       -------------------------------------------\n
       SCHEMA: {schema}\n
       -------------------------------------------\n
@@ -174,6 +174,7 @@ export default class SqlDatabaseChain extends BaseChain {
         question: (input: { question: string }) => input.question,
         chat_history: () => values?.chat_history,
         format_chat_messages: () => values?.format_chat_messages,
+        user_prompt: () => this.customMessage,
       },
       this.buildPromptTemplate(this.getSQLPrompt()),
       this.llm.bind({ stop: ['\nSQLResult:'] }),
