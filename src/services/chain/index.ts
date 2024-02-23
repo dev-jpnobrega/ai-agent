@@ -13,6 +13,7 @@ import {
   SystemMessagePromptTemplate,
 } from 'langchain/prompts';
 
+import { AIMessage } from 'langchain/schema';
 import {
   IAgentConfig,
   SYSTEM_MESSAGE_DEFAULT,
@@ -90,11 +91,12 @@ class ChainService {
         this.buildSystemMessages(systemMessages)
       ),
       new MessagesPlaceholder('chat_history'),
+      new AIMessage('Olá! Em que posso ajudar?'),
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ];
 
     const CHAT_COMBINE_PROMPT =
-      ChatPromptTemplate.fromPromptMessages(combine_messages);
+      ChatPromptTemplate.fromMessages(combine_messages);
 
     return CHAT_COMBINE_PROMPT;
   }

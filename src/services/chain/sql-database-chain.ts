@@ -12,7 +12,7 @@ import {
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
 } from 'langchain/prompts';
-import { ChainValues } from 'langchain/schema';
+import { AIMessage, ChainValues } from 'langchain/schema';
 import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnableSequence } from 'langchain/schema/runnable';
 import { SqlDatabase } from 'langchain/sql_db';
@@ -88,6 +88,7 @@ export default class SqlDatabaseChain extends BaseChain {
   getSQLPrompt(): string {
     return `
       Based on the SQL table schema provided below, write an SQL query that answers the user's question.\n
+      Remeber to put double quotes around database table names\n
       Your response must only be a valid SQL query, based on the schema provided.\n
       -------------------------------------------\n
       Here are some important observations for generating the query:\n
@@ -152,6 +153,7 @@ export default class SqlDatabaseChain extends BaseChain {
     const combine_messages = [
       SystemMessagePromptTemplate.fromTemplate(systemMessages),
       new MessagesPlaceholder('chat_history'),
+      new AIMessage('Aguarde! Estamos pesquisando em nossa base de dados.'),
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ];
 

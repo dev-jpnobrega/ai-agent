@@ -33,6 +33,7 @@
     "node": ">=16"
   },
   "dependencies": {
+    "@langchain/google-genai": "^0.0.10",
     "ai": "^2.2.10",
     "ioredis": "^5.3.2",
     "langchain": "^0.0.178",
