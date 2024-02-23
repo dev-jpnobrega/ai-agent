@@ -88,7 +88,7 @@ export default class SqlDatabaseChain extends BaseChain {
   getSQLPrompt(): string {
     return `
       Based on the SQL table schema provided below, write an SQL query that answers the user's question.\n
-      Remeber to put double quotes around database table names\n
+      Remember to put double quotes around database table names\n
       Your response must only be a valid SQL query, based on the schema provided.\n
       -------------------------------------------\n
       Here are some important observations for generating the query:\n
