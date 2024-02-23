@@ -61,6 +61,7 @@ export interface ILLMConfig {
   instance?: string;
   apiKey: string;
   apiVersion?: string;
+  maxOutputTokens?: number;
 }
 
 export interface IVectorStoreConfig {
