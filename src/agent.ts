@@ -14,9 +14,10 @@ import {
 import { nanoid } from 'ai';
 import { interpolate } from './helpers/string.helpers';
 import { ChainService, IChainService } from './services/chain';
-import ChatHistoryFactory from './services/chat-history';
+import { ChatHistoryFactory, IChatHistory } from './services/chat-history';
 import LLMFactory from './services/llm';
 import VectorStoreFactory from './services/vector-store';
+import { BaseMessage } from 'langchain/schema';
 
 const EVENTS_NAME = {
   onMessage: 'onMessage',
@@ -33,6 +34,9 @@ class Agent extends AgentBaseCommand implements IAgent {
   private _vectorService: VectorStore;
 
   private _chainService: IChainService;
+
+
+  private _chatHistory: IChatHistory;
   private _bufferMemory: BufferMemory;
   private _logger: Console;
   private _settings: IAgentConfig;
@@ -61,28 +65,15 @@ class Agent extends AgentBaseCommand implements IAgent {
   private async buildHistory(
     userSessionId: string,
     settings: IDatabaseConfig
-  ): Promise<BufferMemory> {
-    if (this._bufferMemory && !settings) return this._bufferMemory;
+  ): Promise<IChatHistory> {
+    if (this._chatHistory) return this._chatHistory;
 
-    if (!this._bufferMemory && !settings) {
-      this._bufferMemory = new BufferMemory({
-        returnMessages: true,
-        memoryKey: 'chat_history',
-      });
+    this._chatHistory = await ChatHistoryFactory.create({
+      ...settings,
+      sessionId: userSessionId || nanoid(), // TODO
+    })
 
-      return this._bufferMemory;
-    }
-
-    this._bufferMemory = new BufferMemory({
-      returnMessages: true,
-      memoryKey: 'chat_history',
-      chatHistory: await ChatHistoryFactory.create({
-        ...settings,
-        sessionId: userSessionId || nanoid(), // TODO
-      }),
-    });
-
-    return this._bufferMemory;
+    return this._chatHistory;
   }
 
   private async buildRelevantDocs(
@@ -115,12 +106,10 @@ class Agent extends AgentBaseCommand implements IAgent {
     const { question, chatThreadID } = args;
 
     try {
-      const memoryChat = await this.buildHistory(
+      const chatHistory = await this.buildHistory(
         chatThreadID,
         this._settings.dbHistoryConfig
       );
-
-      memoryChat.chatHistory?.addUserMessage(question);
 
       const { relevantDocs, referenciesDocs } = await this.buildRelevantDocs(
         args,
@@ -130,21 +119,23 @@ class Agent extends AgentBaseCommand implements IAgent {
       const chain = await this._chainService.build(
         this._llm,
         question,
-        memoryChat
+        chatHistory.getBufferMemory(),
       );
-      const chat_history = await memoryChat.chatHistory?.getMessages();
+
+      const chatMessages = await chatHistory.getMessages();
 
       const result = await chain.call({
         referencies: referenciesDocs,
         input_documents: relevantDocs,
         query: question,
         question: question,
-        chat_history: chat_history?.slice(
-          -(this._settings?.dbHistoryConfig?.limit || 5)
-        ),
+        chat_history: chatMessages,
+        format_chat_messages: chatHistory.getFormatedMessages(chatMessages),
+        user_prompt: this._settings.systemMesssage,
       });
 
-      await memoryChat.chatHistory?.addAIChatMessage(result?.text);
+      await chatHistory.addUserMessage(question);
+      await chatHistory.addAIChatMessage(result?.text);
 
       this.emit(EVENTS_NAME.onMessage, result?.text);
 
@@ -155,6 +146,15 @@ class Agent extends AgentBaseCommand implements IAgent {
     } finally {
       return;
     }
+  }
+
+  getMessageFormat(messages: BaseMessage[]): string {
+    const cut = messages
+      .slice(-(this._settings?.dbHistoryConfig?.limit || 5));
+
+    const formated = cut.map((message) => `${message._getType().toUpperCase()}: ${message.content}`).join('\n');
+
+    return formated;
   }
 
   execute(args: any): Promise<void> {

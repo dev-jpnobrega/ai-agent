@@ -53,7 +53,7 @@ The documents found are used for the context of the Agent.
     systemMesssage: '<a message that will specialize your agent>',
     chatConfig: {
       temperature: 0,
-    }
+    },
     llmConfig: {
       type: '<cloud-provider-llm-service>', // Check availability at <link>
       model: '<llm-model>',
