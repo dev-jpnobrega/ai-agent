@@ -153,7 +153,7 @@ export default class SqlDatabaseChain extends BaseChain {
     const combine_messages = [
       SystemMessagePromptTemplate.fromTemplate(systemMessages),
       new MessagesPlaceholder('chat_history'),
-      new AIMessage('Aguarde! Estamos pesquisando em nossa base de dados.'),
+      new AIMessage('Wait! We are searching our database.'),
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ];
 

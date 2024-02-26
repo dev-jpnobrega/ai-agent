@@ -68,7 +68,7 @@ class ChainService {
       - You must remove any punctuation from the question.\n
       - You must remove any words that are not relevant to the question.\n
       - If you are unable to formulate a question, respond in a friendly manner so the user can rephrase the question.\n\n
-    
+
       USER PROMPT: {user_prompt}\n
       --------------------------------------
       CHAT HISTORY: {format_chat_messages}\n
@@ -104,7 +104,7 @@ class ChainService {
         this.buildSystemMessages(systemMessages)
       ),
       new MessagesPlaceholder('chat_history'),
-      new AIMessage('Olá! Em que posso ajudar?'),
+      new AIMessage('Hello! How can I help?'),
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ];
 
@@ -148,7 +148,7 @@ class ChainService {
         'question',
         'chat_history',
         'format_chat_messages',
-        'user_prompt'
+        'user_prompt',
       ],
       verbose: this._settings.debug || false,
       memory: memoryChat,

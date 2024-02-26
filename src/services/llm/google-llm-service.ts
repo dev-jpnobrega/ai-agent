@@ -15,7 +15,7 @@ class GoogleLLMService {
       temperature: this._chatSettings.temperature,
       modelName: this._llmSettings.model,
       apiKey: this._llmSettings.apiKey,
-      maxOutputTokens: this._llmSettings.maxOutputTokens || 2048,
+      maxOutputTokens: this._chatSettings.maxTokens || 2048,
       streaming: true,
     });
   }
