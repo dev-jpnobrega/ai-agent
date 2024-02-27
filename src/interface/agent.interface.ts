@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 
-export type LLM_TYPE = 'azure' | 'gpt' | 'aws';
+export type LLM_TYPE = 'azure' | 'gpt' | 'aws' | 'google';
 export type DATABASE_TYPE = 'cosmos' | 'redis' | 'postgres';
 
 export const SYSTEM_MESSAGE_DEFAULT = `
@@ -58,9 +58,9 @@ export interface IChatConfig {
 export interface ILLMConfig {
   type: LLM_TYPE;
   model: string;
-  instance: string;
+  instance?: string;
   apiKey: string;
-  apiVersion: string;
+  apiVersion?: string;
 }
 
 export interface IVectorStoreConfig {
