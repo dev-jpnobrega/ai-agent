@@ -60,7 +60,10 @@ export interface ILLMConfig {
   model: string;
   instance?: string;
   apiKey: string;
-  apiVersion?: string;
+  apiVersion: string;
+  secretAccessKey?: string;
+  sessionToken?: string;
+  region?: string;
 }
 
 export interface IVectorStoreConfig {
