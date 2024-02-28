@@ -12,7 +12,7 @@ import {
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
 } from 'langchain/prompts';
-import { ChainValues } from 'langchain/schema';
+import { AIMessage, ChainValues } from 'langchain/schema';
 import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnableSequence } from 'langchain/schema/runnable';
 import { SqlDatabase } from 'langchain/sql_db';
@@ -89,6 +89,7 @@ export default class SqlDatabaseChain extends BaseChain {
     return `
       Based on the SQL table schema provided below, write an SQL query that answers the user's question.\n
       Your response must only be a valid SQL query, based on the schema provided.\n
+      Remember to put double quotes around database table names.\n
       -------------------------------------------\n
       Here are some important observations for generating the query:\n
       - Only execute the request on the service if the question is not in CHAT HISTORY, if the question has already been answered, use the same answer and do not make a query on the database.\n
@@ -152,6 +153,7 @@ export default class SqlDatabaseChain extends BaseChain {
     const combine_messages = [
       SystemMessagePromptTemplate.fromTemplate(systemMessages),
       new MessagesPlaceholder('chat_history'),
+      new AIMessage('Wait! We are searching our database.'),
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ];
 
