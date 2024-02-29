@@ -45,6 +45,7 @@ export interface IOpenAPIConfig {
   customizeSystemMessage?: string;
   xApiKey?: string;
   authorization?: string;
+  timeout?: number;
 }
 
 export interface IChatConfig {

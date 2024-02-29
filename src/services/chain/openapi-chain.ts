@@ -2,8 +2,8 @@ import { BaseChain } from 'langchain/chains';
 import { IOpenAPIConfig } from '../../interface/agent.interface';
 
 import { BaseChatModel } from 'langchain/chat_models/base';
-import { OpenApiBaseChain } from './openapi-base-chain';
 import { IChain } from '.';
+import { OpenApiBaseChain } from './openapi-base-chain';
 
 class OpenAPIChain implements IChain {
   private _settings: IOpenAPIConfig;
@@ -18,8 +18,7 @@ class OpenAPIChain implements IChain {
 
     const temp: any = {};
 
-    if (!this._settings?.xApiKey)
-      temp['x-api-key'] = this._settings.xApiKey;
+    if (!this._settings?.xApiKey) temp['x-api-key'] = this._settings.xApiKey;
 
     if (!this._settings?.authorization)
       temp['Authorization'] = this._settings.authorization;
@@ -31,6 +30,7 @@ class OpenAPIChain implements IChain {
     return new OpenApiBaseChain({
       llm,
       spec: this._settings.data,
+      timeout: this._settings.timeout,
       customizeSystemMessage: this._settings.customizeSystemMessage || '',
       headers: this.getHeaders(),
     });
