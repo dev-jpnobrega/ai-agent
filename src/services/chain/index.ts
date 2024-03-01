@@ -13,7 +13,6 @@ import {
   SystemMessagePromptTemplate,
 } from 'langchain/prompts';
 
-import { AIMessage } from 'langchain/schema';
 import {
   IAgentConfig,
   SYSTEM_MESSAGE_DEFAULT,
@@ -104,7 +103,6 @@ class ChainService {
         this.buildSystemMessages(systemMessages)
       ),
       new MessagesPlaceholder('chat_history'),
-      new AIMessage('Hello! How can I help?'),
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ];
 

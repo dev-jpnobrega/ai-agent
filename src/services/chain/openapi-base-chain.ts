@@ -59,7 +59,7 @@ export class OpenApiBaseChain extends BaseChain {
       - Only execute the request on the service if the question is not in CHAT HISTORY, if the question has already been answered, use the same answer and do not make a request on the service.
       - Only attempt to answer if a question was posed.\n
       - Always answer the question in the language in which the question was asked.\n
-      - The response must be an json object contains an url, contentType, requestMethod and data.\n\n
+      - The response must be a json object contains an url, contentType, requestMethod and data.\n\n
       -------------------------------------------\n
       USER PROMPT: {user_prompt}\n
       -------------------------------------------\n
@@ -183,18 +183,22 @@ export class OpenApiBaseChain extends BaseChain {
         question: (input) => input.question,
         query: (input) => input.query,
         response: async (input) => {
-          const request: IRequest = JSON.parse(
-            input.query.content.replace('```json', '').replace('```', '')
-          );
-          return await this.fetchOpenAPI(
-            request,
-            this._input.timeout || 120000
-          );
+          try {
+            const request: IRequest = JSON.parse(
+              input.query.content.replace('```json', '').replace('```', '')
+            );
+            return await this.fetchOpenAPI(
+              request,
+              this._input.timeout || 180000
+            );
+          } catch (error) {
+            console.error(error);
+          }
         },
       },
       {
         [this.outputKey]: (previousStepResult) => {
-          return previousStepResult.response.body;
+          return previousStepResult?.response?.body;
         },
       },
     ]);

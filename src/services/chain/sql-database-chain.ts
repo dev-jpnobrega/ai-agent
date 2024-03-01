@@ -12,7 +12,7 @@ import {
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
 } from 'langchain/prompts';
-import { AIMessage, ChainValues } from 'langchain/schema';
+import { ChainValues } from 'langchain/schema';
 import { StringOutputParser } from 'langchain/schema/output_parser';
 import { RunnableSequence } from 'langchain/schema/runnable';
 import { SqlDatabase } from 'langchain/sql_db';
@@ -153,7 +153,6 @@ export default class SqlDatabaseChain extends BaseChain {
     const combine_messages = [
       SystemMessagePromptTemplate.fromTemplate(systemMessages),
       new MessagesPlaceholder('chat_history'),
-      new AIMessage('Wait! We are searching our database.'),
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ];
 
