@@ -12,11 +12,14 @@ const ServiceLLM = {
 } as any;
 
 class LLMFactory {
-  public static create(
+  public static async create(
     chatSettings: IChatConfig,
     llmSettings: ILLMConfig
-  ): BaseChatModel {
-    return new ServiceLLM[llmSettings.type](chatSettings, llmSettings).build();
+  ): Promise<BaseChatModel> {
+    
+    const serviceModule = await import(`./${llmSettings.type}-llm-service`);
+    const LLMServiceClass = serviceModule.default;
+    return new LLMServiceClass(chatSettings, llmSettings).build();
   }
 }
 

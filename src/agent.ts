@@ -52,7 +52,11 @@ class Agent extends AgentBaseCommand implements IAgent {
 
   private setup(settings: IAgentConfig): void {
     this._name = settings?.name || 'AssistentAgent';
-    this._llm = LLMFactory.create(settings.chatConfig, settings.llmConfig);
+    LLMFactory.create(settings.chatConfig, settings.llmConfig).then(
+      (llm: BaseChatModel) => {
+        this._llm = llm;
+      }
+    )
     this._chainService = new ChainService(settings);
 
     if (settings?.vectorStoreConfig)
