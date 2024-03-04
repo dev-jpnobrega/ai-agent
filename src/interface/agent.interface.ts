@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 
-export type LLM_TYPE = 'azure' | 'gpt' | 'aws' | 'google';
+export type LLM_TYPE = 'azure' | 'gpt' | 'bedrock' | 'google';
 export type DATABASE_TYPE = 'cosmos' | 'redis' | 'postgres';
 
 export const SYSTEM_MESSAGE_DEFAULT = `
@@ -67,14 +67,18 @@ export interface ILLMConfig {
 }
 
 export interface IVectorStoreConfig {
-  name: string;
   type: LLM_TYPE;
-  apiKey: string;
-  apiVersion: string;
   indexes: string[] | string;
-  vectorFieldName: string;
+  name?: string;
+  apiKey?: string;
+  apiVersion?: string;
+  vectorFieldName?: string;
   model?: string;
   customFilters?: string;
+  embedding_model_id?: string,
+  temperature?: number,
+  max_tokens_to_sample?: number,
+  clientUrl: string
 }
 
 export interface IAgentConfig {

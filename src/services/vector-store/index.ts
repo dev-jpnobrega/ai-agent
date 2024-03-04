@@ -4,20 +4,31 @@ import { AwsOpenSearch } from './aws-vector-store';
 import { ILLMConfig, IVectorStoreConfig, LLM_TYPE } from '../../interface/agent.interface';
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 import { BedrockEmbeddings } from 'langchain/embeddings/bedrock';
+import { CredentialType } from 'langchain/dist/util/bedrock';
 
 const ServiceEmbeddings = {
   azure: OpenAIEmbeddings,
-  aws: BedrockEmbeddings,
+  bedrock: BedrockEmbeddings,
 } as any;
 
 const ServiceVectores = {
   azure: AzureCogSearch,
-  aws: AwsOpenSearch,
+  bedrock: AwsOpenSearch,
 } as any;
 
 
-const typeSpecificConfigs = (llmSettings: ILLMConfig, type: LLM_TYPE) => {
+const typeSpecificConfigs = (settings: IVectorStoreConfig, llmSettings: ILLMConfig) => {
   
+  const credentials: CredentialType = {
+    accessKeyId: llmSettings.apiKey,
+    secretAccessKey: llmSettings.secretAccessKey,
+    sessionToken: llmSettings.sessionToken,
+  }
+
+ /*  const client: BedrockRuntimeClient = new BedrockRuntimeClient({
+    
+  }) */
+
   // alterar para switch
   let configs = {
     azure: {
@@ -26,14 +37,11 @@ const typeSpecificConfigs = (llmSettings: ILLMConfig, type: LLM_TYPE) => {
       azureOpenAIApiInstanceName: llmSettings.instance,
       azureOpenAIApiDeploymentName: llmSettings.model,
     },
-    aws: {
-      model: llmSettings.model,
+    bedrock: {
+      model: settings.model,
+      client: '',
       region: llmSettings.region,
-      credentials: {
-        accessKeyId: llmSettings.apiKey,
-        secretAccessKey: llmSettings.secretAccessKey,
-        sessionToken: llmSettings.sessionToken
-      },
+      credentials: credentials
     },
     gpt: {
     },
@@ -43,19 +51,22 @@ const typeSpecificConfigs = (llmSettings: ILLMConfig, type: LLM_TYPE) => {
     },
   }
 
-  return configs[type] as any;
+  return configs[settings.type] as any;
 };
 
 class VectorStoreFactory {
 
   public static create(settings: IVectorStoreConfig, llmSettings: ILLMConfig): VectorStore {
+    
+    const typeConfig = typeSpecificConfigs(settings, llmSettings)
 
-    const typeConfig = typeSpecificConfigs(llmSettings, settings.type)
-
+    console.log('[typeConfig]', typeConfig)
+    
     const embedding = new ServiceEmbeddings[settings.type]({
       ...llmSettings,
       ...typeConfig,
     });
+    console.log('[embedding - VectorStoreFactory]', embedding)
 
     const service = new ServiceVectores[settings.type](
       embedding,
