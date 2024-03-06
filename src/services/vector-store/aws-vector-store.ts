@@ -153,7 +153,7 @@ export class AwsOpenSearch<TModel extends Record<string, unknown>> extends Vecto
       indexName: this._config.indexes[0],
     });
 
-    const results = vectorStore.similaritySearch(query, 10, {
+    const results = await vectorStore.similaritySearch(query, 10, {
       vectorFieldName: 'embedding'
     });
 
