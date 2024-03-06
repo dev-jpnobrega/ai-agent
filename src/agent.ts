@@ -88,6 +88,8 @@ class Agent extends AgentBaseCommand implements IAgent {
 
     const { customFilters = null } = settings;
 
+    const response = await this._vectorService.asRetriever(10);
+
     const relevantDocs = await this._vectorService.similaritySearch(
       args.question,
       10,

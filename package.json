@@ -46,6 +46,7 @@
     "@smithy/util-utf8": "^2.1.1",
     "ai": "^2.2.10",
     "aws-sdk": "^2.1569.0",
+    "dotenv": "^16.4.5",
     "ioredis": "^5.3.2",
     "langchain": "^0.0.178",
     "openapi-types": "^12.1.3",

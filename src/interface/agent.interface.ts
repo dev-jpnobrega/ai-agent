@@ -75,10 +75,10 @@ export interface IVectorStoreConfig {
   vectorFieldName?: string;
   model?: string;
   customFilters?: string;
-  embedding_model_id?: string,
-  temperature?: number,
-  max_tokens_to_sample?: number,
-  clientUrl: string
+  accessKey?: string;
+  secretAccessKey?: string;
+  sessionToken?: string;
+  customizeSystemMessage?: string;
 }
 
 export interface IAgentConfig {
@@ -99,7 +99,7 @@ export interface IInputProps {
   chatThreadID?: string;
 }
 
-export interface TModel extends Record<string, unknown> {}
+export interface TModel extends Record<string, unknown> { }
 
 export interface IAgent {
   call(input: IInputProps): Promise<void>;

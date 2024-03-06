@@ -5,6 +5,15 @@ import { ILLMConfig, IVectorStoreConfig, LLM_TYPE } from '../../interface/agent.
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 import { BedrockEmbeddings } from 'langchain/embeddings/bedrock';
 import { CredentialType } from 'langchain/dist/util/bedrock';
+import { BedrockRuntimeClient } from '@aws-sdk/client-bedrock-runtime';
+import { Client } from '@opensearch-project/opensearch/.';
+import { ChatBedrock } from 'langchain/chat_models/bedrock';
+import AWS from 'aws-sdk';
+import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
+
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const ServiceEmbeddings = {
   azure: OpenAIEmbeddings,
@@ -19,17 +28,11 @@ const ServiceVectores = {
 
 const typeSpecificConfigs = (settings: IVectorStoreConfig, llmSettings: ILLMConfig) => {
   
-  const credentials: CredentialType = {
-    accessKeyId: llmSettings.apiKey,
-    secretAccessKey: llmSettings.secretAccessKey,
-    sessionToken: llmSettings.sessionToken,
-  }
+  const bedrockClient = new BedrockRuntimeClient({
+    region: "us-east-1",
+  });
 
- /*  const client: BedrockRuntimeClient = new BedrockRuntimeClient({
-    
-  }) */
-
-  // alterar para switch
+  // TODO: alterar para switch
   let configs = {
     azure: {
       azureOpenAIApiVersion: llmSettings.apiVersion,
@@ -39,9 +42,8 @@ const typeSpecificConfigs = (settings: IVectorStoreConfig, llmSettings: ILLMConf
     },
     bedrock: {
       model: settings.model,
-      client: '',
+      client: bedrockClient,
       region: llmSettings.region,
-      credentials: credentials
     },
     gpt: {
     },
@@ -71,6 +73,7 @@ class VectorStoreFactory {
     const service = new ServiceVectores[settings.type](
       embedding,
       settings,
+      llmSettings
     );
 
     return service;

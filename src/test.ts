@@ -14,11 +14,14 @@ const agentSettings = {
     type: 'bedrock',
     model: 'anthropic.claude-v2',
     instance: 'ai-enterprise',
-    apiKey: 'ASIAVEKDIBUE2DAVRM74',
     region: "us-east-1",
     apiVersion: '2023-07-01-preview',
-    secretAccessKey: "zDslGUshcUl0y+GC4u8/ltZBVch7XhgUd7jEt5Tk",
-    sessionToken: "IQoJb3JpZ2luX2VjEIX//////////wEaCXVzLWVhc3QtMSJHMEUCIB3sa2bP//l6QTAfGAPOXBpPIAN4o3lUHhuvhOfPWFq7AiEArwxKVJxn+Mcd/FFjGCSy9pXubUpLBjCuZJOTj1gB8KQqngMIfhADGgwzNTI4NjUyMjU5OTMiDDYq/kS43snI4y7N3Sr7AsRDPKfscg+TksFWbrEfCUjXdbBu4es1LFgjx+HdsckUJRv0UvzbinEXXg9g/NsrNLv0F8CSDsLUeJh4HWqxXForZeiVHOTkNEEvd67+6xJ+x9fdF4hwHQZRIP4kpeSav+SPIcvMW1kdiaApSth/tqF36Hssed85EfeM78sXECSzSdCa0pSi8mXd3yi2q4o+XeaTDa0prZapNKdTL4jnAPgGQgOFJBjp5m6rpqhmsiMMxYZMFZzk3vwPFFQe9R/2yot1bfdbpJwx6BubRYMHkoa335J1x43TMozWu8SX6P8l18z+GlpdDG7FQsofSvpVlzl6lYmXTW7xExKvOcTLf17PyXiX1cWUpxD3sIfBS4qazspgvpeobx+WWmVbneK4tR4JTwFBgs8prHo/5iuHJTCVF23S5pGZrVDRgbC/ZmNa9O3qw0Vr1LFOw0pEn06yUgsn0gtdyotfcrACGMBN05jtvoqUSdfjyS+tGXR7VbZK8jTB7x5cPh70Jvgw7N6YrwY6pgGPEv0R65z281rXeelouV+sl85NlH92eOubXeXh4fyeX3UhW9owGQKarK9RkvYQe46eXAP0axmjoniMvsymvks0Zq7pbrdmuOzTGsdOcNwxDAucamaahgE18DVLQz3lurDI4gX0AZCgIiGz8KI2HfFrIxeWDVWbhygme4vm2jHe0ihCy/R1Kz9yjJgtHSvCDIDxt2Cl7TD5EW/uoOrvYfk7HzW1EHi+",
+    apiKey: ''
+    /*
+    apiKey: 'ASIAVEKDIBUE4NLRNFPL',
+    secretAccessKey: "U+VKv57dBP/kUyUbr4KEQkcnojOOtX3GESR7ayLI",
+    sessionToken: "IQoJb3JpZ2luX2VjEJ3//////////wEaCXVzLWVhc3QtMSJIMEYCIQDS5YD7WcifswpHlIlTI626LTVzRmO1ZE9EbizoGTkL0gIhAKvgXu5dkU9sJOid9mL6Q6S9SAgNmETDnQhA6KISv07EKqcDCJX//////////wEQAxoMMzUyODY1MjI1OTkzIgx8fp2jyrFz+yZzPtgq+wJEYVKbABp/KBM6kougMCHkDoFJtI2NZ0vYLV2xheMM1G1xdwOVpx4kf6Dowhqat39Hy2WvAJGULFaxRfA6nODdbTXGFt2YpWFbe8eneDy76JvBxUfkoodPq1H80/jUYWo9ND1rXi2kGyKdAmvZBaMNhDXOiZNJ30gL8AUqcc0CGxcS5i2NpxBGPAlFzMIFWp1HQHiN/ILuwN1Wp8rTArgWH6+rPouhePni3+90n57RIPdznl6pv8lcbV0EFOO/xYb1AvQH5H+OZPdJfauI3wXVIpgJXBfZzpbPboIM1c7YCZwdKH7IUcxVJFDtwKg5H5vnOGxmAfB0Cohv+RSUnRfdx8HWHp6GZxy78QIf0hwMa49/FDooOLcVHG0nA6eIsOiDrfgW6zPRDokcC+1EmKB+/Rqe9c5yqx3MimAJ+PEZczHubXQapYsirmJivE7GmCVIEPeGNPqmO+/F4YWPnoEUbL+v1ZXMl4nwURC22fjPLZusF0CgQtg29zKwMLf8na8GOqUB7/7le0mgCSCwlZHoaXnGmLKeBNaAfHIhFSOqIXZhL7h6GmXbhifWITgwRUAYGrduKDjt0yzhB7f2l0rByQmvcEWMYRm9ov9v08WFmgDI/x0lcMB+0VcGs8bA9AUJC3cqQyyEwrNkGQCJqKQrQ3i+UeaoDHYPoEZ3OOdW2WPtk77SNwjyezN2jn7yiNsxMihXuIxyzT5wLFlIuDfPrvu21PAJ/jRT", 
+    */
   },
   llmConfig_: {
     type: 'azure',
@@ -254,12 +257,17 @@ const agentSettings = {
     type: 'bedrock',
     indexes: ['bedrock-gdp-rag-index'],
     model: 'anthropic.claude-v2:1',
-    clientUrl: "https://oibsdrs1b4kf1ypbap0d.us-east-1.aoss.amazonaws.com",
     embedding_model_id: "amazon.titan-embed-text-v1",
     temperature: 0.1,
     max_tokens_to_sample: 300,
     vectorFieldName: 'embedding',
+    
+    accessKey: 'ASIAVEKDIBUEV4OAPWNN',
+    secretAccessKey: 'QeIKDAK1ic+hp9X1F4JuxLBffIm4zEVVaHtP3p9j',
+    sessionToken: 'IQoJb3JpZ2luX2VjELL//////////wEaCXVzLWVhc3QtMSJGMEQCIBmgUe3IZT8mAGN5OoQSSwIBLNkhP1Aosqi/oMeIrOLqAiBGu1A5W+1AK9s3KV0J/vfkG3hYIiwAeOVRzVtn8DSHRyqnAwir//////////8BEAMaDDM1Mjg2NTIyNTk5MyIM/dshgDf5a/CC6llSKvsCh9l3S/rc3IomImZaDF9yTCoEXLnn8R20zn7tvUcgoAqiYmglSsYk2t+6PYiuewYXzUfADD1Q+jChLbR/tufjaMFwcvcfmyIBEEv7MxzV0FEXQ7ZKpEmgtds32k4pKY1du77zLG1lIgaITdS4xn4rJrQow/fuZQbS+6awOzGouraG/pOMwpt8aSGHXgbNEasCK3yWCrbCo92xdANt7ecDHJ996ued96Ub0U/JA8Mh9pUj3ejWptC+Pz7mc1hoDFSzvFi4LJ22TT5/mskrRimFFHO4EeS/M4h2/5elylX46GwvE1/LyQ67IbAiePhnk0e+ilWrDpfMMFhmy7I3R46NHzAUn+Rb9jZC1cm7NHYFUIp/GVyCHx5NvAssE4Q+uYF2rya56Sl5TpKENsyS1+CIHM+sDKyNUNlATZwM1izaFUiqQ4zg1IpGl0lBIn5iacYDc80HZ6dS9ZRoWmaHQx/cu5BLJLZh3RQa2906fJ9KYdGDUWcLk9472X/pBzDo3aKvBjqnAai30vIrvN+7bKgdLSPiShu/CRLFX/UwcczgUNYZbW5lrx931dd4vShtgnRKKFvWApCniEOzR7f/Wg7VIOzT9ti/1xU1HSy7Wb80RU+IwE675xp2ZeMfLL6hjhleyczrQWN11TT7hReREtdIc9EIVbax0eggS0ArTiDATivs1RxvwVpGv5YENeVVX0ORcnd98J/Dwv13dUFu4VbHiYAHJlit1FOecmhL',
+    customizeSystemMessage: 'Human: Você é a MAIA, a inteligência artificial do GDP (Global Data Platform), você pode responder perguntas relacionadas indicadores de estrutura comercial da Natura. Use as seguintes partes do contexto para fornecer uma resposta concisa à pergunta no final. Responda de forma mais natural possivel. Se você não sabe a resposta, apenas diga que não sabe, não tente inventar uma resposta. Se o usuário te cumprimentar, apenas cumprimente de volta, não tente consultar o contexto. Se apresente e diga o que você pode fazer somente se o usuário perguntar.\n'
   },
+
   vectorStoreConfig_: {
     apiKey: 'OZLHFdd4s4Fa6IKB6BHoWmloe5IlR2PMii7aDV9ut1AzSeCjN7yz',
     indexes: ['index-gdp'],

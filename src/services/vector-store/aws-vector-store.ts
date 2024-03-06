@@ -1,211 +1,175 @@
-import { Callbacks } from 'langchain/callbacks';
 import { Document } from 'langchain/document';
-import { Embeddings } from 'langchain/embeddings/base';
 import { VectorStore } from 'langchain/vectorstores/base';
-import { OpenSearchClientArgs } from 'langchain/vectorstores/opensearch';
-import { nanoid } from 'nanoid';
+import { Client } from "@opensearch-project/opensearch";
+import { OpenSearchVectorStore } from "langchain/vectorstores/opensearch";
+import AWS, { Bedrock } from 'aws-sdk';
+import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
+import { defaultProvider } from '@aws-sdk/credential-provider-node';
+import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
+import { CredentialType } from 'langchain/dist/util/bedrock';
 
-interface AzureSearchConfig {
-  name: string;
-  indexes: string[];
-  apiKey: string;
-  apiVersion: string;
-  vectorFieldName: string;
-  model?: string;
-}
+import { PromptTemplate } from 'langchain/prompts';
+import { BedrockEmbeddings } from 'langchain/embeddings/bedrock';
+import { ILLMConfig } from '../../interface/agent.interface';
+import { ChatBedrock } from 'langchain/chat_models/bedrock';
+import { RetrievalQAChain, loadQAStuffChain } from 'langchain/chains';
+import { ChainValues } from 'langchain/schema';
+import { RunnableSequence } from 'langchain/schema/runnable';
 
-interface DocumentSearchResponseModel<TModel> {
-  value: TModel[];
-}
+import dotenv from 'dotenv'
+dotenv.config()
 
-type DocumentSearchModel = {
-  '@search.score': number;
-};
-
-export interface AzureCogDocument extends Record<string, unknown> { }
-
-type AwsCogVectorField = {
-  value: number[];
-  fields: string;
-  k: number;
-};
-
-type AzureCogFilter = {
-  search?: string;
-  facets?: string[];
-  filter?: string;
-  top?: number;
-  vectorFields: string;
-};
-
-type AwsCogRequestObject = {
-  search: string;
-  facets: string[];
-  filter: string;
-  vectors: AwsCogVectorField[];
-  top: number;
-};
-
-
-export interface FaqDocumentIndex extends AzureCogDocument {
-  id: string;
-  user: string;
-  chatThreadId: string;
-  embedding: number[];
-  pageContent: string;
-  metadata: any;
-}
-
-export interface ICustomOpenSearchClientArgs extends OpenSearchClientArgs {
-  vectorFieldName: string
+interface OpenSearchClientArgs {
+  clientUrl: string
+  indexes: string[]
+  model: string
+  service: "es" | "aoss"
+  customizeSystemMessage?: string;
 }
 
 export class AwsOpenSearch<TModel extends Record<string, unknown>> extends VectorStore {
 
-  private _config: ICustomOpenSearchClientArgs;
+  private _config: OpenSearchClientArgs;
+  private _client: Client
+  private _llmSettings: ILLMConfig
 
-  constructor(embeddings: any, dbConfig: ICustomOpenSearchClientArgs) {
+  constructor(embeddings: any, dbConfig: OpenSearchClientArgs, llmSettings?: ILLMConfig) {
+
+    console.log('[Embeddings]', embeddings)
+    console.log('[dbConfig]', dbConfig)
 
     super(embeddings, dbConfig);
 
+    this._llmSettings = llmSettings
     this._config = dbConfig;
-    console.log("🚀 ~ AwsOpenSearch<TModel ~ constructor ~ this._config:", this._config)
+
+    this._client = new Client({
+      ...AwsSigv4Signer({
+        region: this._llmSettings.region,
+        service: this._config.service,
+        getCredentials: () => {
+          const credentialsProvider = defaultProvider();
+          return credentialsProvider();
+        },
+      }),
+      node: 'https://oibsdrs1b4kf1ypbap0d.us-east-1.aoss.amazonaws.com'
+    });
   }
 
   _vectorstoreType(): string {
-    return 'aws-cog-search';
+    return 'bedrock-cog-search';
   }
 
-  get config(): ICustomOpenSearchClientArgs {
-    return this._config;
+  async addDocuments(documents: Document<TModel>[]) {
+
+    await OpenSearchVectorStore.fromDocuments(documents, this.embeddings, {
+      client: this._client,
+      indexName: this._config.indexes[0],
+    })
   }
 
-  get baseUrl(): string {
-    return `https://oibsdrs1b4kf1ypbap0d.us-east-1.aoss.amazonaws.com/bedrock-gdp-rag-index/_doc`;
-  }
+  async similaritySearch___(
+    query: string,
+    k: number,
+  ): Promise<Document<TModel>[]> {
 
-  async addDocuments(documents: Document<TModel>[]): Promise<string[]> {
-    const texts = documents.map(({ pageContent }) => pageContent);
-    return this.addVectors(
-      await this.embeddings.embedDocuments(texts),
-      documents
-    );
+    const bedrockClient = new BedrockRuntimeClient({
+      region: this._llmSettings.region,
+    });
+
+    const llm = new ChatBedrock({
+      region: this._llmSettings.region,
+      model: this._llmSettings.model,
+      maxTokens: 300,
+      temperature: 0,
+    });
+    console.log("1 🚀 ~ AwsOpenSearch<TModel ~ llm:", llm)
+
+    const vectorStore = new OpenSearchVectorStore(this.embeddings, {
+      client: this._client,
+      indexName: this._config.indexes[0],
+    });
+
+    const retriever = vectorStore.asRetriever(20);
+
+    const prompt_template = this._config.customizeSystemMessage.concat(
+      `\n
+      Context: ${retriever}\n
+      Question: ${query}\n
+      Assistant:`
+    )
+
+    const prompt = new PromptTemplate({
+      template: prompt_template,
+      inputVariables: ['retriever', 'query']
+    });
+
+    const input = {
+      modelId: "anthropic.claude-v2",
+      contentType: "application/json",
+      accept: "application/json",
+      body: JSON.stringify({
+        prompt: prompt_template,
+        max_tokens_to_sample: 300,
+        temperature: 0.5,
+        top_k: 250,
+        top_p: 1,
+      }),
+    };
+
+    const command = new InvokeModelCommand(input);
+
+    bedrockClient.send(command).then((response) => {
+
+      const rawRes = response.body;
+      const jsonString = new TextDecoder().decode(rawRes);
+      const parsedResponse = JSON.parse(jsonString);
+      console.log("🚀 ~ AwsOpenSearch<TModel ~ bedrockClient.send ~ parsedResponse:", parsedResponse.completion)
+
+    }).catch((err) => {
+      console.log("err2:");
+      console.log(err);
+    });
+
+
+    //return parsedResponse
+    const retorno: Document<Record<string, any>>[] = []
+
+    return retorno as Document<TModel>[];
   }
 
   async similaritySearch(
     query: string,
     k?: number,
-    filter?: AzureCogFilter,
   ): Promise<Document<TModel>[]> {
 
-    const results = await this.similaritySearchVectorWithScore(
-      await this.embeddings.embedQuery(query),
-      k || 4,
-      filter,
-      // filter.filter
-    );
-
-    return results.map(([doc, _score]) => doc);
-  }
-
-  async similaritySearchWithScore(
-    query: string,
-    k?: number,
-    filter?: AzureCogFilter,
-    _callbacks: Callbacks | undefined = undefined
-  ): Promise<[Document<TModel>, number][]> {
-    const embeddings = await this.embeddings.embedQuery(query);
-    return this.similaritySearchVectorWithScore(embeddings, k || 5, filter);
-  }
-
-  async addVectors(
-    vectors: number[][],
-    documents: Document<TModel>[]
-  ): Promise<string[]> {
-    const indexes: Array<any> = [];
-
-    documents.forEach((document, i) => {
-      indexes.push({
-        id: nanoid().replace('_', ''),
-        ...document,
-        [this._config.vectorFieldName]: vectors[i],
-      });
+    const embeddings = new BedrockEmbeddings({
+      region: "us-east-1",
+      model: "amazon.titan-embed-text-v1", // Default value
     });
 
-    // run through indexes and if the id has _ then remove it
-    indexes.forEach((index) => {
-      if (index.id.includes('_')) {
-        index.id = index.id.replace('_', '');
-      }
+    const vectorStore = new OpenSearchVectorStore(embeddings, {
+      client: this._client,
+      indexName: this._config.indexes[0],
     });
 
-    const documentIndexRequest: DocumentSearchResponseModel<TModel> = {
-      value: indexes,
-    };
-    // TODO: indexes
-    const url = this.baseUrl;
-    const responseObj = await fetcher(
-      url,
-      documentIndexRequest,
-      "ASIAVEKDIBUE2DAVRM74"
-    );
-    return responseObj.value.map((doc: any) => doc.key);
+    const results = vectorStore.similaritySearch(query, 10, {
+      vectorFieldName: 'embedding'
+    });
+
+    console.log("🚀 ~ AwsOpenSearch<TModel ~ results:", results)
+
+    const retorno: Document<Record<string, any>>[] = []
+
+    return retorno as Document<TModel>[];
   }
 
-  async similaritySearchVectorWithScore(
-    query: number[],
-    k: number,
-    filter?: AzureCogFilter,
-    index?: string
-  ): Promise<[Document<TModel>, number][]> {
-
-    // TODO: indexes
-    const url = this.baseUrl
-
-    const searchBody: AwsCogRequestObject = {
-      search: filter?.search || '*',
-      facets: filter?.facets || [],
-      filter: filter?.filter || '',
-      vectors: [{ value: query, fields: filter?.vectorFields || '', k: k }],
-      top: filter?.top || k,
-    };
-
-    const resultDocuments = (await fetcher(
-      url,
-      searchBody,
-      "ASIAVEKDIBUE2DAVRM74"
-    )) as DocumentSearchResponseModel<Document<TModel> & DocumentSearchModel>;
-
-    return resultDocuments.value.map((doc) => [doc, doc['@search.score'] || 0]);
+  addVectors(vectors: number[][], documents: Document<Record<string, any>>[], options?: { [x: string]: any; }): Promise<void | string[]> {
+    throw new Error('Method not implemented.');
   }
+
+  similaritySearchVectorWithScore(query: number[], k: number, filter?: this['FilterType']): Promise<[Document<Record<string, any>>, number][]> {
+    throw new Error('Method not implemented.');
+  }
+
 }
-
-const fetcher = async (url: string, body: any, apiKey: string) => {
-
-  const myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/json");
-  myHeaders.append("X-Amz-Content-Sha256", "beaead3198f7da1e70d03ab969765e0821b24fc913697e929e726aeaebf0eba3");
-  myHeaders.append("X-Amz-Security-Token", "IQoJb3JpZ2luX2VjEIX//////////wEaCXVzLWVhc3QtMSJHMEUCIB3sa2bP//l6QTAfGAPOXBpPIAN4o3lUHhuvhOfPWFq7AiEArwxKVJxn+Mcd/FFjGCSy9pXubUpLBjCuZJOTj1gB8KQqngMIfhADGgwzNTI4NjUyMjU5OTMiDDYq/kS43snI4y7N3Sr7AsRDPKfscg+TksFWbrEfCUjXdbBu4es1LFgjx+HdsckUJRv0UvzbinEXXg9g/NsrNLv0F8CSDsLUeJh4HWqxXForZeiVHOTkNEEvd67+6xJ+x9fdF4hwHQZRIP4kpeSav+SPIcvMW1kdiaApSth/tqF36Hssed85EfeM78sXECSzSdCa0pSi8mXd3yi2q4o+XeaTDa0prZapNKdTL4jnAPgGQgOFJBjp5m6rpqhmsiMMxYZMFZzk3vwPFFQe9R/2yot1bfdbpJwx6BubRYMHkoa335J1x43TMozWu8SX6P8l18z+GlpdDG7FQsofSvpVlzl6lYmXTW7xExKvOcTLf17PyXiX1cWUpxD3sIfBS4qazspgvpeobx+WWmVbneK4tR4JTwFBgs8prHo/5iuHJTCVF23S5pGZrVDRgbC/ZmNa9O3qw0Vr1LFOw0pEn06yUgsn0gtdyotfcrACGMBN05jtvoqUSdfjyS+tGXR7VbZK8jTB7x5cPh70Jvgw7N6YrwY6pgGPEv0R65z281rXeelouV+sl85NlH92eOubXeXh4fyeX3UhW9owGQKarK9RkvYQe46eXAP0axmjoniMvsymvks0Zq7pbrdmuOzTGsdOcNwxDAucamaahgE18DVLQz3lurDI4gX0AZCgIiGz8KI2HfFrIxeWDVWbhygme4vm2jHe0ihCy/R1Kz9yjJgtHSvCDIDxt2Cl7TD5EW/uoOrvYfk7HzW1EHi+");
-  myHeaders.append("X-Amz-Date", "20240304T203244Z");
-  myHeaders.append("Authorization", "AWS4-HMAC-SHA256 Credential=ASIAVEKDIBUE2DAVRM74/20240304/us-east-1/execute-api/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-content-sha256;x-amz-date;x-amz-security-token, Signature=a83930cff4c440b8f62b05543fe144f477869244b9dad572272eeee5440de121");
-  
-  console.log("🚀 ~ fetcher ~ myHeaders:", myHeaders)
-
-  const raw = JSON.stringify(body);
-  
-  const requestOptions = {
-    method: "POST",
-    headers: myHeaders,
-    body: raw,
-  };
-
-  const response = await fetch(url, requestOptions)
-
-  if (!response.ok) {
-    const err = await response.json();
-
-    throw new Error(JSON.stringify(err));
-  }
-
-  return await response.json();
-};
