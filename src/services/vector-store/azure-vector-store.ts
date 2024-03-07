@@ -1,3 +1,4 @@
+import { AzureCogFilter, CustomVectorStore } from './../../interface/vector-store.interface';
 import { Callbacks } from 'langchain/callbacks';
 import { Document } from 'langchain/document';
 import { Embeddings } from 'langchain/embeddings/base';
@@ -29,13 +30,6 @@ type AzureCogVectorField = {
   k: number;
 };
 
-type AzureCogFilter = {
-  search?: string;
-  facets?: string[];
-  filter?: string;
-  top?: number;
-  vectorFields: string;
-};
 
 type AzureCogRequestObject = {
   search: string;
@@ -55,7 +49,8 @@ export interface FaqDocumentIndex extends AzureCogDocument {
   metadata: any;
 }
 
-export class AzureCogSearch<TModel extends Record<string, unknown>> extends VectorStore {
+export class AzureCogSearch<TModel extends Record<string, unknown>> extends CustomVectorStore {
+  
   private _config: AzureSearchConfig;
 
   constructor(embeddings: any, dbConfig: AzureSearchConfig) {
@@ -76,6 +71,11 @@ export class AzureCogSearch<TModel extends Record<string, unknown>> extends Vect
 
   get baseUrl(): string {
     return `https://${this._config.name}.search.windows.net/indexes`;
+  }
+  
+  search(query: string, k: number, filter?: AzureCogFilter): any {
+
+    return this.similaritySearch(query, k, filter);
   }
 
   async addDocuments(documents: Document<TModel>[]): Promise<string[]> {

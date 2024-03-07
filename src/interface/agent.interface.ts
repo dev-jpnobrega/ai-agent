@@ -93,6 +93,7 @@ export interface IAgentConfig {
   openAPIConfig?: IOpenAPIConfig;
 }
 
+
 export interface IInputProps {
   question?: string;
   userSessionId?: string;

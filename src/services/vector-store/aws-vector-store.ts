@@ -16,6 +16,8 @@ import { RetrievalQAChain, loadQAStuffChain } from 'langchain/chains';
 import { ChainValues } from 'langchain/schema';
 import { RunnableSequence } from 'langchain/schema/runnable';
 
+import { AzureCogFilter, CustomVectorStore } from './../../interface/vector-store.interface';
+
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -27,7 +29,7 @@ interface OpenSearchClientArgs {
   customizeSystemMessage?: string;
 }
 
-export class AwsOpenSearch<TModel extends Record<string, unknown>> extends VectorStore {
+export class AwsOpenSearch<TModel extends Record<string, unknown>> extends CustomVectorStore {
 
   private _config: OpenSearchClientArgs;
   private _client: Client
@@ -56,24 +58,48 @@ export class AwsOpenSearch<TModel extends Record<string, unknown>> extends Vecto
     });
   }
 
-  _vectorstoreType(): string {
-    return 'bedrock-cog-search';
+  search(query: string, k: number, filter?: AzureCogFilter, mode?: string): any {
+
+    return this.awsAsRetriever(query)
   }
 
-  async addDocuments(documents: Document<TModel>[]) {
+  async awsAsRetriever(
+    query: string,
+  ): Promise<ChainValues> {
 
-    await OpenSearchVectorStore.fromDocuments(documents, this.embeddings, {
+    const model = new ChatBedrock({
+      temperature: 0,
+      streaming: true,
+      model: 'anthropic.claude-v2',
+      region: 'us-east-1',
+      maxTokens: 2048,
+    });
+
+    const vectorStore = new OpenSearchVectorStore(this.embeddings, {
       client: this._client,
       indexName: this._config.indexes[0],
-    })
-  }
+    });
 
-  async similaritySearch___(
-    query: string,
-    k: number,
-  ): Promise<Document<TModel>[]> {
+    const context = vectorStore.asRetriever(20, { vectorFieldName: 'embedding' });
 
-    const bedrockClient = new BedrockRuntimeClient({
+    const prompt_template = `Human: Você é a MAIA, a inteligência artificial do GDP (Global Data Platform), você pode responder perguntas relacionadas indicadores de estrutura comercial da Natura. Use as seguintes partes do contexto para fornecer uma resposta concisa à pergunta no final. Responda de forma mais natural possivel. Se você não sabe a resposta, apenas diga que não sabe, não tente inventar uma resposta. Se o usuário te cumprimentar, apenas cumprimente de volta, não tente consultar o contexto. Se apresente e diga o que você pode fazer somente se o usuário perguntar.\n
+    Context: {context}\n
+    Question: {question}\n
+    Assistant:`;
+
+    const chain = RetrievalQAChain.fromLLM(model, context, {
+      prompt: new PromptTemplate({
+        template: prompt_template,
+        inputVariables: ['context', 'question'],
+      })
+    });
+
+    const response = await chain.invoke({ query, context });
+    console.log('RetrievalQAChain', JSON.stringify(response));
+
+    return response
+
+    /* const bedrockClient = new BedrockRuntimeClient({
       region: this._llmSettings.region,
     });
 
@@ -85,14 +111,11 @@ export class AwsOpenSearch<TModel extends Record<string, unknown>> extends Vecto
     });
     console.log("1 🚀 ~ AwsOpenSearch<TModel ~ llm:", llm)
 
-    const vectorStore = new OpenSearchVectorStore(this.embeddings, {
-      client: this._client,
-      indexName: this._config.indexes[0],
-    });
+
 
     const retriever = vectorStore.asRetriever(20);
 
-    const prompt_template = this._config.customizeSystemMessage.concat(
+    const prompt_template2 = this._config.customizeSystemMessage.concat(
       `\n
       Context: ${retriever}\n
       Question: ${query}\n
@@ -131,11 +154,11 @@ export class AwsOpenSearch<TModel extends Record<string, unknown>> extends Vecto
       console.log(err);
     });
 
-
+ */
     //return parsedResponse
-    const retorno: Document<Record<string, any>>[] = []
+    //const retorno: Document<Record<string, any>>[] = []
 
-    return retorno as Document<TModel>[];
+    //return retorno as Document<TModel>[];
   }
 
   async similaritySearch(
@@ -162,6 +185,19 @@ export class AwsOpenSearch<TModel extends Record<string, unknown>> extends Vecto
     const retorno: Document<Record<string, any>>[] = []
 
     return retorno as Document<TModel>[];
+  }
+
+  
+  _vectorstoreType(): string {
+    return 'bedrock-cog-search';
+  }
+
+  async addDocuments(documents: Document<TModel>[]) {
+
+    await OpenSearchVectorStore.fromDocuments(documents, this.embeddings, {
+      client: this._client,
+      indexName: this._config.indexes[0],
+    })
   }
 
   addVectors(vectors: number[][], documents: Document<Record<string, any>>[], options?: { [x: string]: any; }): Promise<void | string[]> {

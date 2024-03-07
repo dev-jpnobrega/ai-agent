@@ -18,6 +18,7 @@ import { ChatHistoryFactory, IChatHistory } from './services/chat-history';
 import LLMFactory from './services/llm';
 import VectorStoreFactory from './services/vector-store';
 import { BaseMessage } from 'langchain/schema';
+import { CustomVectorStore } from './interface/vector-store.interface';
 
 const EVENTS_NAME = {
   onMessage: 'onMessage',
@@ -31,7 +32,7 @@ const EVENTS_NAME = {
 class Agent extends AgentBaseCommand implements IAgent {
   private _name: string;
   private _llm: BaseChatModel;
-  private _vectorService: VectorStore;
+  private _vectorService: CustomVectorStore;
 
   private _chainService: IChainService;
 
@@ -88,9 +89,7 @@ class Agent extends AgentBaseCommand implements IAgent {
 
     const { customFilters = null } = settings;
 
-    const response = await this._vectorService.asRetriever(10);
-
-    const relevantDocs = await this._vectorService.similaritySearch(
+    const relevantDocs = await this._vectorService.search(
       args.question,
       10,
       {

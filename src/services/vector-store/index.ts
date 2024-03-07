@@ -12,6 +12,7 @@ import AWS from 'aws-sdk';
 import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
 
 import dotenv from 'dotenv'
+import { CustomVectorStore } from '../../interface/vector-store.interface';
 
 dotenv.config()
 
@@ -28,9 +29,6 @@ const ServiceVectores = {
 
 const typeSpecificConfigs = (settings: IVectorStoreConfig, llmSettings: ILLMConfig) => {
   
-  const bedrockClient = new BedrockRuntimeClient({
-    region: "us-east-1",
-  });
 
   // TODO: alterar para switch
   let configs = {
@@ -42,7 +40,6 @@ const typeSpecificConfigs = (settings: IVectorStoreConfig, llmSettings: ILLMConf
     },
     bedrock: {
       model: settings.model,
-      client: bedrockClient,
       region: llmSettings.region,
     },
     gpt: {
@@ -58,7 +55,7 @@ const typeSpecificConfigs = (settings: IVectorStoreConfig, llmSettings: ILLMConf
 
 class VectorStoreFactory {
 
-  public static create(settings: IVectorStoreConfig, llmSettings: ILLMConfig): VectorStore {
+  public static create(settings: IVectorStoreConfig, llmSettings: ILLMConfig): CustomVectorStore {
     
     const typeConfig = typeSpecificConfigs(settings, llmSettings)
 
