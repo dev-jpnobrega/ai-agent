@@ -148,15 +148,6 @@ class Agent extends AgentBaseCommand implements IAgent {
     }
   }
 
-  getMessageFormat(messages: BaseMessage[]): string {
-    const cut = messages
-      .slice(-(this._settings?.dbHistoryConfig?.limit || 5));
-
-    const formated = cut.map((message) => `${message._getType().toUpperCase()}: ${message.content}`).join('\n');
-
-    return formated;
-  }
-
   execute(args: any): Promise<void> {
     throw new Error(args);
   }

@@ -39,15 +39,18 @@ class RedisChatHistory implements IChatHistory {
     return this._history?.addAIChatMessage(message);
   }
 
-  getMessages(): Promise<BaseMessage[]> {
-    return this._history?.getMessages();
-  }
-
-  getFormatedMessages(messages: BaseMessage[]): string {
+  async getMessages(): Promise<BaseMessage[]> {
+    const messages = await this._history?.getMessages();
     const cut = messages
       .slice(-(this._settings?.limit || 5));
 
-    const formated = cut.map((message) => `${message._getType().toUpperCase()}: ${message.content}`).join('\n');
+    return cut;
+  }
+
+  getFormatedMessages(messages: BaseMessage[]): string {
+    const formated = messages.map(
+      (message) => `${message._getType().toUpperCase()}: ${message.content}`
+    ).join('\n');
 
     return formated;
   }
