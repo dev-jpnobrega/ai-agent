@@ -30,7 +30,7 @@ class OpenAPIChain implements IChain {
     return new OpenApiBaseChain({
       llm,
       spec: this._settings.data,
-      timeout: this._settings.timeout,
+      timeout: this._settings.timeout || 180000,
       customizeSystemMessage: this._settings.customizeSystemMessage || '',
       headers: this.getHeaders(),
     });

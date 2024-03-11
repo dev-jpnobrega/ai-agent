@@ -12,6 +12,7 @@ import {
 import { ChainValues } from 'langchain/schema';
 import { RunnableSequence } from 'langchain/schema/runnable';
 import type { OpenAPIV3_1 } from 'openapi-types';
+import { fetchOpenAPI } from '../../helpers/fetch.helpers';
 
 export interface OpenApiBaseChainInput extends ChainInputs {
   spec: string | OpenAPIV3_1.Document<{}>;
@@ -19,17 +20,6 @@ export interface OpenApiBaseChainInput extends ChainInputs {
   customizeSystemMessage?: string;
   headers: Record<string, string>;
   timeout?: number;
-}
-
-interface IRequest {
-  url: string;
-  contentType?: string;
-  requestMethod?: string;
-  data: object;
-}
-
-interface IResponseHeaders {
-  [key: string]: string;
 }
 
 export class OpenApiBaseChain extends BaseChain {
@@ -86,69 +76,6 @@ export class OpenApiBaseChain extends BaseChain {
     return CHAT_COMBINE_PROMPT;
   }
 
-  configureTimeout(timeout: number) {
-    let timeoutId = null;
-    const controller = new AbortController();
-    const { signal } = controller;
-
-    if (timeout) {
-      timeoutId = setTimeout(() => {
-        controller.abort();
-      }, timeout);
-    }
-
-    return { signal, timeoutId };
-  }
-
-  tryParseJSON = (value: any) => {
-    try {
-      return JSON.parse(value);
-    } catch (error) {
-      return value;
-    }
-  };
-
-  async formatResponse(response: Response) {
-    const body = this.tryParseJSON(await response.text());
-
-    const responseHeaders: IResponseHeaders = {};
-
-    Array.from(response.headers.keys()).forEach((key) => {
-      responseHeaders[key] = response.headers.get(key);
-    });
-
-    const formattedResponse = {
-      body,
-      response: {
-        body,
-        headers: responseHeaders,
-        ok: response.ok,
-        statusCode: response.status,
-        statusText: response.statusText,
-      },
-    };
-
-    return response.ok ? formattedResponse : { body: 'Request Error' };
-  }
-
-  async fetchOpenAPI(data: IRequest, timeout: number) {
-    const abortSignal = this.configureTimeout(timeout);
-
-    const response = await fetch(data?.url, {
-      method: data?.requestMethod,
-      headers: {
-        'Content-Type': data?.contentType,
-        ...this._input.headers,
-      },
-      body: JSON.stringify(data?.data),
-      signal: abortSignal.signal,
-    });
-
-    clearTimeout(abortSignal.timeoutId);
-
-    return this.formatResponse(response);
-  }
-
   async _call(
     values: ChainValues,
     runManager?: CallbackManagerForChainRun
@@ -165,7 +92,7 @@ export class OpenApiBaseChain extends BaseChain {
         question: (input: { question: string }) => input.question,
         chat_history: () => values?.chat_history,
         format_chat_messages: () => values?.format_chat_messages,
-        user_prompt: () => this._input.customizeSystemMessage || '',
+        user_prompt: () => this._input.customizeSystemMessage,
       },
       this.buildPromptTemplate(this.getOpenApiPrompt()),
       this._input?.llm.bind({}),
@@ -184,12 +111,13 @@ export class OpenApiBaseChain extends BaseChain {
         query: (input) => input.query,
         response: async (input) => {
           try {
-            const request: IRequest = JSON.parse(
+            const request = JSON.parse(
               input.query.content.replace('```json', '').replace('```', '')
             );
-            return await this.fetchOpenAPI(
+            return await fetchOpenAPI(
               request,
-              this._input.timeout || 180000
+              this._input.timeout,
+              this._input.headers
             );
           } catch (error) {
             console.error(error);
