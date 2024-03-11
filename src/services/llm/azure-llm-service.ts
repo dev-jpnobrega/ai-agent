@@ -16,6 +16,7 @@ class AzureLLMService {
     return new ChatOpenAI({
       temperature: this._chatSettings.temperature,
       streaming: true,
+      maxConcurrency: 10,
       azureOpenAIApiDeploymentName: this._llmSettings.model,
       azureOpenAIApiVersion: this._llmSettings.apiVersion,
       azureOpenAIApiKey: this._llmSettings.apiKey,

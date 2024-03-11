@@ -4,6 +4,9 @@ import { Embeddings } from 'langchain/embeddings/base';
 import { VectorStore } from 'langchain/vectorstores/base';
 import { nanoid } from 'nanoid';
 
+
+import request from '../../helpers/http-request.helpers';
+
 interface AzureSearchConfig {
   name: string;
   indexes: string[];
@@ -38,6 +41,7 @@ type AzureCogFilter = {
 };
 
 type AzureCogRequestObject = {
+  select: string;
   search: string;
   facets: string[];
   filter: string;
@@ -156,6 +160,7 @@ export class AzureCogSearch<TModel extends Record<string, unknown>> extends Vect
     const url = `${this.baseUrl}/${index || this._config.indexes[0]}/docs/search?api-version=${this._config.apiVersion}`;
 
     const searchBody: AzureCogRequestObject = {
+      select: 'pageContent, metadata',
       search: filter?.search || '*',
       facets: filter?.facets || [],
       filter: filter?.filter || '',
@@ -175,21 +180,21 @@ export class AzureCogSearch<TModel extends Record<string, unknown>> extends Vect
 
 const fetcher = async (url: string, body: any, apiKey: string) => {
   const options = {
+    url,
     method: 'POST',
-    body: JSON.stringify(body),
+    body,
     headers: {
       'Content-Type': 'application/json',
       'api-key': apiKey,
     },
   };
 
-  const response = await fetch(url, options);
+  try {
+    const rs = await request(options, false);
 
-  if (!response.ok) {
-    const err = await response.json();
-
-    throw new Error(JSON.stringify(err));
+    return rs.body;
+  } catch (error) {
+    console.error('vector-error', error);
+    throw error;
   }
-
-  return await response.json();
 };
