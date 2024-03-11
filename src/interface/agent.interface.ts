@@ -45,6 +45,7 @@ export interface IOpenAPIConfig {
   customizeSystemMessage?: string;
   xApiKey?: string;
   authorization?: string;
+  timeout?: number;
 }
 
 export interface IChatConfig {
@@ -59,7 +60,7 @@ export interface ILLMConfig {
   type: LLM_TYPE;
   model: string;
   instance?: string;
-  apiKey: string;
+  apiKey?: string;
   apiVersion: string;
   secretAccessKey?: string;
   sessionToken?: string;
