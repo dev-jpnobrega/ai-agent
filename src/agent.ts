@@ -95,11 +95,15 @@ class Agent extends AgentBaseCommand implements IAgent {
       }
     );
 
-    const referenciesDocs = relevantDocs
-      .map((doc: { metadata: unknown }) => doc.metadata)
-      .join(', ');
+    const referenciesObjDocs: any = {};
+    relevantDocs.map(
+      (doc: { metadata: any }) => referenciesObjDocs[doc.metadata] = doc.metadata
+    )
 
-    return { relevantDocs, referenciesDocs };
+    return { 
+      relevantDocs: relevantDocs.map((doc: any) => doc.pageContent).join('\n'),
+      referenciesDocs: Object.values(referenciesObjDocs),
+    };
   }
 
   async call(args: IInputProps): Promise<void> {
@@ -126,7 +130,8 @@ class Agent extends AgentBaseCommand implements IAgent {
 
       const result = await chain.call({
         referencies: referenciesDocs,
-        input_documents: relevantDocs,
+        relevant_docs: relevantDocs,
+        input_documents: [],
         query: question,
         question: question,
         chat_history: chatMessages,

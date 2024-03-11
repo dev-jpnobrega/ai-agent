@@ -67,13 +67,13 @@ class ChainService {
       - The question must be a single sentence.\n
       - You must remove any punctuation from the question.\n
       - You must remove any words that are not relevant to the question.\n
-      - If you are unable to formulate a question, respond in a friendly manner so the user can rephrase the question.\n\n
+      - If you are unable to formulate a answer, respond in a friendly manner so the user can rephrase the question.\n\n
 
       USER PROMPT: {user_prompt}\n
       --------------------------------------
       CHAT HISTORY: {format_chat_messages}\n
       --------------------------------------
-      Context found in documents: {summaries}\n
+      Context found in documents: {relevant_docs}\n
       --------------------------------------
       Name of reference files: {referencies}\n
     `;
@@ -144,6 +144,7 @@ class ChainService {
       inputVariables: [
         'query',
         'referencies',
+        'relevant_docs',
         'input_documents',
         'question',
         'chat_history',
