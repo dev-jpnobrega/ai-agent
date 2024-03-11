@@ -23,13 +23,16 @@ const Services = {
 
 class ChatHistoryFactory {
   public static async create(settings: IDatabaseConfig): Promise<IChatHistory> {
-    const service = new Services[settings?.type](settings);
+    const service = Services[settings?.type]
 
-    if (!service) { 
+    if (service) { 
+      return new service(settings).build();
+      
+    }else{
       return await new MemoryChatHistory(settings).build();
     }
 
-    return await service.build();
+    
   }
 }
 
