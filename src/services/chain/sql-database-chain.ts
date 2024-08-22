@@ -58,7 +58,7 @@ export default class SqlDatabaseChain extends BaseChain {
   prompt = DEFAULT_SQL_DATABASE_PROMPT;
 
   // Number of results to return from the query
-  topK = 5;
+  topK = 5; 
 
   inputKey = 'query';
 
@@ -85,6 +85,7 @@ export default class SqlDatabaseChain extends BaseChain {
     this.customMessage = customMessage || '';
   }
 
+  //TODO: rever se vai ser necessário colocar o context aqui tbm
   getSQLPrompt(): string {
     return `
       Based on the SQL table schema provided below, write an SQL query that answers the user's question.\n

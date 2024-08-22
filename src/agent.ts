@@ -107,7 +107,7 @@ class Agent extends AgentBaseCommand implements IAgent {
   }
 
   async call(args: IInputProps): Promise<void> {
-    const { question, chatThreadID } = args;
+    const { question, chatThreadID, context } = args;
 
     try {
       const chatHistory = await this.buildHistory(
@@ -123,7 +123,7 @@ class Agent extends AgentBaseCommand implements IAgent {
       const chain = await this._chainService.build(
         this._llm,
         question,
-        chatHistory.getBufferMemory(),
+        chatHistory.getBufferMemory(),        
       );
 
       const chatMessages = await chatHistory.getMessages();
@@ -132,8 +132,9 @@ class Agent extends AgentBaseCommand implements IAgent {
         referencies: referenciesDocs,
         relevant_docs: relevantDocs,
         input_documents: [],
-        query: question,
+        query: question,        
         question: question,
+        context: context,
         chat_history: chatMessages,
         format_chat_messages: chatHistory.getFormatedMessages(chatMessages),
         user_prompt: this._settings.systemMesssage,

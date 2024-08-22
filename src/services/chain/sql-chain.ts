@@ -48,6 +48,7 @@ class SqlChain implements IChain {
     const chainSQL =  new SqlDatabaseChain({
       llm,
       database,
+      topK: args?.topK, //TODO: rever se vai ser necessário
       outputKey: 'sqlResult',
       sqlOutputKey: 'sqlQuery',
       prompt: new PromptTemplate({

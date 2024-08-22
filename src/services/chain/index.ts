@@ -69,13 +69,15 @@ class ChainService {
       - You must remove any words that are not relevant to the question.\n
       - If you are unable to formulate a answer, respond in a friendly manner so the user can rephrase the question.\n\n
 
+      USER CONTEXT: {user_context}\n
+      --------------------------------------
       USER PROMPT: {user_prompt}\n
       --------------------------------------
       CHAT HISTORY: {format_chat_messages}\n
       --------------------------------------
       Context found in documents: {relevant_docs}\n
       --------------------------------------
-      Name of reference files: {referencies}\n
+      Name of reference files: {referencies}\n      
     `;
 
     if (this._isSQLChainEnabled) {
@@ -150,6 +152,7 @@ class ChainService {
         'chat_history',
         'format_chat_messages',
         'user_prompt',
+        'user_context'
       ],
       verbose: this._settings.debug || false,
       memory: memoryChat,
