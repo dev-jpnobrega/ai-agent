@@ -102,9 +102,7 @@ export default class SqlDatabaseChain extends BaseChain {
       CHAT HISTORY: {format_chat_messages}\n
       -------------------------------------------\n
       QUESTION: {question}\n
-      ------------------------------------------\n
-      TOP RESULT: {max_result}\n
-      ------------------------------------------\n
+      ------------------------------------------\n      
       SQL QUERY:
     `;
   }
