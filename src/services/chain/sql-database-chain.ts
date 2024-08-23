@@ -102,6 +102,8 @@ export default class SqlDatabaseChain extends BaseChain {
       -------------------------------------------\n
       QUESTION: {question}\n
       ------------------------------------------\n
+      TOP RESULT: {max_result}\n
+      ------------------------------------------\n
       SQL QUERY:
     `;
   }

@@ -29,8 +29,7 @@ export interface IDatabaseConfig {
   database?: string | number;
   container?: string;
   synchronize?: boolean;
-  limit?: number;
-  //topk?: number; //TODO: rever se vai ficar aqui mesmo
+  limit?: number;  
 }
 
 export interface IDataSourceConfig {
@@ -39,6 +38,7 @@ export interface IDataSourceConfig {
   ignoreTables?: string[];
   customizeSystemMessage?: string;
   ssl?: boolean;
+  maxResult?: number;
 }
 
 export interface IOpenAPIConfig {

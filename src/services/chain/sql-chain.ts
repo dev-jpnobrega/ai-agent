@@ -47,12 +47,11 @@ class SqlChain implements IChain {
 
     const chainSQL =  new SqlDatabaseChain({
       llm,
-      database,
-      topK: args?.topK, //TODO: rever se vai ser necessário
+      database,      
       outputKey: 'sqlResult',
       sqlOutputKey: 'sqlQuery',
       prompt: new PromptTemplate({
-        inputVariables: ['question', 'response', 'schema', 'query', 'chat_history'],
+        inputVariables: ['question', 'response', 'schema', 'query', 'chat_history', 'max_result'],
         template: systemTemplate,
       }),
     }, this._settings?.customizeSystemMessage);
