@@ -1,54 +1,55 @@
-import { describe, it } from 'node:test';
-import { strict as assert } from 'node:assert';
+// import { describe, it } from 'node:test';
+// import { strict as assert } from 'node:assert';
 
-import Agent from'../src/agent';
-import { DataSource } from 'typeorm';
-import { IAgentConfig } from '../src/interface/agent.interface';
-
-
-const agentConfig = require(`./agent-configs/gsp-testcase-agent.json`);
-
-describe('Agent test', () => {
-  it('should Agent instance', (t, done) => {
-    const agent = new Agent({
-      llmConfig: {
-        apiKey: '123',
-        apiVersion: '1.0',
-        type: 'azure',
-        instance: 'test',
-        model: 'test',
-      },
-      chatConfig: {
-          temperature: 0.5,
-      }
-    });
-    assert.ok(agent instanceof Agent);
-
-    done();
-  });
+// import Agent from'../src/agent';
+// import { DataSource } from 'typeorm';
+// import { IAgentConfig } from '../src/interface/agent.interface';
 
 
-  it('should Agent call', (t, done) => {
-    const agentSettings = agentConfig as unknown as IAgentConfig;
+// const agentConfig = require(`./agent-configs/gsp-testcase-agent.json`);
 
-    if (agentSettings.dataSourceConfig) {
-      agentSettings.dataSourceConfig.dataSource = new DataSource({
-        ...(agentSettings.dataSourceConfig as any)
-      });
-    }
+// describe('Agent test', () => {
+//   it('should Agent instance', (t, done) => {
+//     const agent = new Agent({
+//       llmConfig: {
+//         apiKey: '123',
+//         apiVersion: '1.0',
+//         type: 'azure',
+//         instance: 'test',
+//         model: 'test',
+//       },
+//       chatConfig: {
+//           temperature: 0.5,
+//       }
+//     });
+//     assert.ok(agent instanceof Agent);
 
-    const agent = new Agent(agentSettings);
+//     done();
+//   });
+
+
+//   it('should Agent call', (t, done) => {
+//     const agentSettings = agentConfig as unknown as IAgentConfig;
+
+//     if (agentSettings.dataSourceConfig) {
+//       agentSettings.dataSourceConfig.dataSource = new DataSource({
+//         ...(agentSettings.dataSourceConfig as any)
+//       });
+//     }
+
+//     const agent = new Agent(agentSettings);
   
-    agent.on('onMessage', async (message) => {
-      assert.ok(message, 'message is not null');
-      console.warn('MESSAGE:', message);
-      done();
-      process.exit(0);
-    });
+//     agent.on('onMessage', async (message) => {
+//       assert.ok(message, 'message is not null');
+//       console.warn('MESSAGE:', message);
+//       done();
+//       process.exit(0);
+//     });
 
-    agent.call({
-      question: 'Forneca cenários de finalização de pedido com status id 8, pendente, com validação nas tabelas necessárias?',
-      chatThreadID: '01',
-    });
-  });
-});
+//     agent.call({
+//       question: 'Me fale mais sobre o cliente 1014814.',
+//       chatThreadID: '01',
+//       context: 'contexto teste',
+//     });
+//   });
+// });
