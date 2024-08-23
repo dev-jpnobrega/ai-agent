@@ -51,9 +51,10 @@ class SqlChain implements IChain {
       outputKey: 'sqlResult',
       sqlOutputKey: 'sqlQuery',
       prompt: new PromptTemplate({
-        inputVariables: ['question', 'response', 'schema', 'query', 'chat_history', 'max_result'],
+        inputVariables: ['question', 'response', 'schema', 'query', 'chat_history', 'user_context'],
         template: systemTemplate,
       }),
+      topK: this._settings.maxResult,
     }, this._settings?.customizeSystemMessage);
 
     return chainSQL;

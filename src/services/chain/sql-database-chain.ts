@@ -66,8 +66,6 @@ export default class SqlDatabaseChain extends BaseChain {
 
   customMessage = '';
 
-  maxDataExamples = 10; // TODO add config in agent settings
-
   sqlOutputKey: string | undefined = undefined;
 
   // Whether to return the result of querying the SQL table directly.
@@ -94,7 +92,10 @@ export default class SqlDatabaseChain extends BaseChain {
       -------------------------------------------\n
       Here are some important observations for generating the query:\n
       - Only execute the request on the service if the question is not in CHAT HISTORY, if the question has already been answered, use the same answer and do not make a query on the database.\n
-      {user_prompt}\n
+      
+      USER CONTEXT:\n
+        {user_prompt}\n
+        {user_context}\n
       -------------------------------------------\n
       SCHEMA: {schema}\n
       -------------------------------------------\n
@@ -142,7 +143,7 @@ export default class SqlDatabaseChain extends BaseChain {
       const data = JSON.parse(countResult);
       const result = parseInt(data[0]?.resultcount, 10);
 
-      if (result >= this.maxDataExamples) {
+      if (result >= this.topK) {
         throw new Error(MESSAGES_ERRORS.dataTooBig);
       }
 
@@ -180,6 +181,7 @@ export default class SqlDatabaseChain extends BaseChain {
         chat_history: () => values?.chat_history,
         format_chat_messages: () => values?.format_chat_messages,
         user_prompt: () => this.customMessage,
+        user_context: () => values?.user_context,
       },
       this.buildPromptTemplate(this.getSQLPrompt()),
       this.llm.bind({ stop: ['\nSQLResult:'] }),

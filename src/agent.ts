@@ -134,11 +134,10 @@ class Agent extends AgentBaseCommand implements IAgent {
         input_documents: [],
         query: question,        
         question: question,
-        context: context,
+        user_context: context,
         chat_history: chatMessages,
         format_chat_messages: chatHistory.getFormatedMessages(chatMessages),
         user_prompt: this._settings.systemMesssage,
-        max_result: this._settings.dataSourceConfig?.maxResult || 5,
       });
 
       await chatHistory.addUserMessage(question);
