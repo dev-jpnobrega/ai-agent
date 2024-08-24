@@ -29,7 +29,7 @@ export interface IDatabaseConfig {
   database?: string | number;
   container?: string;
   synchronize?: boolean;
-  limit?: number;
+  limit?: number;  
 }
 
 export interface IDataSourceConfig {
@@ -38,6 +38,7 @@ export interface IDataSourceConfig {
   ignoreTables?: string[];
   customizeSystemMessage?: string;
   ssl?: boolean;
+  maxResult?: number;
 }
 
 export interface IOpenAPIConfig {
@@ -52,7 +53,7 @@ export interface IChatConfig {
   topP?: number;
   frequencyPenalty?: number;
   presencePenalty?: number;
-  maxTokens?: number;
+  maxTokens?: number;  
 }
 
 export interface ILLMConfig {
@@ -60,7 +61,7 @@ export interface ILLMConfig {
   model: string;
   instance?: string;
   apiKey: string;
-  apiVersion: string;
+  apiVersion: string;  
   secretAccessKey?: string;
   sessionToken?: string;
   region?: string;
@@ -93,6 +94,7 @@ export interface IInputProps {
   question?: string;
   userSessionId?: string;
   chatThreadID?: string;
+  context?: string;  
 }
 
 export interface TModel extends Record<string, unknown> {}

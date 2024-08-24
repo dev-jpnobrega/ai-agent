@@ -58,15 +58,13 @@ export default class SqlDatabaseChain extends BaseChain {
   prompt = DEFAULT_SQL_DATABASE_PROMPT;
 
   // Number of results to return from the query
-  topK = 5;
+  topK = 5; 
 
   inputKey = 'query';
 
   outputKey = 'result';
 
   customMessage = '';
-
-  maxDataExamples = 10; // TODO add config in agent settings
 
   sqlOutputKey: string | undefined = undefined;
 
@@ -85,6 +83,7 @@ export default class SqlDatabaseChain extends BaseChain {
     this.customMessage = customMessage || '';
   }
 
+  //TODO: rever se vai ser necessário colocar o context aqui tbm
   getSQLPrompt(): string {
     return `
       Based on the SQL table schema provided below, write an SQL query that answers the user's question.\n
@@ -93,14 +92,17 @@ export default class SqlDatabaseChain extends BaseChain {
       -------------------------------------------\n
       Here are some important observations for generating the query:\n
       - Only execute the request on the service if the question is not in CHAT HISTORY, if the question has already been answered, use the same answer and do not make a query on the database.\n
-      {user_prompt}\n
+      
+      USER CONTEXT:\n
+        {user_prompt}\n
+        {user_context}\n
       -------------------------------------------\n
       SCHEMA: {schema}\n
       -------------------------------------------\n
       CHAT HISTORY: {format_chat_messages}\n
       -------------------------------------------\n
       QUESTION: {question}\n
-      ------------------------------------------\n
+      ------------------------------------------\n      
       SQL QUERY:
     `;
   }
@@ -139,7 +141,7 @@ export default class SqlDatabaseChain extends BaseChain {
       const data = JSON.parse(countResult);
       const result = parseInt(data[0]?.resultcount, 10);
 
-      if (result >= this.maxDataExamples) {
+      if (result >= this.topK) {
         throw new Error(MESSAGES_ERRORS.dataTooBig);
       }
 
@@ -177,6 +179,7 @@ export default class SqlDatabaseChain extends BaseChain {
         chat_history: () => values?.chat_history,
         format_chat_messages: () => values?.format_chat_messages,
         user_prompt: () => this.customMessage,
+        user_context: () => values?.user_context,
       },
       this.buildPromptTemplate(this.getSQLPrompt()),
       this.llm.bind({ stop: ['\nSQLResult:'] }),
