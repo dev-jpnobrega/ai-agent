@@ -90,9 +90,6 @@ export default class SqlDatabaseChain extends BaseChain {
       Your response must only be a valid SQL query, based on the schema provided.\n
       Remember to put double quotes around database table names.\n
       -------------------------------------------\n
-      Here are some important observations for generating the query:\n
-      - Only execute the request on the service if the question is not in CHAT HISTORY, if the question has already been answered, use the same answer and do not make a query on the database.\n
-      
       USER CONTEXT:\n
         {user_prompt}\n
         {user_context}\n
