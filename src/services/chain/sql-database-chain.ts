@@ -90,13 +90,13 @@ export default class SqlDatabaseChain extends BaseChain {
       Your response must only be a valid SQL query, based on the schema provided.\n
       Remember to put double quotes around database table names.\n
       -------------------------------------------\n
+      Here are some important observations for generating the query:\n
+   
       USER CONTEXT:\n
         {user_prompt}\n
         {user_context}\n
       -------------------------------------------\n
       SCHEMA: {schema}\n
-      -------------------------------------------\n
-      CHAT HISTORY: {format_chat_messages}\n
       -------------------------------------------\n
       QUESTION: {question}\n
       ------------------------------------------\n      
