@@ -17,7 +17,6 @@ import { ChainService, IChainService } from './services/chain';
 import { ChatHistoryFactory, IChatHistory } from './services/chat-history';
 import LLMFactory from './services/llm';
 import VectorStoreFactory from './services/vector-store';
-import { BaseMessage } from 'langchain/schema';
 
 const EVENTS_NAME = {
   onMessage: 'onMessage',
@@ -34,7 +33,6 @@ class Agent extends AgentBaseCommand implements IAgent {
   private _vectorService: VectorStore;
 
   private _chainService: IChainService;
-
 
   private _chatHistory: IChatHistory;
   private _bufferMemory: BufferMemory;
@@ -71,7 +69,7 @@ class Agent extends AgentBaseCommand implements IAgent {
     this._chatHistory = await ChatHistoryFactory.create({
       ...settings,
       sessionId: userSessionId || nanoid(), // TODO
-    })
+    });
 
     return this._chatHistory;
   }
@@ -97,10 +95,11 @@ class Agent extends AgentBaseCommand implements IAgent {
 
     const referenciesObjDocs: any = {};
     relevantDocs.map(
-      (doc: { metadata: any }) => referenciesObjDocs[doc.metadata] = doc.metadata
-    )
+      (doc: { metadata: any }) =>
+        (referenciesObjDocs[doc.metadata] = doc.metadata)
+    );
 
-    return { 
+    return {
       relevantDocs: relevantDocs.map((doc: any) => doc.pageContent).join('\n'),
       referenciesDocs: Object.values(referenciesObjDocs),
     };
@@ -123,7 +122,7 @@ class Agent extends AgentBaseCommand implements IAgent {
       const chain = await this._chainService.build(
         this._llm,
         question,
-        chatHistory.getBufferMemory(),        
+        chatHistory.getBufferMemory()
       );
 
       const chatMessages = await chatHistory.getMessages();
@@ -132,7 +131,7 @@ class Agent extends AgentBaseCommand implements IAgent {
         referencies: referenciesDocs,
         relevant_docs: relevantDocs,
         input_documents: [],
-        query: question,        
+        query: question,
         question: question,
         user_context: context,
         chat_history: chatMessages,

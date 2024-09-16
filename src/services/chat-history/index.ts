@@ -1,4 +1,3 @@
-
 import { IDatabaseConfig } from '../../interface/agent.interface';
 import { BaseChatMessageHistory, BaseMessage } from 'langchain/schema';
 
@@ -6,7 +5,7 @@ import RedisChatHistory from './redis-chat-history';
 import { BufferMemory } from 'langchain/memory';
 import MemoryChatHistory from './memory-chat-history';
 
-interface IChatHistory  { 
+interface IChatHistory {
   addUserMessage(message: string): Promise<void>;
   addAIChatMessage(message: string): Promise<void>;
   getMessages(): Promise<BaseMessage[]>;
@@ -25,7 +24,7 @@ class ChatHistoryFactory {
   public static async create(settings: IDatabaseConfig): Promise<IChatHistory> {
     const service = new Services[settings?.type](settings);
 
-    if (!service) { 
+    if (!service) {
       return await new MemoryChatHistory(settings).build();
     }
 
@@ -33,7 +32,4 @@ class ChatHistoryFactory {
   }
 }
 
-export {
-  IChatHistory,
-  ChatHistoryFactory,
-};
+export { IChatHistory, ChatHistoryFactory };

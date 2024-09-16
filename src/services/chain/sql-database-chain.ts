@@ -58,7 +58,7 @@ export default class SqlDatabaseChain extends BaseChain {
   prompt = DEFAULT_SQL_DATABASE_PROMPT;
 
   // Number of results to return from the query
-  topK = 5; 
+  topK = 5;
 
   inputKey = 'query';
 
@@ -71,7 +71,13 @@ export default class SqlDatabaseChain extends BaseChain {
   // Whether to return the result of querying the SQL table directly.
   returnDirect = false;
 
-  constructor(fields: SqlDatabaseChainInput, customMessage?: string) {
+  includeTables: string[] = [];
+
+  constructor(
+    fields: SqlDatabaseChainInput,
+    customMessage?: string,
+    includeTables?: string[]
+  ) {
     super(fields);
     this.llm = fields.llm;
     this.database = fields.database;
@@ -81,6 +87,7 @@ export default class SqlDatabaseChain extends BaseChain {
     this.sqlOutputKey = fields.sqlOutputKey ?? this.sqlOutputKey;
     this.prompt = fields.prompt;
     this.customMessage = customMessage || '';
+    this.includeTables = includeTables || [];
   }
 
   //TODO: rever se vai ser necessário colocar o context aqui tbm
@@ -91,14 +98,17 @@ export default class SqlDatabaseChain extends BaseChain {
       Remember to put double quotes around database table names.\n
       -------------------------------------------\n
       Here are some important observations for generating the query:\n
+      - Do not use data from the example rows, they are just demonstration rows over the data.\n
    
       USER CONTEXT:\n
         {user_prompt}\n
         {user_context}\n
       -------------------------------------------\n
-      SCHEMA: {schema}\n
+      DATA SCHEMA AND ROWS EXAMPLE: \n
+      {schema}\n
       -------------------------------------------\n
-      QUESTION: {question}\n
+      QUESTION:\n
+      {question}\n
       ------------------------------------------\n      
       SQL QUERY:
     `;
@@ -167,7 +177,7 @@ export default class SqlDatabaseChain extends BaseChain {
     runManager?: CallbackManagerForChainRun
   ): Promise<ChainValues> {
     const question: string = values[this.inputKey];
-    const table_schema = await this.database.getTableInfo();
+    const table_schema = await this.database.getTableInfo(this.includeTables);
 
     const sqlQueryChain = RunnableSequence.from([
       {
@@ -184,16 +194,16 @@ export default class SqlDatabaseChain extends BaseChain {
 
     const finalChain = RunnableSequence.from([
       {
-        question: (input) => input.question,
+        question: (input: any) => input.question,
         query: sqlQueryChain,
       },
       {
         table_info: () => table_schema,
         input: () => question,
         schema: () => table_schema,
-        question: (input) => input.question,
-        query: (input) => input.query,
-        response: async (input) => {
+        question: (input: any) => input.question,
+        query: (input: any) => input.query,
+        response: async (input: any) => {
           const text = input.query.content;
 
           try {
@@ -219,7 +229,7 @@ export default class SqlDatabaseChain extends BaseChain {
         [this.outputKey]: this.prompt
           .pipe(this.llm)
           .pipe(new StringOutputParser()),
-        [this.sqlOutputKey]: (previousStepResult) => {
+        [this.sqlOutputKey]: (previousStepResult: any) => {
           return previousStepResult?.query?.content;
         },
       },

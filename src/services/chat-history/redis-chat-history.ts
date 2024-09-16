@@ -16,14 +16,14 @@ class RedisChatHistory implements IChatHistory {
   private async createClient(): Promise<any> {
     if (this._redisClientInstance) {
       return this._redisClientInstance;
-    };
+    }
 
-    const { Redis } = (await import('ioredis'));
+    const { Redis } = await import('ioredis');
 
     const client = new Redis({
       ...this._settings,
       db: this._settings.database as number,
-      tls: {}
+      tls: {},
     });
 
     this._redisClientInstance = client;
@@ -41,16 +41,17 @@ class RedisChatHistory implements IChatHistory {
 
   async getMessages(): Promise<BaseMessage[]> {
     const messages = await this._history?.getMessages();
-    const cut = messages
-      .slice(-(this._settings?.limit || 5));
+    const cut = messages.slice(-(this._settings?.limit || 5));
 
     return cut;
   }
 
   getFormatedMessages(messages: BaseMessage[]): string {
-    const formated = messages.map(
-      (message) => `${message._getType().toUpperCase()}: ${message.content}`
-    ).join('\n');
+    const formated = messages
+      .map(
+        (message) => `${message._getType().toUpperCase()}: ${message.content}`
+      )
+      .join('\n');
 
     return formated;
   }
@@ -66,9 +67,11 @@ class RedisChatHistory implements IChatHistory {
   clear(): Promise<void> {
     return this._history?.clear();
   }
- 
+
   async build(): Promise<IChatHistory> {
-    const { RedisChatMessageHistory } = (await import('langchain/stores/message/ioredis'));
+    const { RedisChatMessageHistory } = await import(
+      'langchain/stores/message/ioredis'
+    );
 
     const client = await this.createClient();
 
