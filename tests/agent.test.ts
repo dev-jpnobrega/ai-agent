@@ -46,9 +46,9 @@ describe('Agent test', () => {
     });
 
     agent.call({
-      question: 'Quais sao minhas proximas visitas?',
-      chatThreadID: '01',
-      context: 'Sou vendedor, meu telefone e o +5511978343559',
+      question: 'quais os últimos 5 pedidos desse cliente?',
+      chatThreadID: '1',
+      context: 'Sou vendedor, meu telefone e o 1',
     });
   });
 });
