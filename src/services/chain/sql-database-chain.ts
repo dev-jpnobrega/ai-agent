@@ -19,7 +19,8 @@ import { SqlDatabase } from 'langchain/sql_db';
 
 const MESSAGES_ERRORS = {
   dataTooBig: 'Data result is too big. Please, be more specific.',
-  dataEmpty: 'Data result is empty. Please, be more specific.',
+  dataEmpty: 'Data result is empty.',
+  dataError: 'Data result is error. Please, try again.',
 };
 
 /**
@@ -101,8 +102,8 @@ export default class SqlDatabaseChain extends BaseChain {
       - Do not use data from the example rows, they are just demonstration rows over the data.\n
    
       USER CONTEXT:\n
-        {user_prompt}\n
-        {user_context}\n
+        USER RULES: {user_prompt}\n
+        CONTEXT: {user_context}\n
       -------------------------------------------\n
       DATA SCHEMA AND ROWS EXAMPLE: \n
       {schema}\n
@@ -141,21 +142,27 @@ export default class SqlDatabaseChain extends BaseChain {
   private async checkResultDatabase(database: SqlDatabase, sql: string) {
     const prepareSql = sql.replace(';', '');
     const prepareCount = `SELECT COUNT(*) as resultCount FROM (${prepareSql}) as tableCount;`;
+    let result = 0;
 
     try {
       const countResult = await database.run(prepareCount);
 
       const data = JSON.parse(countResult);
-      const result = parseInt(data[0]?.resultcount, 10);
-
-      if (result >= this.topK) {
-        throw new Error(MESSAGES_ERRORS.dataTooBig);
-      }
-
-      return result;
+      result = parseInt(data[0]?.resultcount, 10);
     } catch (error) {
-      throw error;
+      console.error(error);
+      throw new Error(MESSAGES_ERRORS.dataError);
     }
+
+    if (result === 0) {
+      throw new Error(MESSAGES_ERRORS.dataEmpty);
+    }
+
+    if (result >= this.topK) {
+      throw new Error(MESSAGES_ERRORS.dataTooBig);
+    }
+
+    return result;
   }
 
   private buildPromptTemplate(systemMessages: string): BasePromptTemplate {
@@ -178,6 +185,7 @@ export default class SqlDatabaseChain extends BaseChain {
   ): Promise<ChainValues> {
     const question: string = values[this.inputKey];
     const table_schema = await this.database.getTableInfo(this.includeTables);
+    const prompt = this.buildPromptTemplate(this.getSQLPrompt());
 
     const sqlQueryChain = RunnableSequence.from([
       {
@@ -188,19 +196,25 @@ export default class SqlDatabaseChain extends BaseChain {
         user_prompt: () => this.customMessage,
         user_context: () => values?.user_context,
       },
-      this.buildPromptTemplate(this.getSQLPrompt()),
+      prompt,
       this.llm.bind({ stop: ['\nSQLResult:'] }),
     ]);
 
     const finalChain = RunnableSequence.from([
       {
         question: (input: any) => input.question,
+        user_prompt: () => this.customMessage,
+        user_context: () => values?.user_context,
+        chat_history: () => values?.chat_history,
         query: sqlQueryChain,
       },
       {
         table_info: () => table_schema,
         input: () => question,
         schema: () => table_schema,
+        chat_history: () => values?.chat_history,
+        user_prompt: () => this.customMessage,
+        user_context: () => values?.user_context,
         question: (input: any) => input.question,
         query: (input: any) => input.query,
         response: async (input: any) => {

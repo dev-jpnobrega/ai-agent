@@ -70,8 +70,8 @@ class ChainService {
       - If you are unable to formulate a answer, respond in a friendly manner so the user can rephrase the question.\n\n
 
       USER CONTEXT:\n
-        context: {user_context}\n
-        question: {user_prompt}\n
+        USER RULES: {user_prompt}\n
+        CONTEXT: {user_context}\n
       --------------------------------------
       CHAT HISTORY: {format_chat_messages}\n
       --------------------------------------
@@ -152,7 +152,7 @@ class ChainService {
         'chat_history',
         'format_chat_messages',
         'user_prompt',
-        'user_context'
+        'user_context',
       ],
       verbose: this._settings.debug || false,
       memory: memoryChat,
