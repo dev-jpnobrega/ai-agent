@@ -47,8 +47,8 @@ describe('Agent test', () => {
 
     agent.call({
       question: 'quais os últimos 5 pedidos desse cliente?',
-      chatThreadID: '+5511970774145',
-      context: 'Sou vendedor, meu telefone e o +5511970774145',
+      chatThreadID: '1',
+      context: 'Sou vendedor, meu telefone e o 1',
     });
   });
 });
