@@ -1,4 +1,4 @@
-import { BaseChatModel } from 'langchain/chat_models/base';
+import { BaseLanguageModel } from '@langchain/core/language_models/base';
 import { BufferMemory } from 'langchain/memory';
 import { VectorStore } from 'langchain/vectorstores/base';
 
@@ -17,6 +17,7 @@ import { ChainService, IChainService } from './services/chain';
 import { ChatHistoryFactory, IChatHistory } from './services/chat-history';
 import LLMFactory from './services/llm';
 import VectorStoreFactory from './services/vector-store';
+// Removed duplicate import
 
 const EVENTS_NAME = {
   onMessage: 'onMessage',
@@ -29,7 +30,7 @@ const EVENTS_NAME = {
 
 class Agent extends AgentBaseCommand implements IAgent {
   private _name: string;
-  private _llm: BaseChatModel;
+  private _llm: BaseLanguageModel;
   private _vectorService: VectorStore;
 
   private _chainService: IChainService;
@@ -106,7 +107,7 @@ class Agent extends AgentBaseCommand implements IAgent {
   }
 
   async call(args: IInputProps): Promise<void> {
-    const { question, chatThreadID, context } = args;
+    const { question, chatThreadID, context: userContext } = args;
 
     try {
       const chatHistory = await this.buildHistory(
@@ -122,27 +123,33 @@ class Agent extends AgentBaseCommand implements IAgent {
       const chain = await this._chainService.build(
         this._llm,
         question,
-        chatHistory.getBufferMemory()
+        chatHistory.getChatHistory(),
+        userContext
       );
 
       const chatMessages = await chatHistory.getMessages();
 
-      const result = await chain.call({
-        referencies: referenciesDocs,
-        relevant_docs: relevantDocs,
-        input_documents: [],
-        query: question,
-        question: question,
-        user_context: context,
-        chat_history: chatMessages,
-        format_chat_messages: chatHistory.getFormatedMessages(chatMessages),
-        user_prompt: this._settings.systemMesssage,
-      });
+      const result = await chain.invoke(
+        {
+          referencies: referenciesDocs,
+          relevant_docs: relevantDocs,
+          input_documents: [],
+          query: question,
+          question: question,
+          user_context: userContext,
+          history: chatMessages,
+          format_chat_messages: await chatHistory.getFormatedMessages(
+            chatMessages
+          ),
+          user_prompt: this._settings.systemMesssage,
+        },
+        { configurable: { sessionId: chatThreadID } }
+      );
 
-      await chatHistory.addUserMessage(question);
-      await chatHistory.addAIChatMessage(result?.text);
+      // await chatHistory.addUserMessage(question);
+      // await chatHistory.addAIMessage(result);
 
-      this.emit(EVENTS_NAME.onMessage, result?.text);
+      this.emit(EVENTS_NAME.onMessage, result);
 
       this.emit(EVENTS_NAME.onEnd, 'terminated');
     } catch (error) {

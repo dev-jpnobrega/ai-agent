@@ -1,13 +1,12 @@
-import { BaseChatMessageHistory, BaseMessage } from 'langchain/schema';
+import { BaseListChatMessageHistory } from '@langchain/core/chat_history';
+import { BaseMessage } from '@langchain/core/messages';
 import { IDatabaseConfig } from '../../interface/agent.interface';
 import { IChatHistory } from '.';
-import { BufferMemory } from 'langchain/memory';
 
 class RedisChatHistory implements IChatHistory {
   private _settings: IDatabaseConfig;
   private _redisClientInstance: any;
-  private _history: BaseChatMessageHistory;
-  private _bufferMemory: BufferMemory;
+  private _history: BaseListChatMessageHistory;
 
   constructor(settings: IDatabaseConfig) {
     this._settings = settings;
@@ -35,12 +34,12 @@ class RedisChatHistory implements IChatHistory {
     return this._history?.addUserMessage(message);
   }
 
-  addAIChatMessage(message: string): Promise<void> {
-    return this._history?.addAIChatMessage(message);
+  addAIMessage(message: string): Promise<void> {
+    return this._history?.addAIMessage(message);
   }
 
   async getMessages(): Promise<BaseMessage[]> {
-    const messages = await this._history?.getMessages();
+    const messages = (await this._history?.getMessages()).reverse();
     const cut = messages.slice(-(this._settings?.limit || 5));
 
     return cut;
@@ -56,12 +55,8 @@ class RedisChatHistory implements IChatHistory {
     return formated;
   }
 
-  getChatHistory(): BaseChatMessageHistory {
+  getChatHistory(): BaseListChatMessageHistory {
     return this._history;
-  }
-
-  getBufferMemory(): BufferMemory {
-    return this._bufferMemory;
   }
 
   clear(): Promise<void> {
@@ -70,7 +65,7 @@ class RedisChatHistory implements IChatHistory {
 
   async build(): Promise<IChatHistory> {
     const { RedisChatMessageHistory } = await import(
-      'langchain/stores/message/ioredis'
+      '@langchain/community/stores/message/ioredis'
     );
 
     const client = await this.createClient();
@@ -79,12 +74,6 @@ class RedisChatHistory implements IChatHistory {
       sessionTTL: this._settings.sessionTTL,
       sessionId: this._settings.sessionId || new Date().toISOString(),
       client,
-    });
-
-    this._bufferMemory = new BufferMemory({
-      returnMessages: true,
-      memoryKey: 'chat_history',
-      chatHistory: this._history,
     });
 
     return this;

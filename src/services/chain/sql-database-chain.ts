@@ -1,21 +1,26 @@
 import { CallbackManagerForChainRun } from 'langchain/callbacks';
-import { BaseChain } from 'langchain/chains';
+import { DEFAULT_SQL_DATABASE_PROMPT } from 'langchain/chains/sql_db';
+import { BaseLanguageModel } from '@langchain/core/language_models/base';
+
+import { AIMessage, ChainValues } from 'langchain/schema';
+
+import { SqlDatabase } from 'langchain/sql_db';
 import {
-  DEFAULT_SQL_DATABASE_PROMPT,
-  SqlDatabaseChainInput,
-} from 'langchain/chains/sql_db';
-import { BaseLanguageModel } from 'langchain/dist/base_language';
+  RunnableSequence,
+  RunnableWithMessageHistory,
+} from '@langchain/core/runnables';
+import { StringOutputParser } from '@langchain/core/output_parsers';
 import {
+  AIMessagePromptTemplate,
   BasePromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
+  PromptTemplate,
   SystemMessagePromptTemplate,
-} from 'langchain/prompts';
-import { AIMessage, ChainValues } from 'langchain/schema';
-import { StringOutputParser } from 'langchain/schema/output_parser';
-import { RunnableSequence } from 'langchain/schema/runnable';
-import { SqlDatabase } from 'langchain/sql_db';
+} from '@langchain/core/prompts';
+
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 
 const MESSAGES_ERRORS = {
   dataTooBig: 'Data result is too big. Please, be more specific.',
@@ -48,7 +53,18 @@ const MESSAGES_ERRORS = {
  * const result = await chain.run("How many tracks are there?");
  * ```
  */
-export default class SqlDatabaseChain extends BaseChain {
+
+export interface SqlDatabaseChainInput {
+  llm: BaseLanguageModel;
+  database: SqlDatabase;
+  topK?: number;
+  inputKey?: string;
+  outputKey?: string;
+  sqlOutputKey?: string;
+  prompt?: PromptTemplate;
+}
+
+class SqlDatabaseChain {
   // LLM wrapper to use
   llm: BaseLanguageModel;
 
@@ -56,7 +72,7 @@ export default class SqlDatabaseChain extends BaseChain {
   database: SqlDatabase;
 
   // Prompt to use to translate natural language to SQL.
-  prompt = DEFAULT_SQL_DATABASE_PROMPT;
+  prompt;
 
   // Number of results to return from the query
   topK = 5;
@@ -79,7 +95,6 @@ export default class SqlDatabaseChain extends BaseChain {
     customMessage?: string,
     includeTables?: string[]
   ) {
-    super(fields);
     this.llm = fields.llm;
     this.database = fields.database;
     this.topK = fields.topK ?? this.topK;
@@ -104,6 +119,9 @@ export default class SqlDatabaseChain extends BaseChain {
       USER CONTEXT:\n
         USER RULES: {user_prompt}\n
         CONTEXT: {user_context}\n
+      -------------------------------------------\n
+      CHAT HISTORY:\n
+      {format_chat_messages}\n
       -------------------------------------------\n
       DATA SCHEMA AND ROWS EXAMPLE: \n
       {schema}\n
@@ -168,76 +186,82 @@ export default class SqlDatabaseChain extends BaseChain {
   private buildPromptTemplate(systemMessages: string): BasePromptTemplate {
     const combine_messages = [
       SystemMessagePromptTemplate.fromTemplate(systemMessages),
-      new MessagesPlaceholder('chat_history'),
-      new AIMessage('Wait! We are searching our database.'),
+      new MessagesPlaceholder('history'),
+      AIMessagePromptTemplate.fromTemplate(
+        'Wait! We are searching our database.'
+      ),
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ];
 
     const CHAT_COMBINE_PROMPT =
-      ChatPromptTemplate.fromPromptMessages(combine_messages);
+      ChatPromptTemplate.fromMessages(combine_messages);
 
     return CHAT_COMBINE_PROMPT;
   }
 
-  async _call(
-    values: ChainValues,
-    runManager?: CallbackManagerForChainRun
-  ): Promise<ChainValues> {
-    const question: string = values[this.inputKey];
-    const table_schema = await this.database.getTableInfo(this.includeTables);
+  private async buildSqlQueryChain(
+    tableSchema: string
+  ): Promise<RunnableSequence<any, any>> {
     const prompt = this.buildPromptTemplate(this.getSQLPrompt());
 
     const sqlQueryChain = RunnableSequence.from([
       {
-        schema: () => table_schema,
-        question: (input: { question: string }) => input.question,
-        chat_history: () => values?.chat_history,
-        format_chat_messages: () => values?.format_chat_messages,
-        user_prompt: () => this.customMessage,
-        user_context: () => values?.user_context,
+        schema: () => tableSchema,
+        question: (input) => input.question,
+        user_prompt: (input) => this.customMessage,
+        history: (input) => input.history,
+        user_context: (input) => input.user_context,
+        format_chat_messages: (input) => input.format_chat_messages,
       },
       prompt,
       this.llm.bind({ stop: ['\nSQLResult:'] }),
     ]);
 
-    const finalChain = RunnableSequence.from([
+    return sqlQueryChain;
+  }
+
+  private async executeSQLQuery(input: any) {
+    const text = input?.query?.content;
+
+    try {
+      const sqlParserd = this.parserSQL(text);
+
+      if (!sqlParserd) return text;
+
+      await this.checkResultDatabase(this.database, sqlParserd);
+
+      const queryResult = await this.database.run(sqlParserd);
+
+      return queryResult;
+    } catch (error) {
+      console.error(error);
+
+      return error?.message;
+    }
+  }
+
+  async build(...args: any): Promise<RunnableSequence<any, any>> {
+    const tableSchema = await this.database.getTableInfo(this.includeTables);
+    const sqlQueryChain = await this.buildSqlQueryChain(tableSchema);
+
+    const sqlChain = RunnableSequence.from([
       {
         question: (input: any) => input.question,
-        user_prompt: () => this.customMessage,
-        user_context: () => values?.user_context,
-        chat_history: () => values?.chat_history,
+        user_prompt: (input: any) => this.customMessage,
+        history: (input: any) => input.history,
+        user_context: (input: any) => input.user_context,
+        format_chat_messages: (input) => input.format_chat_messages,
         query: sqlQueryChain,
       },
       {
-        table_info: () => table_schema,
-        input: () => question,
-        schema: () => table_schema,
-        chat_history: () => values?.chat_history,
+        schema: () => tableSchema,
         user_prompt: () => this.customMessage,
-        user_context: () => values?.user_context,
+        user_context: (input: any) => input.user_context,
+        history: (input: any) => input.history,
         question: (input: any) => input.question,
         query: (input: any) => input.query,
-        response: async (input: any) => {
-          const text = input.query.content;
-
-          try {
-            const sqlParserd = this.parserSQL(text);
-
-            if (!sqlParserd) return text;
-
-            console.log(`SQL`, sqlParserd);
-
-            await this.checkResultDatabase(this.database, sqlParserd);
-
-            const queryResult = await this.database.run(sqlParserd);
-
-            return queryResult;
-          } catch (error) {
-            console.error(error);
-
-            return error?.message;
-          }
-        },
+        format_chat_messages: (input) => input.format_chat_messages,
+        response: this.executeSQLQuery.bind(this),
       },
       {
         [this.outputKey]: this.prompt
@@ -249,23 +273,8 @@ export default class SqlDatabaseChain extends BaseChain {
       },
     ]);
 
-    const result = await finalChain.invoke({ question });
-
-    return result;
-  }
-
-  _chainType(): string {
-    return 'sql_chain' as const;
-  }
-
-  get inputKeys(): string[] {
-    return [this.inputKey];
-  }
-
-  get outputKeys(): string[] {
-    if (this.sqlOutputKey != null) {
-      return [this.outputKey, this.sqlOutputKey];
-    }
-    return [this.outputKey];
+    return sqlChain;
   }
 }
+
+export default SqlDatabaseChain;

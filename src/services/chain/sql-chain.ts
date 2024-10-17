@@ -1,10 +1,10 @@
-import { BaseChain } from 'langchain/chains';
 import { IDataSourceConfig } from '../../interface/agent.interface';
 import SqlDatabaseChain from './sql-database-chain';
 import { SqlDatabase } from 'langchain/sql_db';
-import { BaseChatModel } from 'langchain/chat_models/base';
-import { PromptTemplate } from 'langchain/prompts';
 import { IChain } from './';
+import { RunnableSequence } from '@langchain/core/runnables';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { BaseLanguageModel } from '@langchain/core/language_models/base';
 
 class SqlChain implements IChain {
   private _settings: IDataSourceConfig;
@@ -22,13 +22,16 @@ class SqlChain implements IChain {
         ${customizeSystemMessage}\n
         ------------\n
         DATA SCHEMA AND ROWS EXAMPLE: {schema}\n
-        ------------\n
+        -------------------------------------------\n
+        CHAT HISTORY:\n
+        {format_chat_messages}\n
+        -------------------------------------------\n
         QUESTION: {question}\n
-        ------------\n
+        -------------------------------------------\n
         SQL QUERY: {query}\n
-        ------------\n
+        -------------------------------------------\n
         SQLResult: {response}\n
-        ------------\n
+        -------------------------------------------\n
         NATURAL LANGUAGE RESPONSE:\n
     `;
   }
@@ -46,13 +49,16 @@ class SqlChain implements IChain {
     return this._dataSourceInstance;
   }
 
-  public async create(llm: BaseChatModel, ...args: any): Promise<BaseChain> {
+  public async create(
+    llm: BaseLanguageModel,
+    ...args: any
+  ): Promise<RunnableSequence<any, any>> {
     const database = await this.getDataSourceInstance();
     const systemTemplate = this.getSystemMessage(
       this._settings.customizeSystemMessage
     );
 
-    const chainSQL = new SqlDatabaseChain(
+    const chainSQL = await new SqlDatabaseChain(
       {
         llm,
         database,
@@ -64,8 +70,9 @@ class SqlChain implements IChain {
             'response',
             'schema',
             'query',
-            'chat_history',
+            'history',
             'user_context',
+            'format_chat_messages',
           ],
           template: systemTemplate,
         }),
@@ -73,7 +80,7 @@ class SqlChain implements IChain {
       },
       this._settings?.customizeSystemMessage,
       this._settings?.includesTables
-    );
+    ).build(...args);
 
     return chainSQL;
   }
