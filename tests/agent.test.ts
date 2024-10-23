@@ -5,7 +5,7 @@ import Agent from '../src/agent';
 import { DataSource } from 'typeorm';
 import { IAgentConfig } from '../src/interface/agent.interface';
 
-const agentConfig = require(`./agent-configs/agent-tigre.json`);
+const agentConfig = require(`./agent-configs/agent-openapi.json`);
 
 describe('Agent test', () => {
   it('should Agent instance', (t, done) => {
@@ -51,10 +51,11 @@ describe('Agent test', () => {
     });
 
     agent.call({
-      question: 'Qual foi o cliente q mais comprou esse produto?',
-      chatThreadID: '3323',
+      question: 'Qual estoque do produto 2771?',
+      // question: 'qUAL MINHAS VISITAS AMANHA?',
+      chatThreadID: '23ee',
       // context: 'Eu me chamo Joao Paulo e sou Arquiteto de Software',
-      context: 'Sou vendedor, meu telefone e o +5511970774145',
+      // context: 'Sou vendedor, meu telefone e o +5511970774145',
     });
   });
 });

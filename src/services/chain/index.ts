@@ -1,9 +1,3 @@
-import {
-  BaseChain,
-  SequentialChain,
-  loadQAMapReduceChain,
-} from 'langchain/chains';
-
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
 
 import {
@@ -15,15 +9,12 @@ import {
   AIMessagePromptTemplate,
 } from '@langchain/core/prompts';
 
-import {
-  IAgentConfig,
-  SYSTEM_MESSAGE_DEFAULT,
-} from '../../interface/agent.interface';
+import { IAgentConfig } from '../../interface/agent.interface';
 import OpenAPIChain from './openapi-chain';
 import SqlChain from './sql-chain';
 
 import {
-  RunnablePassthrough,
+  RunnableLike,
   RunnableSequence,
   RunnableWithMessageHistory,
 } from '@langchain/core/runnables';
@@ -40,7 +31,7 @@ interface IChainService {
   build(
     llm: BaseLanguageModel,
     ...args: any
-  ): Promise<RunnableSequence<any, any>>;
+  ): Promise<RunnableWithMessageHistory<any, any>>;
 }
 
 class ChainService {
@@ -58,7 +49,6 @@ class ChainService {
 
     if (settings.vectorStoreConfig) {
       this._isVectorStoreEnabled = true;
-      enabledChains.push(new VectorStoreChain(settings.vectorStoreConfig));
     }
 
     if (settings.dataSourceConfig) {
@@ -101,8 +91,6 @@ class ChainService {
       Input Data:\n
       - User Rules: {user_prompt}\n
       - User Context: {user_context}\n
-      - Document Context: {relevant_docs}\n
-      - Reference Files: {referencies}\n
     `;
 
     if (this._isSQLChainEnabled) {
@@ -112,29 +100,23 @@ class ChainService {
       `;
     }
 
-    builtMessage += `
-      Question:\n
-      - {question}\n
-    `;
-
     if (this._isVectorStoreEnabled) {
       builtMessage += `
-        --------------------------------------
-        Context found in documents: {relevant_docs}\n
-        --------------------------------------
-        Name of reference files: {referencies}\n    
+        - Document Context: {relevant_docs}\n
+        - Reference Files: {referencies}\n   
       `;
     }
 
     if (this._isOpenAPIChainEnabled) {
       builtMessage += `
-        --------------------------------------
-        API Result: {openAPIResult}\n
-        --------------------------------------
+        - API Result: {openAPIResult}\n
       `;
     }
 
-    // builtMessage += `\n\nQUESTION: {question}`;
+    builtMessage += `
+      Question:\n
+      - {question}\n
+    `;
 
     return builtMessage;
   }
@@ -153,54 +135,47 @@ class ChainService {
     return CHAT_COMBINE_PROMPT;
   }
 
+  private async createChains(
+    enabledChains: IChain[],
+    llm: BaseLanguageModel,
+    ...args: any
+  ): Promise<RunnableLike<any, any>[]> {
+    const prompt = this.buildPromptTemplate();
+
+    const chainQA = prompt.pipe(llm).pipe(new StringOutputParser());
+
+    const chains: RunnableLike<any, any>[] = await Promise.all(
+      enabledChains.map(
+        async (chain: IChain) => await chain.create(llm, ...args)
+      )
+    );
+
+    chains.push(chainQA);
+
+    return chains;
+  }
+
   private async buildChains(
     llm: BaseLanguageModel,
     ...args: any
   ): Promise<RunnableSequence<any, any>> {
     const enabledChains = this.checkEnabledChains(this._settings);
 
-    const prompt = this.buildPromptTemplate();
+    const chains = await this.createChains(enabledChains, llm, ...args);
 
-    const chain = prompt.pipe(llm).pipe(new StringOutputParser());
-
-    /*
-    const chainQA = loadQAMapReduceChain(llm as unknown as BLMOld, {
-      combinePrompt: this.buildPromptTemplate(
-        this._settings.systemMesssage || SYSTEM_MESSAGE_DEFAULT
-      ),
-    });
-
-    const chains = await Promise.all(
-      enabledChains.map(
-        async (chain: IChain) => await chain.create(llm, ...args)
-      )
+    return RunnableSequence.from(
+      chains as [
+        RunnableLike<any, any>,
+        ...RunnableLike<any, any>[],
+        RunnableLike<any, string>
+      ]
     );
-    */
-    const chainSQL = await new SqlChain(this._settings.dataSourceConfig).create(
-      llm,
-      ...args
-    );
-
-    const run = RunnableSequence.from([
-      RunnablePassthrough.assign({
-        chainSQL,
-      }),
-      RunnablePassthrough.assign({
-        sqlResult: (input) => input.chainSQL.sqlResult,
-        sqlQuery: (input) => input.chainSQL.sqlQuery,
-      }),
-      chain,
-      llm,
-      new StringOutputParser(),
-    ]);
-
-    return run;
   }
 
   public async build(
     llm: BaseLanguageModel,
     ...args: any
-  ): Promise<RunnableSequence<any, any>> {
+  ): Promise<RunnableWithMessageHistory<any, any>> {
     const [, chatHistory] = args;
     const runnable = await this.buildChains(llm, ...args);
 

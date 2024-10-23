@@ -1,14 +1,7 @@
-import { CallbackManagerForChainRun } from 'langchain/callbacks';
-import { DEFAULT_SQL_DATABASE_PROMPT } from 'langchain/chains/sql_db';
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
 
-import { AIMessage, ChainValues } from 'langchain/schema';
-
 import { SqlDatabase } from 'langchain/sql_db';
-import {
-  RunnableSequence,
-  RunnableWithMessageHistory,
-} from '@langchain/core/runnables';
+import { RunnableSequence } from '@langchain/core/runnables';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import {
   AIMessagePromptTemplate,
@@ -20,39 +13,11 @@ import {
   SystemMessagePromptTemplate,
 } from '@langchain/core/prompts';
 
-import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-
 const MESSAGES_ERRORS = {
   dataTooBig: 'Data result is too big. Please, be more specific.',
   dataEmpty: 'Data result is empty.',
   dataError: 'Data result is error. Please, try again.',
 };
-
-/**
- * Class that represents a SQL database chain in the LangChain framework.
- * It extends the BaseChain class and implements the functionality
- * specific to a SQL database chain.
- *
- * @security **Security Notice**
- * This chain generates SQL queries for the given database.
- * The SQLDatabase class provides a getTableInfo method that can be used
- * to get column information as well as sample data from the table.
- * To mitigate risk of leaking sensitive data, limit permissions
- * to read and scope to the tables that are needed.
- * Optionally, use the includesTables or ignoreTables class parameters
- * to limit which tables can/cannot be accessed.
- *
- * @link See https://js.langchain.com/docs/security for more information.
- * @example
- * ```typescript
- * const chain = new SqlDatabaseChain({
- *   llm: new OpenAI({ temperature: 0 }),
- *   database: new SqlDatabase({ ...config }),
- * });
- *
- * const result = await chain.run("How many tracks are there?");
- * ```
- */
 
 export interface SqlDatabaseChainInput {
   llm: BaseLanguageModel;

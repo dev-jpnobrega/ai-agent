@@ -2,7 +2,10 @@ import { IDataSourceConfig } from '../../interface/agent.interface';
 import SqlDatabaseChain from './sql-database-chain';
 import { SqlDatabase } from 'langchain/sql_db';
 import { IChain } from './';
-import { RunnableSequence } from '@langchain/core/runnables';
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from '@langchain/core/runnables';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
 
@@ -82,7 +85,17 @@ class SqlChain implements IChain {
       this._settings?.includesTables
     ).build(...args);
 
-    return chainSQL;
+    return RunnableSequence.from([
+      RunnablePassthrough.assign({
+        chainSQL,
+      }),
+      RunnablePassthrough.assign({
+        sqlResult: (input: { chainSQL: { sqlResult: any; sqlQuery: any } }) =>
+          input.chainSQL?.sqlResult,
+        sqlQuery: (input: { chainSQL: { sqlResult: any; sqlQuery: any } }) =>
+          input.chainSQL?.sqlQuery,
+      }),
+    ]);
   }
 }
 
