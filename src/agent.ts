@@ -1,6 +1,6 @@
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
 import { BufferMemory } from 'langchain/memory';
-import { VectorStore } from 'langchain/vectorstores/base';
+import { VectorStore } from '@langchain/core/vectorstores';
 
 import AgentBaseCommand from './agent.base';
 import {
@@ -31,12 +31,10 @@ const EVENTS_NAME = {
 class Agent extends AgentBaseCommand implements IAgent {
   private _name: string;
   private _llm: BaseLanguageModel;
-  private _vectorService: VectorStore;
 
   private _chainService: IChainService;
 
   private _chatHistory: IChatHistory;
-  private _bufferMemory: BufferMemory;
   private _logger: Console;
   private _settings: IAgentConfig;
 
@@ -53,12 +51,6 @@ class Agent extends AgentBaseCommand implements IAgent {
     this._name = settings?.name || 'AssistentAgent';
     this._llm = LLMFactory.create(settings.chatConfig, settings.llmConfig);
     this._chainService = new ChainService(settings);
-
-    if (settings?.vectorStoreConfig)
-      this._vectorService = VectorStoreFactory.create(
-        settings.vectorStoreConfig,
-        settings.llmConfig
-      );
   }
 
   private async buildHistory(
@@ -75,75 +67,35 @@ class Agent extends AgentBaseCommand implements IAgent {
     return this._chatHistory;
   }
 
-  private async buildRelevantDocs(
-    args: IInputProps,
-    settings: IVectorStoreConfig
-  ): Promise<any> {
-    if (!settings) return { relevantDocs: [], referenciesDocs: [] };
-
-    const { customFilters = null } = settings;
-
-    const relevantDocs = await this._vectorService.similaritySearch(
-      args.question,
-      10,
-      {
-        vectorFields: settings.vectorFieldName,
-        filter: customFilters
-          ? interpolate<IInputProps>(customFilters, args)
-          : '',
-      }
-    );
-
-    const referenciesObjDocs: any = {};
-    relevantDocs.map(
-      (doc: { metadata: any }) =>
-        (referenciesObjDocs[doc.metadata] = doc.metadata)
-    );
-
-    return {
-      relevantDocs: relevantDocs.map((doc: any) => doc.pageContent).join('\n'),
-      referenciesDocs: Object.values(referenciesObjDocs),
-    };
-  }
-
   async call(args: IInputProps): Promise<void> {
-    const { question, chatThreadID, context: userContext } = args;
-
     try {
       const chatHistory = await this.buildHistory(
-        chatThreadID,
+        args?.chatThreadID,
         this._settings.dbHistoryConfig
-      );
-
-      const { relevantDocs, referenciesDocs } = await this.buildRelevantDocs(
-        args,
-        this._settings.vectorStoreConfig
       );
 
       const chain = await this._chainService.build(
         this._llm,
-        question,
+        args?.question,
         chatHistory.getChatHistory(),
-        userContext
+        args?.context
       );
 
       const chatMessages = await chatHistory.getMessages();
 
       const result = await chain.invoke(
         {
-          referencies: referenciesDocs,
-          relevant_docs: relevantDocs,
-          input_documents: [],
-          query: question,
-          question: question,
-          user_context: userContext,
+          ...args,
+          query: args?.question,
+          question: args?.question,
+          user_context: args?.context,
           history: chatMessages,
           format_chat_messages: await chatHistory.getFormatedMessages(
             chatMessages
           ),
-          user_prompt: this._settings.systemMesssage,
+          user_prompt: this._settings?.systemMesssage,
         },
-        { configurable: { sessionId: chatThreadID } }
+        { configurable: { sessionId: args?.chatThreadID } }
       );
 
       // await chatHistory.addUserMessage(question);

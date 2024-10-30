@@ -12,8 +12,10 @@ import {
 import { IAgentConfig } from '../../interface/agent.interface';
 import OpenAPIChain from './openapi-chain';
 import SqlChain from './sql-chain';
+import VectorStoreChain from './vector-store-chain';
 
 import {
+  Runnable,
   RunnableLike,
   RunnableSequence,
   RunnableWithMessageHistory,
@@ -47,10 +49,6 @@ class ChainService {
   private checkEnabledChains(settings: IAgentConfig): IChain[] {
     const enabledChains: IChain[] = [];
 
-    if (settings.vectorStoreConfig) {
-      this._isVectorStoreEnabled = true;
-    }
-
     if (settings.dataSourceConfig) {
       this._isSQLChainEnabled = true;
       enabledChains.push(new SqlChain(settings.dataSourceConfig));
@@ -59,6 +57,11 @@ class ChainService {
     if (settings.openAPIConfig) {
       this._isOpenAPIChainEnabled = true;
       enabledChains.push(new OpenAPIChain(settings.openAPIConfig));
+    }
+
+    if (settings.vectorStoreConfig) {
+      this._isVectorStoreEnabled = true;
+      enabledChains.push(new VectorStoreChain(settings));
     }
 
     return enabledChains;
@@ -102,11 +105,10 @@ class ChainService {
 
     if (this._isVectorStoreEnabled) {
       builtMessage += `
-        - Document Context: {relevant_docs}\n
-        - Reference Files: {referencies}\n   
+        - Document Context: {relevantDocs}\n
       `;
     }
-
+    // - Reference Files: {referencies}\n
     if (this._isOpenAPIChainEnabled) {
       builtMessage += `
         - API Result: {openAPIResult}\n
@@ -139,7 +141,7 @@ class ChainService {
     enabledChains: IChain[],
     llm: BaseLanguageModel,
     ...args: any
-  ): Promise<RunnableLike<any, any>[]> {
+  ): Promise<RunnableLike<any, any>[] | Runnable> {
     const prompt = this.buildPromptTemplate();
 
     const chainQA = prompt.pipe(llm).pipe(new StringOutputParser());
@@ -150,6 +152,8 @@ class ChainService {
       )
     );
 
+    if (chains.length === 0) return chainQA;
+
     chains.push(chainQA);
 
     return chains;
@@ -158,10 +162,12 @@ class ChainService {
   private async buildChains(
     llm: BaseLanguageModel,
     ...args: any
-  ): Promise<RunnableSequence<any, any>> {
+  ): Promise<RunnableSequence<any, any> | Runnable> {
     const enabledChains = this.checkEnabledChains(this._settings);
 
     const chains = await this.createChains(enabledChains, llm, ...args);
+
+    if (chains instanceof Runnable) return chains;
 
     return RunnableSequence.from(
       chains as [

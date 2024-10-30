@@ -5,7 +5,7 @@ import Agent from '../src/agent';
 import { DataSource } from 'typeorm';
 import { IAgentConfig } from '../src/interface/agent.interface';
 
-const agentConfig = require(`./agent-configs/agent-openapi.json`);
+const agentConfig = require(`./agent-configs/am-lego-faq.json`);
 
 describe('Agent test', () => {
   it('should Agent instance', (t, done) => {
@@ -51,9 +51,9 @@ describe('Agent test', () => {
     });
 
     agent.call({
-      question: 'Qual estoque do produto 2771?',
+      question: 'O que preciso fazer para reprocessear um pedido SAC?',
       // question: 'qUAL MINHAS VISITAS AMANHA?',
-      chatThreadID: '23ee',
+      chatThreadID: '55',
       // context: 'Eu me chamo Joao Paulo e sou Arquiteto de Software',
       // context: 'Sou vendedor, meu telefone e o +5511970774145',
     });
