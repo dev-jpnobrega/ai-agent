@@ -152,6 +152,18 @@ export class AzureCogSearch<
     k: number,
     query?: number[]
   ): AzureCogRequestObject {
+    // TODO: break-change, implementation for 2023-07-01-preview
+    if (this.apiVersion === '2023-07-01-preview') {
+      return {
+        select: 'pageContent, metadata',
+        search: filter?.search || '*',
+        facets: filter?.facets || [],
+        filter: filter?.filter || '',
+        vectors: [{ value: query, fields: filter?.vectorFields || '', k: k }],
+        top: filter?.top || k,
+      } as AzureCogRequestObject;
+    }
+
     return {
       select: 'pageContent, metadata',
       search: filter?.search || '*',

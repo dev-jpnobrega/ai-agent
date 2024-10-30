@@ -18,8 +18,9 @@ export type DocumentSearchModel = {
 };
 
 export type AzureCogVectorField = {
-  vector: number[];
-  kind: string;
+  value?: number[];
+  vector?: number[];
+  kind?: string;
   fields: string;
   k: number;
 };
@@ -41,7 +42,8 @@ export type AzureCogRequestObject = {
   semanticConfiguration: string;
   captions: string;
   answers: string;
-  vectorQueries: AzureCogVectorField[];
+  vectorQueries?: AzureCogVectorField[];
+  vectors?: AzureCogVectorField[];
   top: number;
 };
 
