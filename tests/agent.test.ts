@@ -5,7 +5,7 @@ import Agent from '../src/agent';
 import { DataSource } from 'typeorm';
 import { IAgentConfig } from '../src/interface/agent.interface';
 
-const agentConfig = require(`./agent-configs/am-lego-faq.json`);
+const agentConfig = require(`./agent-configs/agent-openapi.json`);
 
 describe('Agent test', () => {
   it('should Agent instance', (t, done) => {
@@ -27,12 +27,6 @@ describe('Agent test', () => {
   });
 
   it('should Agent call', (t, done) => {
-    process.env.LANGCHAIN_TRACING_V2 = `true`;
-    process.env.LANGCHAIN_ENDPOINT = 'https://api.smith.langchain.com';
-    process.env.LANGCHAIN_API_KEY =
-      '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';
-    process.env.LANGCHAIN_PROJECT = 'ai-enterprise';
-
     const agentSettings = agentConfig as unknown as IAgentConfig;
 
     if (agentSettings.dataSourceConfig) {
@@ -51,9 +45,10 @@ describe('Agent test', () => {
     });
 
     agent.call({
-      question: 'O que preciso fazer para reprocessear um pedido SAC?',
+      question: 'Qual estoque do produto 2771?',
+      // question: 'O que preciso fazer para reprocessear um pedido SAC?',
       // question: 'qUAL MINHAS VISITAS AMANHA?',
-      chatThreadID: '55',
+      chatThreadID: '11',
       // context: 'Eu me chamo Joao Paulo e sou Arquiteto de Software',
       // context: 'Sou vendedor, meu telefone e o +5511970774145',
     });

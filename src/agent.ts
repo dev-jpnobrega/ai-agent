@@ -70,6 +70,21 @@ class Agent extends AgentBaseCommand implements IAgent {
     this._name = settings?.name || 'AssistentAgent';
     this._llm = LLMFactory.create(settings.chatConfig, settings.llmConfig);
     this._chainService = new ChainService(settings);
+
+    this.setMonitor(settings);
+  }
+
+  private setMonitor(settings: IAgentConfig): void {
+    if (settings?.monitor) {
+      this._logger.log('Monitor enabled');
+
+      const { monitor } = settings;
+
+      process.env.LANGCHAIN_TRACING_V2 = `true`;
+      process.env.LANGCHAIN_ENDPOINT = monitor.endpoint;
+      process.env.LANGCHAIN_API_KEY = monitor.apiKey;
+      process.env.LANGCHAIN_PROJECT = monitor.projectName;
+    }
   }
 
   /**

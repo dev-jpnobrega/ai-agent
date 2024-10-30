@@ -1,6 +1,11 @@
 import EventEmitter from 'events';
 import { DataSource } from 'typeorm';
 
+export type MONITOR_TYPE =
+  | 'langchain-smith'
+  | 'smith-shared'
+  | 'aws-cloudwatch'
+  | 'google-stackdriver';
 export type LLM_TYPE = 'azure' | 'gpt' | 'aws' | 'google';
 export type DATABASE_TYPE = 'cosmos' | 'redis' | 'postgres';
 
@@ -80,6 +85,13 @@ export interface IVectorStoreConfig {
   top?: number;
 }
 
+export interface IMonitorConfig {
+  type: MONITOR_TYPE;
+  apiKey: string;
+  projectName: string;
+  endpoint: string;
+}
+
 export interface IAgentConfig {
   name?: string;
   debug?: boolean;
@@ -90,6 +102,7 @@ export interface IAgentConfig {
   vectorStoreConfig?: IVectorStoreConfig;
   dataSourceConfig?: IDataSourceConfig;
   openAPIConfig?: IOpenAPIConfig;
+  monitor?: IMonitorConfig;
 }
 
 export interface IInputProps {
