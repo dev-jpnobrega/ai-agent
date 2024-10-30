@@ -87,7 +87,17 @@ class OpenAPIChain implements IChain {
       return curlL;
     }
 
-    if (curlL.includes('```sh') || curlL.includes('```bash')) {
+    if (curlL.includes('```bash')) {
+      const regex = /```(.*?)```/gs;
+      const matches = [...curlL.matchAll(regex)];
+      const curlBlocks = matches.map((match) => match[1]);
+
+      let curlCommand = curlBlocks[0].replace('bash', '');
+
+      return curlCommand.replace('\n', '').replace('\n', '');
+    }
+
+    if (curlL.includes('```sh')) {
       const regex = /```(.*?)```/gs;
       const matches = [...curlL.matchAll(regex)];
       const curlBlocks = matches.map((match) => match[1]);
