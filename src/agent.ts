@@ -1,6 +1,4 @@
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
-import { BufferMemory } from 'langchain/memory';
-import { VectorStore } from '@langchain/core/vectorstores';
 
 import AgentBaseCommand from './agent.base';
 import {
@@ -8,15 +6,12 @@ import {
   IAgentConfig,
   IDatabaseConfig,
   IInputProps,
-  IVectorStoreConfig,
 } from './interface/agent.interface';
 
 import { nanoid } from 'ai';
-import { interpolate } from './helpers/string.helpers';
 import { ChainService, IChainService } from './services/chain';
 import { ChatHistoryFactory, IChatHistory } from './services/chat-history';
 import LLMFactory from './services/llm';
-import VectorStoreFactory from './services/vector-store';
 // Removed duplicate import
 
 const EVENTS_NAME = {
@@ -87,13 +82,12 @@ class Agent extends AgentBaseCommand implements IAgent {
         {
           ...args,
           query: args?.question,
-          question: args?.question,
           user_context: args?.context,
+          user_prompt: this._settings?.systemMesssage,
           history: chatMessages,
           format_chat_messages: await chatHistory.getFormatedMessages(
             chatMessages
           ),
-          user_prompt: this._settings?.systemMesssage,
         },
         { configurable: { sessionId: args?.chatThreadID } }
       );

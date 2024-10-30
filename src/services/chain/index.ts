@@ -187,31 +187,12 @@ class ChainService {
 
     const chainWithHistory = new RunnableWithMessageHistory({
       runnable,
-      getMessageHistory: (sessionID) => {
+      getMessageHistory: (_) => {
         return chatHistory;
       },
       inputMessagesKey: 'question',
       historyMessagesKey: 'history',
     });
-
-    /*
-    const enhancementChain = new SequentialChain({
-      chains,
-      inputVariables: [
-        'query',
-        'referencies',
-        'relevant_docs',
-        'input_documents',
-        'question',
-        'chat_history',
-        'format_chat_messages',
-        'user_prompt',
-        'user_context',
-      ],
-      verbose: this._settings.debug || false,
-      memory: memoryChat,
-    });
-    */
 
     return chainWithHistory;
   }
