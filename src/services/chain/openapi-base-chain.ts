@@ -1,19 +1,15 @@
-import { CallbackManagerForChainRun } from 'langchain/callbacks';
 import { BaseChain, ChainInputs, createOpenAPIChain } from 'langchain/chains';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import { BaseFunctionCallOptions } from 'langchain/dist/base_language';
 import {
   BasePromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
-} from 'langchain/prompts';
-import { ChainValues } from 'langchain/schema';
-import type { OpenAPIV3_1 } from 'openapi-types';
+} from '@langchain/core/prompts';
 
 export interface OpenApiBaseChainInput extends ChainInputs {
-  spec: string | OpenAPIV3_1.Document<{}>;
+  spec: string;
   llm?: BaseChatModel;
   customizeSystemMessage?: string;
   headers: Record<string, string>;
@@ -87,10 +83,7 @@ export class OpenApiBaseChain extends BaseChain {
     return text;
   }
 
-  async _call(
-    values: ChainValues,
-    runManager?: CallbackManagerForChainRun
-  ): Promise<ChainValues> {
+  async _call(values: any, runManager?: any): Promise<any> {
     this._logger.log('Values: ', values);
     this._logger.log('OPENAPI Input: ', values[this.inputKey]);
 

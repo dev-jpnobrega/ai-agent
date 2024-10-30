@@ -3,7 +3,6 @@ import { BaseMessage } from '@langchain/core/messages';
 import { IDatabaseConfig } from '../../interface/agent.interface';
 import { IChatHistory } from '.';
 import { BufferMemory } from 'langchain/memory';
-import { BaseChatMessageHistory } from 'langchain/schema';
 
 class MemoryChatHistory implements IChatHistory {
   private _settings: IDatabaseConfig;
@@ -60,7 +59,7 @@ class MemoryChatHistory implements IChatHistory {
     this._bufferMemory = new BufferMemory({
       returnMessages: true,
       memoryKey: 'chat_history',
-      chatHistory: this._history as BaseChatMessageHistory,
+      chatHistory: this._history as BaseListChatMessageHistory,
     });
 
     return this;

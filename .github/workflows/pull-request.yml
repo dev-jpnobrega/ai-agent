@@ -6,7 +6,7 @@ name: Pull Request CI action
 on:
   pull_request:
     # Sequence of patterns matched against refs/heads
-    branches:    
+    branches:
       - main
 
 jobs:
@@ -17,4 +17,4 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18.17.0
-      - run: npm i && npm test && npm run build
+      - run: npm i --force && npm test && npm run build
