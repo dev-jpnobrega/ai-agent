@@ -103,7 +103,6 @@ class OpenAPIChain implements IChain {
       const curlBlocks = matches.map((match) => match[1]);
 
       let curlCommand = curlBlocks[0].replace('sh', '');
-      curlCommand = curlCommand.replace('bash', '');
 
       return curlCommand.replace('\n', '').replace('\n', '');
     }
