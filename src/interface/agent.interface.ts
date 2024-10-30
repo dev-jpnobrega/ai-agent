@@ -1,3 +1,4 @@
+import EventEmitter from 'events';
 import { DataSource } from 'typeorm';
 
 export type LLM_TYPE = 'azure' | 'gpt' | 'aws' | 'google';
@@ -100,10 +101,6 @@ export interface IInputProps {
 
 export interface TModel extends Record<string, unknown> {}
 
-export interface IAgent {
+export interface IAgent extends EventEmitter {
   call(input: IInputProps): Promise<void>;
-
-  emit(event: string, ...args: any[]): void;
-
-  on(eventName: string | symbol, listener: (...args: any[]) => void): this;
 }
