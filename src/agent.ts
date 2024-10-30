@@ -1,6 +1,8 @@
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
+import { nanoid } from 'ai';
 
 import AgentBaseCommand from './agent.base';
+
 import {
   IAgent,
   IAgentConfig,
@@ -8,46 +10,74 @@ import {
   IInputProps,
 } from './interface/agent.interface';
 
-import { nanoid } from 'ai';
+import EVENTS_NAME from './helpers/events.name';
 import { ChainService, IChainService } from './services/chain';
 import { ChatHistoryFactory, IChatHistory } from './services/chat-history';
 import LLMFactory from './services/llm';
-// Removed duplicate import
 
-const EVENTS_NAME = {
-  onMessage: 'onMessage',
-  onToken: 'onToken',
-  onEnd: 'onEnd',
-  onError: 'onError',
-  onMessageSystem: 'onMessageSystem',
-  onMessageHuman: 'onMessageHuman',
-};
-
+/**
+ * Represents an Agent that extends the AgentBaseCommand and implements the IAgent interface.
+ * This class is responsible for handling the setup and execution of language model interactions,
+ * managing chat history, and emitting events based on the interactions.
+ */
 class Agent extends AgentBaseCommand implements IAgent {
+  /**
+   * The name of the agent.
+   */
   private _name: string;
+
+  /**
+   * The language model used by the agent.
+   */
   private _llm: BaseLanguageModel;
 
+  /**
+   * The service responsible for building chains of interactions.
+   */
   private _chainService: IChainService;
 
+  /**
+   * The chat history associated with the agent.
+   */
   private _chatHistory: IChatHistory;
+
+  /**
+   * The logger used for logging messages.
+   */
   private _logger: Console;
+
+  /**
+   * The configuration settings for the agent.
+   */
   private _settings: IAgentConfig;
 
+  /**
+   * Creates an instance of the Agent class.
+   * @param settings - The configuration settings for the agent.
+   */
   constructor(settings: IAgentConfig) {
     super();
-
     this._logger = console;
     this._settings = settings;
-
     this.setup(settings);
   }
 
+  /**
+   * Sets up the agent with the provided settings.
+   * @param settings - The configuration settings for the agent.
+   */
   private setup(settings: IAgentConfig): void {
     this._name = settings?.name || 'AssistentAgent';
     this._llm = LLMFactory.create(settings.chatConfig, settings.llmConfig);
     this._chainService = new ChainService(settings);
   }
 
+  /**
+   * Builds the chat history for the given user session.
+   * @param userSessionId - The ID of the user session.
+   * @param settings - The database configuration settings.
+   * @returns A promise that resolves to the chat history.
+   */
   private async buildHistory(
     userSessionId: string,
     settings: IDatabaseConfig
@@ -56,12 +86,17 @@ class Agent extends AgentBaseCommand implements IAgent {
 
     this._chatHistory = await ChatHistoryFactory.create({
       ...settings,
-      sessionId: userSessionId || nanoid(), // TODO
+      sessionId: userSessionId,
     });
 
     return this._chatHistory;
   }
 
+  /**
+   * Calls the agent with the provided input properties.
+   * @param args - The input properties for the agent call.
+   * @returns A promise that resolves when the call is complete.
+   */
   async call(args: IInputProps): Promise<void> {
     try {
       const chatHistory = await this.buildHistory(
@@ -89,14 +124,10 @@ class Agent extends AgentBaseCommand implements IAgent {
             chatMessages
           ),
         },
-        { configurable: { sessionId: args?.chatThreadID } }
+        { configurable: { sessionId: args?.chatThreadID || nanoid() } }
       );
 
-      // await chatHistory.addUserMessage(question);
-      // await chatHistory.addAIMessage(result);
-
       this.emit(EVENTS_NAME.onMessage, result);
-
       this.emit(EVENTS_NAME.onEnd, 'terminated');
     } catch (error) {
       this._logger.error(error);
@@ -106,6 +137,12 @@ class Agent extends AgentBaseCommand implements IAgent {
     }
   }
 
+  /**
+   * Executes the agent with the provided arguments.
+   * @param args - The arguments for the agent execution.
+   * @returns A promise that resolves when the execution is complete.
+   * @throws An error with the provided arguments.
+   */
   execute(args: any): Promise<void> {
     throw new Error(args);
   }

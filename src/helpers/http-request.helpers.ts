@@ -28,7 +28,7 @@ function tryParseJSON(value: any) {
   } catch (error) {
     return value;
   }
-};
+}
 
 function configureTimeout({ timeout }: any) {
   let timeoutId = null;
@@ -66,15 +66,10 @@ async function formatResponse(response: Response, returnStream: any) {
     },
   };
 
-  return response.ok
-    ? formattedResponse
-    : Promise.reject(formattedResponse);
+  return response.ok ? formattedResponse : Promise.reject(formattedResponse);
 }
 
-async function fetchRequest(
-  options = {} as any,
-  returnStream = false,
-) {
+async function fetchRequest(options = {} as any, returnStream = false) {
   try {
     const abortSignal = configureTimeout(options);
 
@@ -95,15 +90,8 @@ async function fetchRequest(
     return formatResponse(response, returnStream);
   } catch (error) {
     const fetchRequestError = new FetchRequestError(error);
-
-    console.error({
-      details: fetchRequestError,
-      error: fetchRequestError.name,
-      message: `[COMMONS-FETCH-REQUEST]-ERROR: ${fetchRequestError.name} - ${fetchRequestError.message}`,
-    });
-
     throw fetchRequestError;
   }
-};
+}
 
 export default fetchRequest;
