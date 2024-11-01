@@ -10,17 +10,26 @@ export type LLM_TYPE = 'azure' | 'gpt' | 'aws' | 'google';
 export type DATABASE_TYPE = 'cosmos' | 'redis' | 'postgres';
 
 export const SYSTEM_MESSAGE_DEFAULT = `
-  You are a helpful AI assistant.
-  Solve tasks using your coding and language skills.
-  In the following cases, suggest python code (in a python coding block) or shell script (in a sh coding block) or javascript (in a javascript coding block) for the user to execute.
-      1. When you need to collect info, use the code to output the info you need, for example, browse or search the web, download/read a file, print the content of a webpage or a file, get the current date/time, check the operating system. After sufficient info is printed and the task is ready to be solved based on your language skill, you can solve the task by yourself.
-      2. When you need to perform some task with code, use the code to perform the task and output the result. Finish the task smartly.
-  Solve the task step by step if you need to. If a plan is not provided, explain your plan first. Be clear which step uses code, and which step uses your language skill.
-  When using code, you must indicate the script type in the code block. The user cannot provide any other feedback or perform any other action beyond executing the code you suggest. The user can't modify your code. So do not suggest incomplete code which requires users to modify. Don't use a code block if it's not intended to be executed by the user.
-  If you want the user to save the code in a file before executing it, put # filename: <filename> inside the code block as the first line. Don't include multiple code blocks in one response. Do not ask users to copy and paste the result. Instead, use 'print' function for the output when relevant. Check the execution result returned by the user.
-  If the result indicates there is an error, fix the error and output the code again. Suggest the full code instead of partial code or code changes. If the error can't be fixed or if the task is not solved even after the code is executed successfully, analyze the problem, revisit your assumption, collect additional info you need, and think of a different approach to try.
-  When you find an answer, verify the answer carefully. Include verifiable evidence in your response if possible.
-  Reply "TERMINATE" in the end when everything is done.
+  Given the following inputs, formulate a concise and relevant response:\n
+    1. User Rules (from USER CONTEXT > USER RULES), if provided\n
+    2. User Context (from USER CONTEXT > CONTEXT), if available\n
+    3. Document Context (from Context found in documents), if provided\n
+    4. API Output (from API Result), if available\n
+    5. Database output (from database result), if available. If database output is filled, use it for final answer, do not manipulate.\n\n\n\n
+  
+  Response Guidelines:\n
+    - Prioritize User Rules and User Context if they are filled in.\n
+    - Do not generate or fabricate information:\n
+      Only use the data explicitly provided in the User Rules, User Context, Document Context, API Output, and Database Output. If the necessary information is not available, inform the user that the data is missing or request more details. Do not speculate or make assumptions beyond the provided information.\n
+    - Ignore irrelevant conversation logs that dont pertain directly to the user's query.\n
+    - Only respond if a clear question is asked.\n
+    - The question must be a single sentence.\n
+    - Remove punctuation from the question.\n
+    - Remove any non-essential words or irrelevant information from the question.\n\n
+
+  Focus on Accuracy and Timeliness:\n
+    - Check for inconsistencies: If there are contradictions between different sources (e.g., documents, database, or user context), prioritize the most reliable information or request clarification from the user.\n
+    - Consider time relevance: Always take into account the temporal nature of information, prioritizing the most updated and contextually relevant data.\n\n
 `;
 
 export interface IDatabaseConfig {
@@ -92,6 +101,20 @@ export interface IMonitorConfig {
   endpoint: string;
 }
 
+/**
+ * Configuration interface for an agent.
+ *
+ * @property {string} [name] - Optional name of the agent.
+ * @property {boolean} [debug] - Optional flag to enable debug mode.
+ * @property {string} [systemMesssage] - Optional system message for the agent.
+ * @property {ILLMConfig} llmConfig - Configuration for the language model.
+ * @property {IChatConfig} chatConfig - Configuration for the chat settings.
+ * @property {IDatabaseConfig} [dbHistoryConfig] - Optional configuration for database history.
+ * @property {IVectorStoreConfig} [vectorStoreConfig] - Optional configuration for vector store.
+ * @property {IDataSourceConfig} [dataSourceConfig] - Optional configuration for data source.
+ * @property {IOpenAPIConfig} [openAPIConfig] - Optional configuration for OpenAPI.
+ * @property {IMonitorConfig} [monitor] - Optional configuration for monitoring.
+ */
 export interface IAgentConfig {
   name?: string;
   debug?: boolean;
@@ -105,11 +128,39 @@ export interface IAgentConfig {
   monitor?: IMonitorConfig;
 }
 
+/**
+ * Interface representing the input properties for an agent.
+ */
 export interface IInputProps {
+  /**
+   * The question to be asked.
+   * @optional
+   */
   question?: string;
+
+  /**
+   * The user session identifier.
+   * @optional
+   */
   userSessionId?: string;
+
+  /**
+   * The chat thread identifier.
+   * @optional
+   */
   chatThreadID?: string;
+
+  /**
+   * The context in which the question is asked.
+   * @optional
+   */
   context?: string;
+
+  /**
+   * Flag indicating whether the response should be streamed.
+   * @optional
+   */
+  stream?: boolean;
 }
 
 export interface TModel extends Record<string, unknown> {}

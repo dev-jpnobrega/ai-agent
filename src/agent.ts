@@ -14,6 +14,7 @@ import EVENTS_NAME from './helpers/events.name';
 import { ChainService, IChainService } from './services/chain';
 import { ChatHistoryFactory, IChatHistory } from './services/chat-history';
 import LLMFactory from './services/llm';
+import { RunnableWithMessageHistory } from '@langchain/core/runnables';
 
 /**
  * Represents an Agent that extends the AgentBaseCommand and implements the IAgent interface.
@@ -74,17 +75,31 @@ class Agent extends AgentBaseCommand implements IAgent {
     this.setMonitor(settings);
   }
 
+  /**
+   * Configures the monitoring settings for the agent.
+   * If monitoring is enabled in the provided settings, it sets up the necessary
+   * environment variables for LangChain tracing and logging.
+   *
+   * @param {IAgentConfig} settings - The configuration settings for the agent.
+   * @param {boolean} settings.monitor - Flag indicating if monitoring is enabled.
+   * @param {string} settings.monitor.endpoint - The endpoint for the monitoring service.
+   * @param {string} settings.monitor.apiKey - The API key for the monitoring service.
+   * @param {string} settings.monitor.projectName - The project name for the monitoring service.
+   * @returns {void}
+   */
   private setMonitor(settings: IAgentConfig): void {
-    if (settings?.monitor) {
-      this._logger.log('Monitor enabled');
+    if (!settings?.monitor) return;
 
-      const { monitor } = settings;
+    this._logger.log(
+      `Monitor enabled project ${settings.monitor?.projectName}`
+    );
 
-      process.env.LANGCHAIN_TRACING_V2 = `true`;
-      process.env.LANGCHAIN_ENDPOINT = monitor.endpoint;
-      process.env.LANGCHAIN_API_KEY = monitor.apiKey;
-      process.env.LANGCHAIN_PROJECT = monitor.projectName;
-    }
+    const { monitor } = settings;
+
+    process.env.LANGCHAIN_TRACING_V2 = `true`;
+    process.env.LANGCHAIN_ENDPOINT = monitor.endpoint;
+    process.env.LANGCHAIN_API_KEY = monitor.apiKey;
+    process.env.LANGCHAIN_PROJECT = monitor.projectName;
   }
 
   /**
@@ -108,9 +123,40 @@ class Agent extends AgentBaseCommand implements IAgent {
   }
 
   /**
+   * Streams data from a given chain and emits events for each chunk of data received.
+   *
+   * @param chain - The runnable chain that processes the input and returns a stream of data.
+   * @param input - The input data to be processed by the chain.
+   * @returns A promise that resolves to the concatenated string of all chunks received from the stream.
+   *
+   * @emits EVENTS_NAME.onToken - Emitted for each chunk of data received from the stream.
+   */
+  async stream(
+    chain: RunnableWithMessageHistory<any, any>,
+    input: any
+  ): Promise<string> {
+    const stream = await chain.stream(input, {
+      configurable: { sessionId: input?.chatThreadID || nanoid() },
+    });
+
+    let finalMessage: string[] = [];
+    for await (const chunk of stream) {
+      finalMessage.push(chunk);
+
+      this.emit(EVENTS_NAME.onToken, chunk);
+    }
+
+    return ''.concat(...finalMessage);
+  }
+
+  /**
    * Calls the agent with the provided input properties.
    * @param args - The input properties for the agent call.
    * @returns A promise that resolves when the call is complete.
+   *
+   * @emits EVENTS_NAME.onMessage - Emitted with the concatenated final message once the stream is complete.
+   * @emits EVENTS_NAME.onToken - If stream enable, emitted for each chunk of data received from the stream.
+   * @emits EVENTS_NAME.onEnd - Emitted when the streaming process is terminated.
    */
   async call(args: IInputProps): Promise<void> {
     try {
@@ -128,19 +174,26 @@ class Agent extends AgentBaseCommand implements IAgent {
 
       const chatMessages = await chatHistory.getMessages();
 
-      const result = await chain.invoke(
-        {
-          ...args,
-          query: args?.question,
-          user_context: args?.context,
-          user_prompt: this._settings?.systemMesssage,
-          history: chatMessages,
-          format_chat_messages: await chatHistory.getFormatedMessages(
-            chatMessages
-          ),
-        },
-        { configurable: { sessionId: args?.chatThreadID || nanoid() } }
-      );
+      const input: any = {
+        ...args,
+        query: args?.question,
+        user_context: args?.context,
+        user_prompt: this._settings?.systemMesssage,
+        history: chatMessages,
+        format_chat_messages: await chatHistory.getFormatedMessages(
+          chatMessages
+        ),
+      };
+
+      let result = '';
+
+      if (args?.stream) {
+        result = await this.stream(chain, input);
+      } else {
+        result = await chain.invoke(input, {
+          configurable: { sessionId: args?.chatThreadID || nanoid() },
+        });
+      }
 
       this.emit(EVENTS_NAME.onMessage, result);
       this.emit(EVENTS_NAME.onEnd, 'terminated');

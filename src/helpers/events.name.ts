@@ -3,6 +3,4 @@ export default {
   onToken: 'onToken',
   onEnd: 'onEnd',
   onError: 'onError',
-  onMessageSystem: 'onMessageSystem',
-  onMessageHuman: 'onMessageHuman',
 };
