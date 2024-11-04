@@ -37,6 +37,16 @@ describe('Agent test', () => {
 
     const agent = new Agent(agentSettings);
 
+    agent.on('onToken', (error) => {
+      console.log('onToken:', error);
+    });
+
+    agent.on('onError', (error) => {
+      console.error('ERROR:', error);
+      done();
+      process.exit(0);
+    });
+
     agent.on('onMessage', async (message) => {
       assert.ok(message, 'message is not null');
       console.warn('MESSAGE:', message);
