@@ -1,7 +1,6 @@
 {
   "name": "ai-agent-enterprise",
-  "description": "AI Agent simplifies the implementation and use of generative AI with LangChain",
-  "version": "0.0.48",
+  "description": "AI Agent simplifies the implementation and use of generative AI with LangChain, you can add components such as vectorized search services, conversation history, custom databases and API contracts",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
   "files": [
@@ -16,16 +15,16 @@
     "test:integration": "jest --config test.json --forceExit --collectCoverage true test/integration",
     "test:unit": "jest --config test.json --forceExit --testPathIgnorePatterns test/integration --collectCoverage true",
     "test": "glob -c \"node --loader tsx --no-warnings --test\" \"./tests/**/*.test.ts\"",
-    "build": "tsc",
     "lint": "eslint ./src ./test",
     "lint:fix": "eslint --fix ./src ./test",
+    "build": "tsc",
     "prepublish": "npm run build"
   },
   "keywords": [
     "ai",
     "agent",
     "langchain",
-    "generative",
+    "generative-ai",
     "ai-agent"
   ],
   "author": "",
