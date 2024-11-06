@@ -91,7 +91,7 @@ class Agent extends AgentBaseCommand implements IAgent {
     if (!settings?.monitor) return;
 
     this._logger.log(
-      `Monitor enabled project ${settings.monitor?.projectName}`
+      `Monitor enabled Agent ${this._name} project ${settings.monitor?.projectName}`
     );
 
     const { monitor } = settings;
