@@ -131,7 +131,7 @@ class Agent extends AgentBaseCommand implements IAgent {
    *
    * @emits EVENTS_NAME.onToken - Emitted for each chunk of data received from the stream.
    */
-  async stream(
+  private async stream(
     chain: RunnableWithMessageHistory<any, any>,
     input: any
   ): Promise<string> {
