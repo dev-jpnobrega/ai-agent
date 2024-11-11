@@ -110,8 +110,6 @@ class OpenAPIChain implements IChain {
   }
 
   private async executeOpenAPI(input: any) {
-    console.log('input', input);
-
     return new Promise((resolve, reject) => {
       try {
         const curl = this.parserCurl(input?.curl?.content);

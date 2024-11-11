@@ -94,6 +94,15 @@ export interface IVectorStoreConfig {
   top?: number;
 }
 
+/**
+ * Configuration interface for a monitor.
+ *
+ * @interface IMonitorConfig
+ * @property {MONITOR_TYPE} type - The type of the monitor.
+ * @property {string} apiKey - The API key used for authentication.
+ * @property {string} projectName - The name of the project being monitored.
+ * @property {string} endpoint - The endpoint URL for the monitor.
+ */
 export interface IMonitorConfig {
   type: MONITOR_TYPE;
   apiKey: string;
