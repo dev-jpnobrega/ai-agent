@@ -1,20 +1,16 @@
-import { CallbackManagerForChainRun } from 'langchain/callbacks';
 import { BaseChain, ChainInputs, createOpenAPIChain } from 'langchain/chains';
-import { BaseChatModel } from 'langchain/chat_models/base';
-import { BaseFunctionCallOptions } from 'langchain/dist/base_language';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import {
   BasePromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
-} from 'langchain/prompts';
-import { ChainValues } from 'langchain/schema';
-import type { OpenAPIV3_1 } from 'openapi-types';
+} from '@langchain/core/prompts';
 
 export interface OpenApiBaseChainInput extends ChainInputs {
-  spec: string | OpenAPIV3_1.Document<{}>;
-  llm?: BaseChatModel<BaseFunctionCallOptions>;
+  spec: string;
+  llm?: BaseChatModel;
   customizeSystemMessage?: string;
   headers: Record<string, string>;
 }
@@ -77,20 +73,17 @@ export class OpenApiBaseChain extends BaseChain {
       try {
         const txtSplitJson = text.split('No function_call in message ')[1];
         const txtJson = JSON.parse(txtSplitJson);
-        
+
         return txtJson[0]?.text;
-      }	catch (error) {
+      } catch (error) {
         return `Sorry, I could not find the answer to your question.`;
-      }	
+      }
     }
 
     return text;
   }
 
-  async _call(
-    values: ChainValues,
-    runManager?: CallbackManagerForChainRun
-  ): Promise<ChainValues> {
+  async _call(values: any, runManager?: any): Promise<any> {
     this._logger.log('Values: ', values);
     this._logger.log('OPENAPI Input: ', values[this.inputKey]);
 
@@ -104,7 +97,7 @@ export class OpenApiBaseChain extends BaseChain {
       verbose: true,
     });
 
-    let answer:string = '';
+    let answer: string = '';
 
     try {
       const rs = await chain.invoke({
@@ -114,15 +107,15 @@ export class OpenApiBaseChain extends BaseChain {
         format_chat_messages: values?.format_chat_messages,
         user_prompt: this._input.customizeSystemMessage || '',
       });
-  
+
       this._logger.log('OPENAPI Resposta: ', answer);
-  
+
       answer = rs?.response;
     } catch (error) {
       this._logger.error('OPENAPI Error: ', error);
 
       answer = this.tryParseText(error?.message);
-    } finally { 
+    } finally {
       return { [this.outputKey]: answer };
     }
   }

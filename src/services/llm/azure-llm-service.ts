@@ -1,7 +1,7 @@
-import { BaseChatModel } from 'langchain/chat_models/base';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { IChatConfig, ILLMConfig } from '../../interface/agent.interface';
-import { ChatOpenAI } from 'langchain/chat_models/openai';
-
+import { ChatOpenAI } from '@langchain/openai';
+import { BaseLanguageModel } from '@langchain/core/language_models/base';
 
 class AzureLLMService {
   private _chatSettings: IChatConfig;
@@ -12,7 +12,7 @@ class AzureLLMService {
     this._llmSettings = llmSettings;
   }
 
-  public build(): BaseChatModel {
+  public build(): BaseLanguageModel {
     return new ChatOpenAI({
       temperature: this._chatSettings.temperature,
       streaming: true,

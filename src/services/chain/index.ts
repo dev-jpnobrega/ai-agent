@@ -1,9 +1,4 @@
-import {
-  BaseChain,
-  SequentialChain,
-  loadQAMapReduceChain,
-} from 'langchain/chains';
-import { BaseChatModel } from 'langchain/chat_models/base';
+import { BaseLanguageModel } from '@langchain/core/language_models/base';
 
 import {
   BasePromptTemplate,
@@ -11,28 +6,41 @@ import {
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
-} from 'langchain/prompts';
+  AIMessagePromptTemplate,
+} from '@langchain/core/prompts';
 
-import { AIMessage } from 'langchain/schema';
-import {
-  IAgentConfig,
-  SYSTEM_MESSAGE_DEFAULT,
-} from '../../interface/agent.interface';
+import { IAgentConfig } from '../../interface/agent.interface';
 import OpenAPIChain from './openapi-chain';
 import SqlChain from './sql-chain';
+import VectorStoreChain from './vector-store-chain';
+
+import {
+  Runnable,
+  RunnableLike,
+  RunnableSequence,
+  RunnableWithMessageHistory,
+} from '@langchain/core/runnables';
+import { StringOutputParser } from '@langchain/core/output_parsers';
 
 interface IChain {
-  create(llm: BaseChatModel, ...args: any): Promise<BaseChain>;
+  create(
+    llm: BaseLanguageModel,
+    ...args: any
+  ): Promise<RunnableSequence<any, any>>;
 }
 
 interface IChainService {
-  build(llm: BaseChatModel, ...args: any): Promise<BaseChain>;
+  build(
+    llm: BaseLanguageModel,
+    ...args: any
+  ): Promise<RunnableWithMessageHistory<any, any>>;
 }
 
 class ChainService {
   private _settings: IAgentConfig;
   private _isSQLChainEnabled: boolean;
   private _isOpenAPIChainEnabled: boolean;
+  private _isVectorStoreEnabled: boolean;
 
   constructor(settings: IAgentConfig) {
     this._settings = settings;
@@ -51,114 +59,142 @@ class ChainService {
       enabledChains.push(new OpenAPIChain(settings.openAPIConfig));
     }
 
+    if (settings.vectorStoreConfig) {
+      this._isVectorStoreEnabled = true;
+      enabledChains.push(new VectorStoreChain(settings));
+    }
+
     return enabledChains;
   }
 
-  private buildSystemMessages(systemMessages: string): string {
-    let builtMessage = systemMessages;
-
-    builtMessage += '\n';
+  private buildSystemMessages(): string {
+    let builtMessage = '';
     builtMessage += `
-      Given the user context, question and conversation log, the document context, the API output, and the following database output, formulate a response from a knowledge base.\n
-      You must follow the following rules and priorities when generating and responding:\n
-      - Always prioritize user prompt over conversation record.\n
-      - Ignore any conversation logs that are not directly related to the user question.\n
-      - Only try to answer if a question is asked.\n
+      Given the following inputs, formulate a concise and relevant response:\n
+      1. User Rules (from USER CONTEXT > USER RULES), if provided\n
+      2. User Context (from USER CONTEXT > CONTEXT), if available\n
+      3. Document Context (from Context found in documents), if provided\n
+      4. API Output (from API Result), if available\n
+      5. Database output (from database result), if available. If database output is filled, use it for final answer, do not manipulate.\n\n\n\n
+      
+      Response Guidelines:\n
+      - Prioritize User Rules and User Context if they are filled in.\n
+      - Do not generate or fabricate information:\n
+        Only use the data explicitly provided in the User Rules, User Context, Document Context, API Output, and Database Output. If the necessary information is not available, inform the user that the data is missing or request more details. Do not speculate or make assumptions beyond the provided information.\n
+      - Ignore irrelevant conversation logs that dont pertain directly to the user's query.\n
+      - Only respond if a clear question is asked.\n
       - The question must be a single sentence.\n
-      - You must remove any punctuation from the question.\n
-      - You must remove any words that are not relevant to the question.\n
-      - If you are unable to formulate a answer, respond in a friendly manner so the user can rephrase the question.\n\n
+      - Remove punctuation from the question.\n
+      - Remove any non-essential words or irrelevant information from the question.\n\n
 
-      USER CONTEXT:\n
-        USER RULES: {user_prompt}\n
-        CONTEXT: {user_context}\n
-      --------------------------------------
-      CHAT HISTORY: {format_chat_messages}\n
-      --------------------------------------
-      Context found in documents: {relevant_docs}\n
-      --------------------------------------
-      Name of reference files: {referencies}\n      
+      Focus on Accuracy and Timeliness:\n
+      - Check for inconsistencies: If there are contradictions between different sources (e.g., documents, database, or user context), prioritize the most reliable information or request clarification from the user.\n
+      - Consider time relevance: Always take into account the temporal nature of information, prioritizing the most updated and contextually relevant data.\n\n
+      
+      Input Data:\n
+      - User Rules: {user_prompt}\n
+      - User Context: {user_context}\n
     `;
 
     if (this._isSQLChainEnabled) {
       builtMessage += `
-        --------------------------------------
-        Database Result: {sqlResult}\n
-        Query executed: {sqlQuery}\n
-        --------------------------------------
+        - Database Result: {sqlResult}\n
+        - Query executed: {sqlQuery}\n
       `;
     }
 
-    if (this._isOpenAPIChainEnabled) {
+    if (this._isVectorStoreEnabled) {
       builtMessage += `
-        --------------------------------------
-        API Result: {openAPIResult}\n
-        --------------------------------------
+        - Document Context: {relevantDocs}\n
       `;
     }
+    // - Reference Files: {referencies}\n
+    if (this._isOpenAPIChainEnabled) {
+      builtMessage += `
+        - API Result: {openAPIResult}\n
+      `;
+    }
+
+    builtMessage += `
+      Question:\n
+      - {question}\n
+    `;
 
     return builtMessage;
   }
 
-  private buildPromptTemplate(systemMessages: string): BasePromptTemplate {
+  private buildPromptTemplate(): BasePromptTemplate {
     const combine_messages = [
-      SystemMessagePromptTemplate.fromTemplate(
-        this.buildSystemMessages(systemMessages)
-      ),
-      new MessagesPlaceholder('chat_history'),
-      new AIMessage('Hello! How can I help?'),
+      SystemMessagePromptTemplate.fromTemplate(this.buildSystemMessages()),
+      new MessagesPlaceholder('history'),
+      AIMessagePromptTemplate.fromTemplate('Hello! How can I help?'),
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ];
 
     const CHAT_COMBINE_PROMPT =
-      ChatPromptTemplate.fromPromptMessages(combine_messages);
+      ChatPromptTemplate.fromMessages(combine_messages);
 
     return CHAT_COMBINE_PROMPT;
   }
 
-  private async buildChains(
-    llm: BaseChatModel,
+  private async createChains(
+    enabledChains: IChain[],
+    llm: BaseLanguageModel,
     ...args: any
-  ): Promise<BaseChain[]> {
-    const enabledChains = this.checkEnabledChains(this._settings);
+  ): Promise<RunnableLike<any, any>[] | Runnable> {
+    const prompt = this.buildPromptTemplate();
 
-    const chainQA = loadQAMapReduceChain(llm, {
-      combinePrompt: this.buildPromptTemplate(
-        this._settings.systemMesssage || SYSTEM_MESSAGE_DEFAULT
-      ),
-    });
+    const chainQA = prompt.pipe(llm).pipe(new StringOutputParser());
 
-    const chains = await Promise.all(
+    const chains: RunnableLike<any, any>[] = await Promise.all(
       enabledChains.map(
         async (chain: IChain) => await chain.create(llm, ...args)
       )
     );
 
-    return chains.concat(chainQA);
+    if (chains.length === 0) return chainQA;
+
+    chains.push(chainQA);
+
+    return chains;
   }
 
-  public async build(llm: BaseChatModel, ...args: any): Promise<BaseChain> {
-    const { memoryChat } = args;
-    const chains = await this.buildChains(llm, args);
+  private async buildChains(
+    llm: BaseLanguageModel,
+    ...args: any
+  ): Promise<RunnableSequence<any, any> | Runnable> {
+    const enabledChains = this.checkEnabledChains(this._settings);
 
-    const enhancementChain = new SequentialChain({
-      chains,
-      inputVariables: [
-        'query',
-        'referencies',
-        'relevant_docs',
-        'input_documents',
-        'question',
-        'chat_history',
-        'format_chat_messages',
-        'user_prompt',
-        'user_context',
-      ],
-      verbose: this._settings.debug || false,
-      memory: memoryChat,
+    const chains = await this.createChains(enabledChains, llm, ...args);
+
+    if (chains instanceof Runnable) return chains;
+
+    return RunnableSequence.from(
+      chains as [
+        RunnableLike<any, any>,
+        ...RunnableLike<any, any>[],
+        RunnableLike<any, string>
+      ]
+    );
+  }
+
+  public async build(
+    llm: BaseLanguageModel,
+    ...args: any
+  ): Promise<RunnableWithMessageHistory<any, any>> {
+    const [, chatHistory] = args;
+    const runnable = await this.buildChains(llm, ...args);
+
+    const chainWithHistory = new RunnableWithMessageHistory({
+      runnable,
+      getMessageHistory: (_) => {
+        return chatHistory;
+      },
+      inputMessagesKey: 'question',
+      historyMessagesKey: 'history',
     });
 
-    return enhancementChain;
+    return chainWithHistory;
   }
 }
 

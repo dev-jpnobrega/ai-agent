@@ -1,4 +1,3 @@
-/*
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
 
@@ -6,7 +5,7 @@ import Agent from '../src/agent';
 import { DataSource } from 'typeorm';
 import { IAgentConfig } from '../src/interface/agent.interface';
 
-const agentConfig = require(`./agent-configs/agent-tigre.json`);
+const agentConfig = require(`./agent-configs/agent-openapi.json`);
 
 describe('Agent test', () => {
   it('should Agent instance', (t, done) => {
@@ -38,6 +37,16 @@ describe('Agent test', () => {
 
     const agent = new Agent(agentSettings);
 
+    agent.on('onToken', (error) => {
+      console.log('onToken:', error);
+    });
+
+    agent.on('onError', (error) => {
+      console.error('ERROR:', error);
+      done();
+      process.exit(0);
+    });
+
     agent.on('onMessage', async (message) => {
       assert.ok(message, 'message is not null');
       console.warn('MESSAGE:', message);
@@ -46,10 +55,14 @@ describe('Agent test', () => {
     });
 
     agent.call({
-      question: 'quais os últimos 5 pedidos desse cliente?',
-      chatThreadID: '1',
-      context: 'Sou vendedor, meu telefone e o 1',
+      // question: 'Quem ganhou a ultima copa do mundo?',
+      // question: 'Limpar o cache da pessoa a443bf0e-4c76-42f8-a084-c6544309f111?',
+      question: 'Qual estoque do produto 2771?',
+      // question: 'O que preciso fazer para reprocessear um pedido SAC?',
+      // question: 'qUAL MINHAS VISITAS AMANHA?',
+      chatThreadID: '111',
+      // context: 'Eu me chamo Joao Paulo e sou Arquiteto de Software',
+      // context: 'Sou vendedor, meu telefone e o +5511970774145',
     });
   });
 });
-*/

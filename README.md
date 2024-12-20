@@ -1,14 +1,12 @@
-<img src="ai-agent.png" align="right" width="250" />
+<img src="docs/media/ai-agent.png" align="right" width="250" />
 
 [![Publish new version to NPM](https://github.com/dev-jpnobrega/ai-agent/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/dev-jpnobrega/ai-agent/actions/workflows/npm-publish.yml)
 
 # AI Agent
 
-AI Agent simplifies the implementation and use of generative AI with LangChain, was inspired by the project [autogent](https://github.com/microsoft/autogen)
+AI Agent simplifies the implementation and use of generative AI with LangChain, you can add components such as vectorized search services (check options in "link"), conversation history (check options in "link"), custom databases (check options in "link") and API contracts ([OpenAPI](https://swagger.io/blog/api-design/openapi-driven-api-design/)).
 
-
-
-## Installation
+# Installation
 
 Use the package manager [npm](https://www.npmjs.com/) to install AI Agent.
 
@@ -16,22 +14,70 @@ Use the package manager [npm](https://www.npmjs.com/) to install AI Agent.
 npm install ai-agent
 ```
 
-## Usage
+## Simple use
 
-### Simple use
+LLM + Prompt Engineering
+
+```javascript
+const agent = new Agent({
+  name: '<name>',
+  systemMesssage: '<a message that will specialize your agent>',
+  llmConfig: {
+    type: '<cloud-provider-llm-service>', // Check availability at <link>
+    model: '<llm-model>',
+    instance: '<instance-name>', // Optional
+    apiKey: '<key-your-llm-service>', // Optional
+  },
+  chatConfig: {
+    temperature: 0,
+  },
+});
+
+// If stream enabled, receiver on token
+agent.on('onToken', async (token) => {
+  console.warn('token:', token);
+});
+
+agent.on('onMessage', async (message) => {
+  console.warn('MESSAGE:', message);
+});
+
+await agent.call({
+  question: 'What is the best way to get started with Azure?',
+  chatThreadID: '<chat-id>',
+  stream: true,
+});
+```
+
+## Using with Chat History
+
+When you use <b>LLM + Chat history</b> all message exchange is persisted and sent to LLM.
+
 ```javascript
   const agent = new Agent({
     name: '<name>',
     systemMesssage: '<a message that will specialize your agent>',
+    chatConfig: {
+      temperature: 0,
+    },
     llmConfig: {
       type: '<cloud-provider-llm-service>', // Check availability at <link>
       model: '<llm-model>',
       instance: '<instance-name>', // Optional
       apiKey: '<key-your-llm-service>', // Optional
     },
-    chatConfig: {
-      temperature: 0,
+    dbHistoryConfig: {
+      type: '<type-database>', // Check availability at <link>
+      host: '<host-database>', // Optional
+      port: "<port-database>", // Optional
+      sessionTTL: '<ttl-database>' // Optional. Time the conversation will be saved in the database
+      limit: '<limit-messages>' // Optional. Limit set for maximum messages included in conversation prompt
     },
+  });
+
+  // If stream enabled, receiver on token
+  agent.on('onToken', async (token) => {
+    console.warn('token:', token);
   });
 
   agent.on('onMessage', async (message) => {
@@ -41,12 +87,20 @@ npm install ai-agent
   await agent.call({
     question: 'What is the best way to get started with Azure?',
     chatThreadID: '<chat-id>',
+    stream: true,
   });
 ```
 
-### Using with Vector stores
-When using LLM + Vector stores the Agent finds the documents relevant to the requested input.
+## Using with Vector stores
+
+When using <b>LLM + Vector stores</b> the Agent finds the documents relevant to the requested input.
 The documents found are used for the context of the Agent.
+
+### Example of the concept of vectorized search
+
+<img src="docs/media/vector-store-img.png" width="500" />
+<br/><br/>
+
 ```javascript
   const agent = new Agent({
     name: '<name>',
@@ -61,7 +115,7 @@ The documents found are used for the context of the Agent.
       apiKey: '<key-your-llm-service>', // Optional
     },
     vectorStoreConfig: {
-      type: '<cloud-provider-llm-service>', // Check availability at <link>
+      type: '<type-vector-service>', // Check availability at <link>
       apiKey: '<your-api-key>', // Optional
       indexes: ['<index-name>'], // Your indexes name. Optional
       vectorFieldName: '<vector-base-field>', // Optional
@@ -72,6 +126,11 @@ The documents found are used for the context of the Agent.
     },
   });
 
+  // If stream enabled, receiver on token
+  agent.on('onToken', async (token) => {
+    console.warn('token:', token);
+  });
+
   agent.on('onMessage', async (message) => {
     console.warn('MESSAGE:', message);
   });
@@ -79,7 +138,104 @@ The documents found are used for the context of the Agent.
   await agent.call({
     question: 'What is the best way to get started with Azure?',
     chatThreadID: '<chat-id>',
+    stream: true,
   });
+```
+
+## Using with Database custom
+
+<b>SQL + LLM</b> for prompt construction is a concept that involves using both Structured Query Language (SQL) and LLMs to create queries or prompts for data retrieval or interaction with databases. This approach leverages the power of SQL for database-specific commands and the capabilities of LLMs to generate natural language prompts, making it easier for users to interact with databases and retrieve information in a more user-friendly and intuitive manner.
+
+### Example of the concept of SQL + LLM
+
+<img src="docs/media/sql-img.png" width="500" />
+<br/><br/>
+
+```javascript
+const agent = new Agent({
+  name: '<name>',
+  systemMesssage: '<a message that will specialize your agent>',
+  chatConfig: {
+    temperature: 0,
+  },
+  llmConfig: {
+    type: '<cloud-provider-llm-service>', // Check availability at <link>
+    model: '<llm-model>',
+    instance: '<instance-name>', // Optional
+    apiKey: '<key-your-llm-service>', // Optional
+  },
+  dataSourceConfig: {
+    type: '<type-database>', // Check availability at <link>
+    username: '<username-database>', // Require
+    password: '<username-pass>', // Require
+    host: '<host-database>', // Require
+    name: '<connection-name>', // Require
+    includesTables: ['<table-name>'], // Optional
+    ssl: '<ssl-mode>', // Optional
+    maxResult: '<max-result-database>', // Optional. Limit set for maximum data included in conversation prompt.
+    customizeSystemMessage: '<custom-chain-prompt>', // Optional. Adds prompt specifications for custom database operations.
+  },
+});
+
+// If stream enabled, receiver on token
+agent.on('onToken', async (token) => {
+  console.warn('token:', token);
+});
+
+agent.on('onMessage', async (message) => {
+  console.warn('MESSAGE:', message);
+});
+
+await agent.call({
+  question: 'What is the best way to get started with Azure?',
+  chatThreadID: '<chat-id>',
+  stream: true,
+});
+```
+
+## Using with OpenAPI contract
+
+<b>OpenAPI + LLM</b> for prompt construction is a concept that combines OpenAPI, a standard for documenting and describing RESTful APIs, with large language models (LLMs). This fusion allows for the automated generation of prompts or queries for interacting with APIs. By using LLMs to understand the OpenAPI specifications and generate natural language prompts, it simplifies and streamlines the process of interfacing with APIs, making it more user-friendly and accessible.
+
+### Example of the concept of SQL + OpenAPI
+
+<img src="docs/media/open-api-img.png" width="500" />
+<br/><br/>
+
+```javascript
+const agent = new Agent({
+  name: '<name>',
+  systemMesssage: '<a message that will specialize your agent>',
+  chatConfig: {
+    temperature: 0,
+  },
+  llmConfig: {
+    type: '<cloud-provider-llm-service>', // Check availability at <link>
+    model: '<llm-model>',
+    instance: '<instance-name>', // Optional
+    apiKey: '<key-your-llm-service>', // Optional
+  },
+  openAPIConfig: {
+    xApiKey: '<x-api-key>', // Optional. Using request API
+    data: '<data-contract>', // Require. OpenAPI contract
+    customizeSystemMessage: '<custom-chain-prompt>', // Optional. Adds prompt specifications for custom openAPI operations.
+  },
+});
+
+// If stream enabled, receiver on token
+agent.on('onToken', async (token) => {
+  console.warn('token:', token);
+});
+
+agent.on('onMessage', async (message) => {
+  console.warn('MESSAGE:', message);
+});
+
+await agent.call({
+  question: 'What is the best way to get started with Azure?',
+  chatThreadID: '<chat-id>',
+  stream: true,
+});
 ```
 
 ## Contributing
@@ -102,9 +258,9 @@ See the [contributing docs](CONTRIBUTING.md) for more information
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ## License
+
 [Apache-2.0](LICENSE)
-
-
