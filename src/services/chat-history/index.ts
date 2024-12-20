@@ -22,7 +22,6 @@ const Services = {
 class ChatHistoryFactory {
   public static async create(settings: IDatabaseConfig): Promise<IChatHistory> {
     const Service = Services[settings?.type];
-    // new Services[settings?.type](settings);
 
     if (!Service) {
       return await new MemoryChatHistory(settings).build();
