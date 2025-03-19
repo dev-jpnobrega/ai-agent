@@ -68,7 +68,7 @@ class VectorStoreChain implements IChain {
       AIMessagePromptTemplate.fromTemplate(
         'Wait! We are searching our VectorStore API.'
       ),
-      HumanMessagePromptTemplate.fromTemplate('{question}'),
+      HumanMessagePromptTemplate.fromTemplate('{input}'),
     ];
 
     const CHAT_COMBINE_PROMPT =
@@ -78,8 +78,6 @@ class VectorStoreChain implements IChain {
   }
 
   private async executeAsRetrieval(input: any) {
-    console.log('input', input);
-
     const prompt = this.buildPromptTemplate(this.getVectorStorePrompt());
 
     return new Promise(async (resolve, reject) => {
@@ -91,6 +89,7 @@ class VectorStoreChain implements IChain {
 
         const chain = await createRetrievalChain({
           retriever: this._service.asRetriever({
+            verbose: true,
             k: this._settings.vectorStoreConfig?.top || 10,
             filter: this._settings.vectorStoreConfig?.customFilters
               ? interpolate<IInputProps>(
@@ -103,8 +102,10 @@ class VectorStoreChain implements IChain {
         });
 
         const response = await chain.invoke({
+          verbose: true,
           input: input.question,
-          chat_history: input.history,
+          question: input.question,
+          history: input.history,
           ...input,
         });
 
@@ -122,22 +123,25 @@ class VectorStoreChain implements IChain {
         user_prompt: (input) => input.user_prompt,
         user_context: (input: any) => input.user_context,
         history: (input: any) => input.history,
+        input: (input: any) => input.question,
         question: (input: any) => input.question,
-        query: (input: any) => input.query,
         format_chat_messages: (input) => input.format_chat_messages,
       },
       {
         user_prompt: (input) => input.user_prompt,
         user_context: (input: any) => input.user_context,
         history: (input: any) => input.history,
+        input: (input: any) => input.question,
         question: (input: any) => input.question,
-        query: (input: any) => input.query,
         format_chat_messages: (input) => input.format_chat_messages,
         response: this.executeAsRetrieval.bind(this),
       },
       {
         [this._outputKey]: (previousStepResult: any) => {
-          return previousStepResult?.response?.answer;
+          return {
+            resume: previousStepResult?.response?.answer,
+            context: previousStepResult?.response?.context,
+          };
         },
       },
     ]);

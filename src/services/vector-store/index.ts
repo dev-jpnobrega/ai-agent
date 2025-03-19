@@ -1,17 +1,21 @@
 import { VectorStore } from '@langchain/core/vectorstores';
+import { OpenAIEmbeddings } from '@langchain/openai';
+
 import { AzureCogSearch } from './azure/azure-vector-store';
+import { AWSCogSearch } from './aws/opensearch-vector-store';
 import {
   ILLMConfig,
   IVectorStoreConfig,
 } from '../../interface/agent.interface';
-import { OpenAIEmbeddings } from '@langchain/openai';
 
 const ServiceEmbeddings = {
   azure: OpenAIEmbeddings,
+  aws: OpenAIEmbeddings,
 } as any;
 
 const ServiceVectores = {
   azure: AzureCogSearch,
+  aws: AWSCogSearch,
 } as any;
 
 class VectorStoreFactory {
@@ -24,7 +28,8 @@ class VectorStoreFactory {
       azureOpenAIApiVersion: llmSettings.apiVersion,
       azureOpenAIApiKey: llmSettings.apiKey,
       azureOpenAIApiInstanceName: llmSettings.instance,
-      azureOpenAIApiDeploymentName: llmSettings.model,
+      azureOpenAIApiDeploymentName: settings.model,
+      model: settings.model,
     });
 
     const service = new ServiceVectores[settings.type](

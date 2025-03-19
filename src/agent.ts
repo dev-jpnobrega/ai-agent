@@ -1,4 +1,5 @@
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
+import { Document } from 'langchain/document';
 import { nanoid } from 'ai';
 
 import AgentBaseCommand from './agent.base';
@@ -8,6 +9,7 @@ import {
   IAgentConfig,
   IDatabaseConfig,
   IInputProps,
+  TModel,
 } from './interface/agent.interface';
 
 import EVENTS_NAME from './helpers/events.name';
@@ -15,6 +17,7 @@ import { ChainService, IChainService } from './services/chain';
 import { ChatHistoryFactory, IChatHistory } from './services/chat-history';
 import LLMFactory from './services/llm';
 import { RunnableWithMessageHistory } from '@langchain/core/runnables';
+import VectorStoreFactory from './services/vector-store';
 
 /**
  * Represents an Agent that extends the AgentBaseCommand and implements the IAgent interface.
@@ -175,8 +178,9 @@ class Agent extends AgentBaseCommand implements IAgent {
       const chatMessages = await chatHistory.getMessages();
 
       const input: any = {
-        ...args,
-        query: args?.question,
+        question: args?.question,
+        chat_thread_id: args?.chatThreadID,
+        user_name: args?.userSessionId,
         user_context: args?.context,
         user_prompt: this._settings?.systemMesssage,
         history: chatMessages,
@@ -203,6 +207,15 @@ class Agent extends AgentBaseCommand implements IAgent {
     } finally {
       return;
     }
+  }
+
+  async tranning(documents: Document<TModel>[]) {
+    const service = VectorStoreFactory.create(
+      this._settings.vectorStoreConfig,
+      this._settings.llmConfig
+    );
+
+    await service.addDocuments(documents);
   }
 
   /**
