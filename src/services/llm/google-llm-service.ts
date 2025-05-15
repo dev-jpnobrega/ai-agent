@@ -11,10 +11,11 @@ class GoogleLLMService {
   }
 
   public build(): ChatGoogleGenerativeAI {
+    process.env.GOOGLE_API_KEY = this._llmSettings.apiKey;
+
     return new ChatGoogleGenerativeAI({
       temperature: this._chatSettings.temperature,
       modelName: this._llmSettings.model,
-      apiKey: this._llmSettings.apiKey,
       maxOutputTokens: this._chatSettings.maxTokens || 2048,
       streaming: true,
     });

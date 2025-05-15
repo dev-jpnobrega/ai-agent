@@ -11,6 +11,9 @@ class RedisChatHistory implements IChatHistory {
   constructor(settings: IDatabaseConfig) {
     this._settings = settings;
   }
+  addMessages(messages: BaseMessage[]): Promise<void> {
+    return this._history?.addMessages(messages);
+  }
 
   private async createClient(): Promise<any> {
     if (this._redisClientInstance) {

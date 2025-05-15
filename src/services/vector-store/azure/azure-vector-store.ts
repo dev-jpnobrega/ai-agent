@@ -165,7 +165,7 @@ export class AzureCogSearch<
     }
 
     return {
-      select: 'pageContent, metadata',
+      select: 'pageContent, metadata, imageBase64',
       search: filter?.search || '*',
       facets: filter?.facets || [],
       filter: filter?.filter || '',
@@ -182,7 +182,7 @@ export class AzureCogSearch<
         },
       ],
       top: k,
-    };
+    } as AzureCogRequestObject;
   }
 }
 

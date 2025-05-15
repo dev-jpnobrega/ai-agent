@@ -36,8 +36,10 @@
     "@aws-crypto/sha256-js": "^5.2.0",
     "@aws-sdk/credential-provider-node": "^3.744.0",
     "@aws-sdk/types": "^3.521.0",
+    "@google/genai": "^0.7.0",
     "@langchain/community": "^0.3.4",
     "@langchain/core": "0.3.8",
+    "@langchain/google-gauth": "^0.2.3",
     "@langchain/google-genai": "^0.0.10",
     "@langchain/openai": "0.3.5",
     "@langchain/redis": "^0.1.0",
@@ -47,8 +49,10 @@
     "@smithy/signature-v4": "^2.1.2",
     "@smithy/util-utf8": "^2.1.1",
     "ai": "^2.2.10",
+    "canvas": "^3.1.0",
     "ioredis": "^5.3.2",
     "langchain": "^0.3.4",
+    "openai": "^4.89.0",
     "typeorm": "0.3.17"
   },
   "overrides": {

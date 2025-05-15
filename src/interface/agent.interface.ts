@@ -1,3 +1,4 @@
+import { BaseMessage } from '@langchain/core/messages';
 import EventEmitter from 'events';
 import { DataSource } from 'typeorm';
 
@@ -6,11 +7,53 @@ export type MONITOR_TYPE =
   | 'smith-shared'
   | 'aws-cloudwatch'
   | 'google-stackdriver';
+
 export type LLM_TYPE = 'azure' | 'gpt' | 'aws' | 'google';
 export type DATABASE_TYPE = 'cosmos' | 'redis' | 'postgres';
 export type VECTOR_SERVICE_TYPE = 'aoss' | 'es';
 
+export type MessageContentText = {
+  type: 'text';
+  text: string;
+};
+export type MessageContentImageUrl = {
+  type: 'image_url';
+  image_url:
+    | string
+    | {
+        url: string;
+        detail?: string;
+      };
+};
+
+export type MessageContentComplex =
+  | MessageContentText
+  | MessageContentImageUrl
+  | (Record<string, any> & {
+      type?: 'text' | 'image_url' | string;
+    })
+  | (Record<string, any> & {
+      type?: never;
+    });
+
+export type MessageContent = string | MessageContentComplex[];
+
+export type MESSAGE_TYPE =
+  | 'human'
+  | 'ia'
+  | 'system'
+  | 'function'
+  | 'api'
+  | 'tool_call';
+
+export type Message = {
+  content: string | MessageContent;
+  role: MESSAGE_TYPE;
+};
+
+export type ImageType = 'image/png' | 'image/jpeg';
 export const SYSTEM_MESSAGE_DEFAULT = `
+
   Given the following inputs, formulate a concise and relevant response:\n
     1. User Rules (from USER CONTEXT > USER RULES), if provided\n
     2. User Context (from USER CONTEXT > CONTEXT), if available\n
@@ -32,6 +75,11 @@ export const SYSTEM_MESSAGE_DEFAULT = `
     - Check for inconsistencies: If there are contradictions between different sources (e.g., documents, database, or user context), prioritize the most reliable information or request clarification from the user.\n
     - Consider time relevance: Always take into account the temporal nature of information, prioritizing the most updated and contextually relevant data.\n\n
 `;
+
+export interface ImageData {
+  mimeType: ImageType;
+  data: string;
+}
 
 export interface IDatabaseConfig {
   type: DATABASE_TYPE;
@@ -141,17 +189,45 @@ export interface IAgentConfig {
   dataSourceConfig?: IDataSourceConfig;
   openAPIConfig?: IOpenAPIConfig;
   monitor?: IMonitorConfig;
+  enableImageGeneration?: boolean;
 }
 
 /**
- * Interface representing the input properties for an agent.
+ * Represents the input properties required for the agent interface.
+ *
+ * @interface IInputProps
+ *
+ * @property {string} question
+ * The question to be asked. This property is required.
+ *
+ * @property {ImageData[]} images
+ * An array of image data objects associated with the input.
+ *
+ * @property {Message[]} [messages]
+ * An optional array of messages that provide additional context or history.
+ *
+ * @property {string} [userSessionId]
+ * An optional user session identifier to track the session.
+ *
+ * @property {string} [chatThreadID]
+ * An optional chat thread identifier to associate the input with a specific thread.
+ *
+ * @property {string} [context]
+ * An optional context string that describes the environment or situation in which the question is asked.
+ *
+ * @property {boolean} [stream]
+ * An optional flag indicating whether the response should be streamed.
  */
 export interface IInputProps {
   /**
    * The question to be asked.
    * @optional
    */
-  question?: string;
+  question: string;
+
+  images?: ImageData[];
+
+  messages?: Message[];
 
   /**
    * The user session identifier.

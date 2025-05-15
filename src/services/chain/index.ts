@@ -13,6 +13,7 @@ import { IAgentConfig } from '../../interface/agent.interface';
 import OpenAPIChain from './openapi-chain';
 import SqlChain from './sql-chain';
 import VectorStoreChain from './vector-store-chain';
+import ImageGenerationChain from './image-generation-chain';
 
 import {
   Runnable,
@@ -41,6 +42,7 @@ class ChainService {
   private _isSQLChainEnabled: boolean;
   private _isOpenAPIChainEnabled: boolean;
   private _isVectorStoreEnabled: boolean;
+  private _isImageGenerationEnabled: boolean;
 
   constructor(settings: IAgentConfig) {
     this._settings = settings;
@@ -62,6 +64,11 @@ class ChainService {
     if (settings.vectorStoreConfig) {
       this._isVectorStoreEnabled = true;
       enabledChains.push(new VectorStoreChain(settings));
+    }
+
+    if (settings.enableImageGeneration) {
+      this._isImageGenerationEnabled = true;
+      enabledChains.push(new ImageGenerationChain(settings));
     }
 
     return enabledChains;
@@ -112,6 +119,12 @@ class ChainService {
     if (this._isOpenAPIChainEnabled) {
       builtMessage += `
         - API Result: {openAPIResult}\n
+      `;
+    }
+
+    if (this._isImageGenerationEnabled) {
+      builtMessage += `
+        - Image Generated: {imageGenerated}\n
       `;
     }
 

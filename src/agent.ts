@@ -19,6 +19,91 @@ import LLMFactory from './services/llm';
 import { RunnableWithMessageHistory } from '@langchain/core/runnables';
 import VectorStoreFactory from './services/vector-store';
 
+/*
+// Define a concrete subclass of BaseMessage
+class CustomMessage extends BaseMessage {
+  lc_namespace: string[];
+  lc_serializable: boolean;
+  private _lc_aliases: Record<string, string>;
+  public get lc_aliases(): Record<string, string> {
+    return this._lc_aliases;
+  }
+  public set lc_aliases(value: Record<string, string>) {
+    this._lc_aliases = value;
+  }
+  private _text: string;
+  public get text(): string {
+    return this._text;
+  }
+  public set text(value: string) {
+    this._text = value;
+  }
+  additional_kwargs: Record<string, any>;
+  response_metadata: Record<string, any>;
+  content: MessageContent;
+  role: MESSAGE_TYPE;
+
+  constructor(msg: Message) {
+    super(msg); // Call the abstract class constructor
+    this.lc_namespace = ['default.namespace'];
+    this.lc_serializable = true;
+    this.lc_aliases = {};
+    this.text = '';
+    this.additional_kwargs = {};
+    this.response_metadata = {};
+    this.content = msg.content;
+    this.role = msg.role;
+  }
+
+  // Implement abstract methods
+  _getType(): MessageType {
+    return this.role as MessageType; // Ensure 'CUSTOM' is a valid value in MESSAGE_TYPE
+  }
+
+  getType(): MessageType {
+    return this.role as MessageType;
+  }
+
+  toDict(): StoredMessage {
+    return {
+      type: this._getType(), // Use the `_getType` method to provide the type
+      data: {
+        lc_namespace: this.lc_namespace,
+        lc_serializable: this.lc_serializable,
+        lc_aliases: this.lc_aliases,
+        text: this.text,
+        additional_kwargs: this.additional_kwargs,
+        response_metadata: this.response_metadata,
+        content: this.content,
+        role: this.role,
+      },
+    };
+  }
+
+  get _printableFields(): Record<string, unknown> {
+    return {
+      text: this.text,
+      role: this.role,
+      content: this.content,
+    };
+  }
+
+  _updateId(): void {
+    // Implement logic if required
+  }
+}
+
+
+      if (args?.messages) {
+        const messages: BaseMessage[] = args?.messages.map((msg) => {
+          const baseMessage = new CustomMessage(msg);
+          return baseMessage;
+        });
+
+        await chatHistory.addMessages(messages);
+      }
+*/
+
 /**
  * Represents an Agent that extends the AgentBaseCommand and implements the IAgent interface.
  * This class is responsible for handling the setup and execution of language model interactions,
@@ -178,6 +263,7 @@ class Agent extends AgentBaseCommand implements IAgent {
       const chatMessages = await chatHistory.getMessages();
 
       const input: any = {
+        images: args?.images,
         question: args?.question,
         chat_thread_id: args?.chatThreadID,
         user_name: args?.userSessionId,
