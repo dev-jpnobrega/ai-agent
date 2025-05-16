@@ -69,12 +69,13 @@ class SqlChain implements IChain {
         sqlOutputKey: 'sqlQuery',
         prompt: new PromptTemplate({
           inputVariables: [
+            'chat_thread_id',
+            'user_prompt',
+            'user_context',
             'question',
             'response',
             'schema',
-            'query',
             'history',
-            'user_context',
             'format_chat_messages',
           ],
           template: systemTemplate,

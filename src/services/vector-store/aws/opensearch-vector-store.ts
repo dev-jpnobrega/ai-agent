@@ -62,12 +62,10 @@ export class AWSCogSearch<
       this._client = new Client({
         compression: 'gzip',
         auth: {
-          username: vectorStoreConfig?.user || `search-read`,
-          password: vectorStoreConfig?.pass || `Search#6pass`,
+          username: vectorStoreConfig?.user,
+          password: vectorStoreConfig?.pass,
         },
-        node:
-          vectorStoreConfig.name ||
-          'https://x8yfc6cu2nt4ub23kxyl.us-east-1.aoss.amazonaws.com', // OpenSearch domain URL
+        node: vectorStoreConfig.name,
       });
     } else {
       this._client = new Client({
@@ -80,9 +78,7 @@ export class AWSCogSearch<
             return credentialsProvider();
           },
         }),
-        node:
-          vectorStoreConfig.name ||
-          'https://x8yfc6cu2nt4ub23kxyl.us-east-1.aoss.amazonaws.com', // OpenSearch domain URL
+        node: vectorStoreConfig.name,
       });
     }
 
@@ -195,111 +191,13 @@ export class AWSCogSearch<
       });
     });
 
-    /*
-    const respCreateIndex = await this._client.indices.create({
-      index: this._config.indexes[0],
-      // body
-    });
-    */
-
-    /*
-    const rssss = await this._client.indices.putMapping({
-      index: this._config.indexes[0],
-      body: {
-        properties: {
-          [this._config.vectorFieldName]: {
-            type: 'knn_vector',
-            dimension: 3072,
-          },
-        },
-      },
-    });
-    */
-
     try {
-      /*
-      const ids: string[] = [
-        `1%3A0%3Ab9mySJUB2vxxy07HZEjB`,
-        '1%3A0%3AKzQzKpUBzM9tyfNYUAsb',
-        '1%3A0%3Az9NsOZUBqqR7yrS56cfr',
-        '1%3A0%3ALDR3OZUBzM9tyfNYeAsV',
-        '1%3A0%3AcdmySJUB2vxxy07HZEjB',
-      ];
-      const del = await this.deleteDocuments([
-        `1%3A0%3ActmySJUB2vxxy07HZEjB`,
-        '1%3A0%3Ac9mySJUB2vxxy07HZEjB',
-      ]);  
-      */
-
-      /*
-      const respCreateInde1x = await this._client.indices.create({
-        index: this._config.indexes[0],
-        body: {
-          settings: {
-            knn: true,
-            'knn.algo_param.ef_search': 512,
-          },
-          mappings: {
-            properties: {
-              [this._config.vectorFieldName]: {
-                type: 'knn_vector',
-                dimension: 3072,
-              },
-              id: {
-                type: 'text',
-              },
-              user: {
-                type: 'text',
-              },
-              chatThreadId: {
-                type: 'text',
-              },
-              pageContent: {
-                type: 'text',
-              },
-              metadata: {
-                type: 'text',
-              },
-            },
-          },
-        },
-      });
-
-      const respCreateI1dex = await this._client.indices.close({
-        allow_no_indices: true,
-        index: this._config.indexes[0],
-      });
-
-      const respCreateIndex = await this._client.indices.putSettings({
-        index: this._config.indexes[0],
-        body: {
-          knn: true,
-          settings: {
-            knn: true,
-          },
-        },
-      });
-      */
-
       const resp1 = await this._client.helpers.bulk({
         datasource: indexes,
         onDocument: this.onDocument.bind(this),
         onDrop: this.onDrop.bind(this),
       });
 
-      /*
-      const resp = await this._client.index({
-        // id: `1`,
-        index: this._config.indexes[0],
-        body: {
-          values: indexes,
-        },
-
-        // refresh: true,
-      });
-      */
-
-      console.warn(`resp`, resp1);
       return;
     } catch (error) {
       console.error('error', error);

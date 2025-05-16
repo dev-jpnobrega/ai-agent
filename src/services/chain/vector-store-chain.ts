@@ -101,13 +101,17 @@ class VectorStoreChain implements IChain {
           combineDocsChain,
         });
 
-        const response = await chain.invoke({
-          verbose: true,
-          input: input.question,
-          question: input.question,
-          history: input.history,
-          ...input,
-        });
+        const response = await chain.invoke(
+          {
+            verbose: this._settings?.debug,
+            input: input.input,
+            history: input.history,
+            ...input,
+          },
+          {
+            configurable: { sessionId: input?.chat_thread_id },
+          }
+        );
 
         return resolve(response);
       } catch (error) {
@@ -120,19 +124,19 @@ class VectorStoreChain implements IChain {
   private async buildVectorStoreChain(): Promise<RunnableSequence<any, any>> {
     const runnable = RunnableSequence.from([
       {
+        chat_thread_id: (input: any) => input.chat_thread_id,
         user_prompt: (input) => input.user_prompt,
         user_context: (input: any) => input.user_context,
         history: (input: any) => input.history,
         input: (input: any) => input.question,
-        question: (input: any) => input.question,
         format_chat_messages: (input) => input.format_chat_messages,
       },
       {
+        chat_thread_id: (input: any) => input.chat_thread_id,
         user_prompt: (input) => input.user_prompt,
         user_context: (input: any) => input.user_context,
         history: (input: any) => input.history,
         input: (input: any) => input.question,
-        question: (input: any) => input.question,
         format_chat_messages: (input) => input.format_chat_messages,
         response: this.executeAsRetrieval.bind(this),
       },

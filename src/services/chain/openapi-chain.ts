@@ -138,10 +138,11 @@ class OpenAPIChain implements IChain {
     const openAPICurlChain = RunnableSequence.from([
       {
         schema: () => spec.obj,
+        chat_thread_id: (input: any) => input.chat_thread_id,
         question: (input) => input.question,
         user_prompt: (input) => this._settings?.customizeSystemMessage,
-        history: (input) => input.history,
         user_context: (input) => input.user_context,
+        history: (input) => input.history,
         format_chat_messages: (input) => input.format_chat_messages,
       },
       prompt,
@@ -160,21 +161,21 @@ class OpenAPIChain implements IChain {
     const openAPIChain = RunnableSequence.from([
       {
         schema: () => spec.obj,
+        chat_thread_id: (input: any) => input.chat_thread_id,
         user_prompt: () => this._settings?.customizeSystemMessage,
         user_context: (input: any) => input.user_context,
         history: (input: any) => input.history,
         question: (input: any) => input.question,
-        query: (input: any) => input.query,
         format_chat_messages: (input) => input.format_chat_messages,
         curl: await this.buildCurlChain(spec, llm),
       },
       {
         schema: () => spec.obj,
+        chat_thread_id: (input: any) => input.chat_thread_id,
         user_prompt: () => this._settings?.customizeSystemMessage,
         user_context: (input: any) => input.user_context,
         history: (input: any) => input.history,
         question: (input: any) => input.question,
-        query: (input: any) => input.query,
         format_chat_messages: (input) => input.format_chat_messages,
         response: this.executeOpenAPI.bind(this),
       },
