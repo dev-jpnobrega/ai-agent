@@ -68,7 +68,7 @@ class VectorStoreChain implements IChain {
       AIMessagePromptTemplate.fromTemplate(
         'Wait! We are searching our VectorStore API.'
       ),
-      HumanMessagePromptTemplate.fromTemplate('{question}'),
+      HumanMessagePromptTemplate.fromTemplate('{input}'),
     ];
 
     const CHAT_COMBINE_PROMPT =
@@ -78,8 +78,6 @@ class VectorStoreChain implements IChain {
   }
 
   private async executeAsRetrieval(input: any) {
-    console.log('input', input);
-
     const prompt = this.buildPromptTemplate(this.getVectorStorePrompt());
 
     return new Promise(async (resolve, reject) => {
@@ -91,6 +89,7 @@ class VectorStoreChain implements IChain {
 
         const chain = await createRetrievalChain({
           retriever: this._service.asRetriever({
+            verbose: true,
             k: this._settings.vectorStoreConfig?.top || 10,
             filter: this._settings.vectorStoreConfig?.customFilters
               ? interpolate<IInputProps>(
@@ -102,11 +101,17 @@ class VectorStoreChain implements IChain {
           combineDocsChain,
         });
 
-        const response = await chain.invoke({
-          input: input.question,
-          chat_history: input.history,
-          ...input,
-        });
+        const response = await chain.invoke(
+          {
+            verbose: this._settings?.debug,
+            input: input.input,
+            history: input.history,
+            ...input,
+          },
+          {
+            configurable: { sessionId: input?.chat_thread_id },
+          }
+        );
 
         return resolve(response);
       } catch (error) {
@@ -119,25 +124,28 @@ class VectorStoreChain implements IChain {
   private async buildVectorStoreChain(): Promise<RunnableSequence<any, any>> {
     const runnable = RunnableSequence.from([
       {
+        chat_thread_id: (input: any) => input.chat_thread_id,
         user_prompt: (input) => input.user_prompt,
         user_context: (input: any) => input.user_context,
         history: (input: any) => input.history,
-        question: (input: any) => input.question,
-        query: (input: any) => input.query,
+        input: (input: any) => input.question,
         format_chat_messages: (input) => input.format_chat_messages,
       },
       {
+        chat_thread_id: (input: any) => input.chat_thread_id,
         user_prompt: (input) => input.user_prompt,
         user_context: (input: any) => input.user_context,
         history: (input: any) => input.history,
-        question: (input: any) => input.question,
-        query: (input: any) => input.query,
+        input: (input: any) => input.question,
         format_chat_messages: (input) => input.format_chat_messages,
         response: this.executeAsRetrieval.bind(this),
       },
       {
         [this._outputKey]: (previousStepResult: any) => {
-          return previousStepResult?.response?.answer;
+          return {
+            resume: previousStepResult?.response?.answer,
+            context: previousStepResult?.response?.context,
+          };
         },
       },
     ]);

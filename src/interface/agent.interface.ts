@@ -8,6 +8,7 @@ export type MONITOR_TYPE =
   | 'google-stackdriver';
 export type LLM_TYPE = 'azure' | 'gpt' | 'aws' | 'google';
 export type DATABASE_TYPE = 'cosmos' | 'redis' | 'postgres';
+export type VECTOR_SERVICE_TYPE = 'aoss' | 'es';
 
 export const SYSTEM_MESSAGE_DEFAULT = `
   Given the following inputs, formulate a concise and relevant response:\n
@@ -86,12 +87,17 @@ export interface IVectorStoreConfig {
   name: string;
   type: LLM_TYPE;
   apiKey: string;
+  user?: string;
+  pass?: string;
   apiVersion: string;
   indexes: string[] | string;
   vectorFieldName: string;
   model?: string;
   customFilters?: string;
   top?: number;
+  region?: string;
+  serviceType?: VECTOR_SERVICE_TYPE;
+  vectorSearch?: boolean;
 }
 
 /**

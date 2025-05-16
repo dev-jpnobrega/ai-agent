@@ -211,6 +211,7 @@ class SqlDatabaseChain {
 
     const sqlChain = RunnableSequence.from([
       {
+        chat_thread_id: (input: any) => input.chat_thread_id,
         question: (input: any) => input.question,
         user_prompt: (input: any) => this.customMessage,
         history: (input: any) => input.history,
@@ -219,6 +220,7 @@ class SqlDatabaseChain {
         query: sqlQueryChain,
       },
       {
+        chat_thread_id: (input: any) => input.chat_thread_id,
         schema: () => tableSchema,
         user_prompt: () => this.customMessage,
         user_context: (input: any) => input.user_context,
