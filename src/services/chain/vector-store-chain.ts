@@ -26,6 +26,8 @@ class VectorStoreChain implements IChain {
   private _outputKey = 'relevantDocs';
   private _service: VectorStore;
   private _llm: BaseLanguageModel;
+  private _runName: string;
+  private _runId: string;
 
   constructor(settings: IAgentConfig) {
     this._settings = settings;
@@ -89,7 +91,7 @@ class VectorStoreChain implements IChain {
 
         const chain = await createRetrievalChain({
           retriever: this._service.asRetriever({
-            verbose: true,
+            verbose: this._settings?.debug || false,
             k: this._settings.vectorStoreConfig?.top || 10,
             filter: this._settings.vectorStoreConfig?.customFilters
               ? interpolate<IInputProps>(
@@ -103,12 +105,14 @@ class VectorStoreChain implements IChain {
 
         const response = await chain.invoke(
           {
-            verbose: this._settings?.debug,
+            verbose: this._settings?.debug || false,
             input: input.input,
             history: input.history,
             ...input,
           },
           {
+            runName: this._runName,
+            runId: this._runId,
             configurable: { sessionId: input?.chat_thread_id },
           }
         );
@@ -157,6 +161,9 @@ class VectorStoreChain implements IChain {
     llm: BaseLanguageModel,
     ...args: any
   ): Promise<RunnableSequence<any, any>> {
+    const [, , , runId, runName] = args;
+    this._runName = runName;
+    this._runId = runId;
     this._llm = llm;
     this._service = VectorStoreFactory.create(
       this._settings.vectorStoreConfig,

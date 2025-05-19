@@ -1,6 +1,6 @@
 import { Document } from 'langchain/document';
 import { VectorStore } from '@langchain/core/vectorstores';
-import { nanoid } from 'nanoid';
+import { v4 as uuid } from 'uuid';
 
 import request from '../../../helpers/http-request.helpers';
 import {
@@ -53,7 +53,7 @@ export class AzureCogSearch<
 
     documents.forEach((document, i) => {
       indexes.push({
-        id: nanoid().replace('_', ''),
+        id: uuid(),
         ...document,
         [this._config.vectorFieldName]: vectors[i],
       });

@@ -1,6 +1,6 @@
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
 import { Document } from 'langchain/document';
-import { nanoid } from 'ai';
+import { v4 as uuid } from 'uuid';
 
 import AgentBaseCommand from './agent.base';
 
@@ -136,10 +136,13 @@ class Agent extends AgentBaseCommand implements IAgent {
    */
   private async stream(
     chain: RunnableWithMessageHistory<any, any>,
-    input: any
+    input: any,
+    runId: string
   ): Promise<string> {
     const stream = await chain.stream(input, {
-      configurable: { sessionId: input?.chatThreadID || nanoid() },
+      runId,
+      runName: this._name,
+      configurable: { sessionId: input?.chatThreadID || uuid() },
     });
 
     let finalMessage: string[] = [];
@@ -162,6 +165,8 @@ class Agent extends AgentBaseCommand implements IAgent {
    * @emits EVENTS_NAME.onEnd - Emitted when the streaming process is terminated.
    */
   async call(args: IInputProps): Promise<void> {
+    const runId = uuid();
+
     try {
       const chatHistory = await this.buildHistory(
         args?.chatThreadID,
@@ -172,7 +177,9 @@ class Agent extends AgentBaseCommand implements IAgent {
         this._llm,
         args?.question,
         chatHistory.getChatHistory(),
-        args?.context
+        args?.context,
+        runId,
+        this._name
       );
 
       const chatMessages = await chatHistory.getMessages();
@@ -192,10 +199,12 @@ class Agent extends AgentBaseCommand implements IAgent {
       let result = '';
 
       if (args?.stream) {
-        result = await this.stream(chain, input);
+        result = await this.stream(chain, input, runId);
       } else {
         result = await chain.invoke(input, {
-          configurable: { sessionId: args?.chatThreadID || nanoid() },
+          runName: this._name,
+          runId,
+          configurable: { sessionId: args?.chatThreadID || uuid() },
         });
       }
 
