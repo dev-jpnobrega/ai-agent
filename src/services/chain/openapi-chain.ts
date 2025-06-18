@@ -33,20 +33,21 @@ class OpenAPIChain implements IChain {
 
   private getOpenApiPrompt(): string {
     return `
-      You are an AI with expertise in OpenAPI and Swagger. Given the provided API schema (from SCHEMA) and the user prompt (from USER PROMPT), generate the appropriate curl command for API execution.\n
+      # You are an AI with expertise in OpenAPI and Swagger. Given the provided API schema (from SCHEMA) and the user prompt (from USER PROMPT), generate the appropriate curl command for API execution.\n
       
-      Follow these rules to generate the curl command:\n
-      1. Generate only the curl command: Output only the executable curl command, without any additional explanation or context.\n
-      2. Avoid duplicate requests:\n
-        - If the same question has already been answered in CHAT HISTORY and result is success, use the previous answer and do not generate a new request.\n
-        - Only generate the request if the question is new.\n
-      3. Respond only if a question is asked: Ensure that a valid question is present before attempting to generate the curl command.\n
+      ## Follow these rules to generate the curl command:\n
+        1. Generate only the curl command: Output only the executable curl command, without any additional explanation or context.\n
+        2. Avoid duplicate requests:\n
+          - If the same question has already been answered in CHAT HISTORY and result is success, use the previous answer and do not generate a new request.\n
+          - Only generate the request if the question is new.\n
+        3. Respond only if a question is asked: Ensure that a valid question is present before attempting to generate the curl command.\n
 
-      Input data:\n
-      - USER PROMPT: ${this._settings?.customizeSystemMessage}\n
-      - SCHEMA: {schema}\n
-      - CHAT HISTORY: {format_chat_messages}\n
-      - QUESTION: {question}\n\n
+      ## Input data:\n
+        - USER PROMPT: {user_prompt}\n
+        - USER CONTEXT: {user_context}\n
+        - SCHEMA: {schema}\n
+        - CHAT HISTORY: {format_chat_messages}\n
+        - QUESTION: {question}\n\n
 
       API ANSWER:
     `;
