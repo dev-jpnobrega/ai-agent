@@ -13,6 +13,11 @@ type HttpServer = {
   url: string;
   headers?: { [key: string]: string };
   automaticSSEFallback?: boolean;
+  reconnect?: {
+    enabled?: boolean;
+    maxAttempts?: boolean;
+    delayMs?: boolean;
+  }
 }
 type StdioServer = {
   transport: "stdio";
@@ -100,6 +105,10 @@ export interface ILLMConfig {
 
 export interface IMcpServerConfig {
   customizeSystemMessage?: string;
+  throwOnLoadError?: boolean;
+  prefixToolNameWithServerName?: boolean;
+  useStandardContentBlocks?: boolean;
+  additionalToolNamePrefix?: string;
   mcpServers: {
     [serverName: string]: StdioServer | HttpServer;
   };

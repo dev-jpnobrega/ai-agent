@@ -11,20 +11,21 @@ import {
 import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 
 import { IChain } from ".";
-import { IMcpServerConfig } from "../../interface/agent.interface";
+import { IAgentConfig } from "../../interface/agent.interface";
 
-class McpServerChain implements IChain {
-    private _settings: IMcpServerConfig;
-    private _outputKey = 'mcpToolResult';
+class McpChain implements IChain {
+    private _settings: IAgentConfig;
+    private _llm: BaseLanguageModel;
+    private _outputKey = 'mcpToolsResult';
 
-    constructor(settings: IMcpServerConfig) {
+    constructor(settings: IAgentConfig) {
         this._settings = settings;
     }
 
     private getMcpPrompt(): string {
         return `
         # You are a helpful AI Assistant focused on orchestrate tools according to user question (QUESTION) and following instructions from USER PROMPT\n
-        ## You should adjust the tool input request according to its schema.
+        ## You MUST adjust the tool input request according to its schema.
         Assistant is constantly learning and improving, and its capabilities are constantly evolving.
         It is able to process and understand large amounts of text, and can use this knowledge to provide accurate and informative responses.\n\n
 
@@ -33,8 +34,6 @@ class McpServerChain implements IChain {
         - USER CONTEXT: {user_context}\n
         - CHAT HISTORY: {format_chat_messages}\n
         - QUESTION: {question}\n\n
-
-        Tool Response:
         `
     }
 
@@ -51,51 +50,60 @@ class McpServerChain implements IChain {
         return CHAT_COMBINE_PROMPT;
     }
 
-    private async getServerTools(): Promise<StructuredToolInterface[]> {
+    private async getServersTools(): Promise<StructuredToolInterface[]> {
         let tools;
-        const { mcpServers } = this._settings;
+        const { mcpServerConfig } = this._settings;
 
         const client = new MultiServerMCPClient({
-            prefixToolNameWithServerName: false,
-            useStandardContentBlocks: true,
-            mcpServers
+            throwOnLoadError: mcpServerConfig.throwOnLoadError || true,
+            prefixToolNameWithServerName: mcpServerConfig.prefixToolNameWithServerName || true,
+            useStandardContentBlocks: mcpServerConfig.useStandardContentBlocks || true,
+            additionalToolNamePrefix: mcpServerConfig.additionalToolNamePrefix || 'mcp',
+            mcpServers: mcpServerConfig.mcpServers
         });
 
         try {
             tools = await client.getTools();
         }
         catch (error) {
-            console.log(error);
+            console.error(`Failed to retrieve tools`, error);
             throw error;
         }
 
         return tools;
     }
 
-    public async create(
-        llm: BaseLanguageModel,
-        ...args: any
-    ): Promise<RunnableSequence<any, any>> {
-        const tools = await this.getServerTools();
-
+    private async buildMcpChain(): Promise<AgentExecutor> {
         const prompt = this.buildPromptTemplate(this.getMcpPrompt());
 
-        const agent = createToolCallingAgent({ llm, tools, prompt });
+        const tools = await this.getServersTools();
+
+        const agent = createToolCallingAgent({ llm: this._llm, tools, prompt });
 
         const agentExecutor = new AgentExecutor({
             agent,
             tools,
-            verbose: true, //debug mode
+            verbose: this._settings?.debug || true,
             handleToolRuntimeErrors: (error) => {
                 return error.message;
             },
         });
 
-        const mcpChain = RunnableSequence.from([
+        return agentExecutor;
+    }
+    public async create(
+        llm: BaseLanguageModel,
+        ...args: any
+    ): Promise<RunnableSequence<any, any>> {
+        this._llm = llm;
+
+        const mcpChain = await this.buildMcpChain();
+
+        return RunnableSequence.from([
             RunnablePassthrough.assign({
-                user_prompt: (input: any) => this._settings?.customizeSystemMessage,
+                user_prompt: (input: any) => this._settings?.mcpServerConfig.customizeSystemMessage,
             }),
-            agentExecutor,
+            mcpChain,
             RunnablePassthrough.assign({
                 [this._outputKey]: (previousStepResult: any) => {
                     return previousStepResult?.output;
@@ -103,7 +111,6 @@ class McpServerChain implements IChain {
             })
         ]);
 
-        return mcpChain;
     }
 }
-export default McpServerChain;
+export default McpChain;

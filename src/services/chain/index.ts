@@ -13,7 +13,7 @@ import { IAgentConfig } from '../../interface/agent.interface';
 import OpenAPIChain from './openapi-chain';
 import SqlChain from './sql-chain';
 import VectorStoreChain from './vector-store-chain';
-import McpServerChain from './mcp-server-chain';
+import McpChain from './mcp-client-chain';
 
 import {
   Runnable,
@@ -68,7 +68,7 @@ class ChainService {
 
     if (settings.mcpServerConfig) {
       this._isMcpServerEnabled = true;
-      enabledChains.push(new McpServerChain(settings.mcpServerConfig));
+      enabledChains.push(new McpChain(settings));
     }
 
     return enabledChains;
@@ -125,7 +125,7 @@ class ChainService {
 
     if (this._isMcpServerEnabled) {
       builtMessage += `
-        - MCP Tool Result: {mcpToolResult}\n
+        - MCP Tool Result: {mcpToolsResult}\n
       `;
     }
 
