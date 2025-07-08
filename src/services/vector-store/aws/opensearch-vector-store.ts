@@ -14,7 +14,7 @@ import {
 } from '@opensearch-project/opensearch/api';
 import { Hit } from '@opensearch-project/opensearch/api/_types/_core.search';
 
-import { generateId } from '../../../helpers/string.helpers';
+import { generateId } from '../../../helpers/string.helper';
 
 export class AWSCogSearch<
   TModel extends Record<string, unknown>

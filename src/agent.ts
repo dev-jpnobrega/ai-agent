@@ -12,7 +12,7 @@ import {
   TModel,
 } from './interface/agent.interface';
 
-import EVENTS_NAME from './helpers/events.name';
+import EVENTS_NAME from './helpers/name-events.helper';
 import { ChainService, IChainService } from './services/chain';
 import { ChatHistoryFactory, IChatHistory } from './services/chat-history';
 import LLMFactory from './services/llm';

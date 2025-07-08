@@ -19,7 +19,7 @@ import { IAgentConfig, IInputProps } from '../../interface/agent.interface';
 import { IChain } from '.';
 
 import VectorStoreFactory from '../vector-store';
-import { interpolate } from '../../helpers/string.helpers';
+import { interpolate } from '../../helpers/string.helper';
 
 class VectorStoreChain implements IChain {
   private _settings: IAgentConfig;

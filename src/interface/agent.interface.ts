@@ -33,6 +33,23 @@ export const SYSTEM_MESSAGE_DEFAULT = `
     - Consider time relevance: Always take into account the temporal nature of information, prioritizing the most updated and contextually relevant data.\n\n
 `;
 
+export interface IMCPServer {
+  name: string;
+  transport: string;
+  commands: string;
+  args?: string[];
+  env?: Record<string, unknown>;
+  settings?: Record<string, unknown>;
+}
+
+export interface IMCPConfig {
+  prefixToolNameWithServerName?: boolean;
+  throwOnLoadError?: boolean;
+  additionalToolNamePrefix?: string;
+  useStandardContentBlocks?: boolean;
+  mcpServers: IMCPServer[];
+}
+
 export interface IDatabaseConfig {
   type: DATABASE_TYPE;
   host: string;
@@ -140,6 +157,7 @@ export interface IAgentConfig {
   vectorStoreConfig?: IVectorStoreConfig;
   dataSourceConfig?: IDataSourceConfig;
   openAPIConfig?: IOpenAPIConfig;
+  mcpConfig?: IMCPConfig;
   monitor?: IMonitorConfig;
 }
 

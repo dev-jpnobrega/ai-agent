@@ -21,6 +21,7 @@ import {
   RunnableWithMessageHistory,
 } from '@langchain/core/runnables';
 import { StringOutputParser } from '@langchain/core/output_parsers';
+import MCPChain from './mcp-chain';
 
 interface IChain {
   create(
@@ -41,6 +42,7 @@ class ChainService {
   private _isSQLChainEnabled: boolean;
   private _isOpenAPIChainEnabled: boolean;
   private _isVectorStoreEnabled: boolean;
+  private _isMCPChainEnabled: boolean;
 
   constructor(settings: IAgentConfig) {
     this._settings = settings;
@@ -62,6 +64,11 @@ class ChainService {
     if (settings.vectorStoreConfig) {
       this._isVectorStoreEnabled = true;
       enabledChains.push(new VectorStoreChain(settings));
+    }
+
+    if (settings.mcpConfig) {
+      this._isMCPChainEnabled = true;
+      enabledChains.push(new MCPChain(settings));
     }
 
     return enabledChains;
@@ -112,6 +119,12 @@ class ChainService {
     if (this._isOpenAPIChainEnabled) {
       builtMessage += `
         - API Result: {openAPIResult}\n
+      `;
+    }
+
+    if (this._isMCPChainEnabled) {
+      builtMessage += `
+        - MCP Tools Result: {mcpToolsResult}\n
       `;
     }
 

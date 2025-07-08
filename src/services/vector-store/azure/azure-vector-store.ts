@@ -2,7 +2,7 @@ import { Document } from 'langchain/document';
 import { VectorStore } from '@langchain/core/vectorstores';
 import { v4 as uuid } from 'uuid';
 
-import request from '../../../helpers/http-request.helpers';
+import request from '../../../helpers/http-request.helper';
 import {
   AzureCogFilter,
   AzureCogRequestObject,
