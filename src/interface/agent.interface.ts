@@ -9,6 +9,21 @@ export type MONITOR_TYPE =
 export type LLM_TYPE = 'azure' | 'gpt' | 'aws' | 'google';
 export type DATABASE_TYPE = 'cosmos' | 'redis' | 'postgres';
 export type VECTOR_SERVICE_TYPE = 'aoss' | 'es';
+type HttpServer = {
+  url: string;
+  headers?: { [key: string]: string };
+  automaticSSEFallback?: boolean;
+}
+type StdioServer = {
+  transport: "stdio";
+  command: string;
+  args: string[];
+  restart?: {
+    enabled: boolean;
+    maxAttempts: number;
+    delayMs: number;
+  };
+}
 
 export const SYSTEM_MESSAGE_DEFAULT = `
   Given the following inputs, formulate a concise and relevant response:\n
@@ -83,6 +98,13 @@ export interface ILLMConfig {
   region?: string;
 }
 
+export interface IMcpServerConfig {
+  customizeSystemMessage?: string;
+  mcpServers: {
+    [serverName: string]: StdioServer | HttpServer;
+  };
+}
+
 export interface IVectorStoreConfig {
   name: string;
   type: LLM_TYPE;
@@ -127,6 +149,7 @@ export interface IMonitorConfig {
  * @property {IDatabaseConfig} [dbHistoryConfig] - Optional configuration for database history.
  * @property {IVectorStoreConfig} [vectorStoreConfig] - Optional configuration for vector store.
  * @property {IDataSourceConfig} [dataSourceConfig] - Optional configuration for data source.
+ * @property {IMcpServerConfig} [mcpServerConfig] - Optional configuration for mcp servers.
  * @property {IOpenAPIConfig} [openAPIConfig] - Optional configuration for OpenAPI.
  * @property {IMonitorConfig} [monitor] - Optional configuration for monitoring.
  */
@@ -140,6 +163,7 @@ export interface IAgentConfig {
   vectorStoreConfig?: IVectorStoreConfig;
   dataSourceConfig?: IDataSourceConfig;
   openAPIConfig?: IOpenAPIConfig;
+  mcpServerConfig?: IMcpServerConfig;
   monitor?: IMonitorConfig;
 }
 

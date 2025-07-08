@@ -39,6 +39,7 @@
     "@langchain/community": "^0.3.4",
     "@langchain/core": "0.3.8",
     "@langchain/google-genai": "^0.0.10",
+    "@langchain/mcp-adapters": "^0.5.2",
     "@langchain/openai": "0.3.5",
     "@langchain/redis": "^0.1.0",
     "@opensearch-project/opensearch": "^3.3.0",
