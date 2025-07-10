@@ -42,7 +42,7 @@ class ChainService {
   private _isSQLChainEnabled: boolean;
   private _isOpenAPIChainEnabled: boolean;
   private _isVectorStoreEnabled: boolean;
-  private _isMcpServerEnabled: boolean;
+  private _isMcpChainEnabled: boolean;
 
   constructor(settings: IAgentConfig) {
     this._settings = settings;
@@ -67,7 +67,7 @@ class ChainService {
     }
 
     if (settings.mcpServerConfig) {
-      this._isMcpServerEnabled = true;
+      this._isMcpChainEnabled = true;
       enabledChains.push(new McpChain(settings));
     }
 
@@ -123,7 +123,7 @@ class ChainService {
       `;
     }
 
-    if (this._isMcpServerEnabled) {
+    if (this._isMcpChainEnabled) {
       builtMessage += `
         - MCP Tool Result: {mcpToolsResult}\n
       `;

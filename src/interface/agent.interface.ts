@@ -15,8 +15,8 @@ type HttpServer = {
   automaticSSEFallback?: boolean;
   reconnect?: {
     enabled?: boolean;
-    maxAttempts?: boolean;
-    delayMs?: boolean;
+    maxAttempts?: number;
+    delayMs?: number;
   }
 }
 type StdioServer = {
