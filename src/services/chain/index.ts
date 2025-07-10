@@ -13,6 +13,7 @@ import { IAgentConfig } from '../../interface/agent.interface';
 import OpenAPIChain from './openapi-chain';
 import SqlChain from './sql-chain';
 import VectorStoreChain from './vector-store-chain';
+import McpChain from './mcp-client-chain';
 
 import {
   Runnable,
@@ -41,6 +42,7 @@ class ChainService {
   private _isSQLChainEnabled: boolean;
   private _isOpenAPIChainEnabled: boolean;
   private _isVectorStoreEnabled: boolean;
+  private _isMcpChainEnabled: boolean;
 
   constructor(settings: IAgentConfig) {
     this._settings = settings;
@@ -64,6 +66,11 @@ class ChainService {
       enabledChains.push(new VectorStoreChain(settings));
     }
 
+    if (settings.mcpServerConfig) {
+      this._isMcpChainEnabled = true;
+      enabledChains.push(new McpChain(settings));
+    }
+
     return enabledChains;
   }
 
@@ -75,8 +82,9 @@ class ChainService {
       2. User Context (from USER CONTEXT > CONTEXT), if available\n
       3. Document Context (from Context found in documents), if provided\n
       4. API Output (from API Result), if available\n
-      5. Database output (from database result), if available. If database output is filled, use it for final answer, do not manipulate.\n\n\n\n
-      
+      5. Database output (from database result), if available. If database output is filled, use it for final answer, do not manipulate.\n
+      6. MCP tool result, if available.\n\n\n\n
+
       Response Guidelines:\n
       - Prioritize User Rules and User Context if they are filled in.\n
       - Do not generate or fabricate information:\n
@@ -112,6 +120,12 @@ class ChainService {
     if (this._isOpenAPIChainEnabled) {
       builtMessage += `
         - API Result: {openAPIResult}\n
+      `;
+    }
+
+    if (this._isMcpChainEnabled) {
+      builtMessage += `
+        - MCP Tool Result: {mcpToolsResult}\n
       `;
     }
 
