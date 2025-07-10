@@ -20,7 +20,7 @@ type HttpServer = {
   }
 }
 type StdioServer = {
-  transport: "stdio";
+  transport: 'stdio';
   command: string;
   args: string[];
   restart?: {
