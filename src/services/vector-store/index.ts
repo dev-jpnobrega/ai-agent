@@ -8,11 +8,6 @@ import {
   IVectorStoreConfig,
 } from '../../interface/agent.interface';
 
-const ServiceEmbeddings = {
-  azure: AzureOpenAIEmbeddings,
-  aws: OpenAIEmbeddings,
-} as any;
-
 const ServiceVectores = {
   azure: AzureCogSearch,
   aws: AWSCogSearch,
@@ -23,14 +18,7 @@ class VectorStoreFactory {
     settings: IVectorStoreConfig,
     llmSettings: ILLMConfig
   ): VectorStore {
-    const embedding = new ServiceEmbeddings[settings.type]({
-      ...llmSettings,
-      azureOpenAIApiVersion: llmSettings.apiVersion,
-      azureOpenAIApiKey: llmSettings.apiKey,
-      azureOpenAIApiInstanceName: llmSettings.instance,
-      azureOpenAIApiDeploymentName: settings.model,
-      model: settings.model,
-    });
+    const embedding = this.instantiateEmbeddings(settings, llmSettings);
 
     const service = new ServiceVectores[settings.type](
       embedding,
@@ -38,6 +26,24 @@ class VectorStoreFactory {
     ) as VectorStore;
 
     return service;
+  }
+
+  private static instantiateEmbeddings(settings: IVectorStoreConfig, llmSettings: ILLMConfig): OpenAIEmbeddings{
+    if (settings.type === 'azure') {
+      return new AzureOpenAIEmbeddings({
+        azureOpenAIApiDeploymentName: settings.model,
+        azureOpenAIApiVersion: llmSettings.apiVersion,
+        azureOpenAIApiKey: llmSettings.apiKey,
+        azureOpenAIApiInstanceName: llmSettings.instance,
+        model: settings.model,
+      });
+    }
+    if (settings.type === 'aws') {
+      return new OpenAIEmbeddings({
+        ...llmSettings,
+        model: settings.model,
+      });
+    }
   }
 }
 
