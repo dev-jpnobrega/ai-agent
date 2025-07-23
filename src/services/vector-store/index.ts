@@ -1,5 +1,5 @@
 import { VectorStore } from '@langchain/core/vectorstores';
-import { OpenAIEmbeddings } from '@langchain/openai';
+import { AzureOpenAIEmbeddings, OpenAIEmbeddings } from '@langchain/openai';
 
 import { AzureCogSearch } from './azure/azure-vector-store';
 import { AWSCogSearch } from './aws/opensearch-vector-store';
@@ -9,7 +9,7 @@ import {
 } from '../../interface/agent.interface';
 
 const ServiceEmbeddings = {
-  azure: OpenAIEmbeddings,
+  azure: AzureOpenAIEmbeddings,
   aws: OpenAIEmbeddings,
 } as any;
 
