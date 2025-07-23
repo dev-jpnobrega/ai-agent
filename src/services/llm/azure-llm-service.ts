@@ -1,6 +1,5 @@
-import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { IChatConfig, ILLMConfig } from '../../interface/agent.interface';
-import { ChatOpenAI } from '@langchain/openai';
+import { AzureChatOpenAI } from '@langchain/openai';
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
 
 class AzureLLMService {
@@ -13,7 +12,7 @@ class AzureLLMService {
   }
 
   public build(): BaseLanguageModel {
-    return new ChatOpenAI({
+    return new AzureChatOpenAI({
       temperature: this._chatSettings.temperature,
       streaming: true,
       maxConcurrency: 10,

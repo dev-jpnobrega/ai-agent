@@ -18,8 +18,6 @@ export class AzureCogSearch<
   private _config: AzureSearchConfig;
 
   constructor(embeddings: any, dbConfig: AzureSearchConfig) {
-    embeddings.azureOpenAIApiDeploymentName = dbConfig.model;
-
     super(embeddings, dbConfig);
 
     this._config = dbConfig;

@@ -83,7 +83,7 @@ class McpChain implements IChain {
     const agentExecutor = new AgentExecutor({
       agent,
       tools,
-      verbose: this._settings?.debug || true,
+      verbose: this._settings?.debug ?? true,
       handleToolRuntimeErrors: (error) => {
         return error.message;
       },
