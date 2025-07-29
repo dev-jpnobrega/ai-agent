@@ -1,12 +1,15 @@
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
-import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from '@langchain/core/runnables';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { MultiServerMCPClient } from '@langchain/mcp-adapters';
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   MessagesPlaceholder,
-  SystemMessagePromptTemplate
+  SystemMessagePromptTemplate,
 } from '@langchain/core/prompts';
 import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
 
@@ -30,11 +33,11 @@ class McpChain implements IChain {
       It is able to process and understand large amounts of text, and can use this knowledge to provide accurate and informative responses.\n\n
 
       ## Input data:\n
-      - USER PROMPT: {user_prompt}\n
+      - USER PROMPT: {user_prompt_mcp}\n
       - USER CONTEXT: {user_context}\n
       - CHAT HISTORY: {format_chat_messages}\n
       - QUESTION: {question}\n\n
-      `
+      `;
   }
 
   private buildPromptTemplate(systemMessages: string): ChatPromptTemplate {
@@ -56,16 +59,18 @@ class McpChain implements IChain {
 
     const client = new MultiServerMCPClient({
       throwOnLoadError: mcpServerConfig.throwOnLoadError || true,
-      prefixToolNameWithServerName: mcpServerConfig.prefixToolNameWithServerName || true,
-      useStandardContentBlocks: mcpServerConfig.useStandardContentBlocks || true,
-      additionalToolNamePrefix: mcpServerConfig.additionalToolNamePrefix || 'mcp',
-      mcpServers: mcpServerConfig.mcpServers
+      prefixToolNameWithServerName:
+        mcpServerConfig.prefixToolNameWithServerName || true,
+      useStandardContentBlocks:
+        mcpServerConfig.useStandardContentBlocks || true,
+      additionalToolNamePrefix:
+        mcpServerConfig.additionalToolNamePrefix || 'mcp',
+      mcpServers: mcpServerConfig.mcpServers,
     });
 
     try {
       tools = await client.getTools();
-    }
-    catch (error) {
+    } catch (error) {
       console.error(`Failed to retrieve tools`, error);
       throw error;
     }
@@ -101,16 +106,16 @@ class McpChain implements IChain {
 
     return RunnableSequence.from([
       RunnablePassthrough.assign({
-        user_prompt: (input: any) => this._settings?.mcpServerConfig.customizeSystemMessage,
+        user_prompt_mcp: (input: any) =>
+          this._settings?.mcpServerConfig.customizeSystemMessage,
       }),
       mcpChain,
       RunnablePassthrough.assign({
         [this._outputKey]: (previousStepResult: any) => {
           return previousStepResult?.output;
         },
-      })
+      }),
     ]);
-
   }
 }
 export default McpChain;
