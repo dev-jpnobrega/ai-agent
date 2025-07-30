@@ -1,7 +1,7 @@
 {
   "name": "ai-agent-enterprise",
   "description": "AI Agent simplifies the implementation and use of generative AI with LangChain, you can add components such as vectorized search services, conversation history, custom databases and API contracts",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
   "files": [
