@@ -129,19 +129,19 @@ class VectorStoreChain implements IChain {
     const runnable = RunnableSequence.from([
       {
         chat_thread_id: (input: any) => input.chat_thread_id,
-        user_prompt: (input) => input.user_prompt,
+        user_prompt: (input: any) => input.user_prompt,
         user_context: (input: any) => input.user_context,
         history: (input: any) => input.history,
         input: (input: any) => input.question,
-        format_chat_messages: (input) => input.format_chat_messages,
+        format_chat_messages: (input: any) => input.format_chat_messages,
       },
       {
         chat_thread_id: (input: any) => input.chat_thread_id,
-        user_prompt: (input) => input.user_prompt,
+        user_prompt: (input: any) => input.user_prompt,
         user_context: (input: any) => input.user_context,
         history: (input: any) => input.history,
         input: (input: any) => input.question,
-        format_chat_messages: (input) => input.format_chat_messages,
+        format_chat_messages: (input: any) => input.format_chat_messages,
         response: this.executeAsRetrieval.bind(this),
       },
       {
