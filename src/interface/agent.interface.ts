@@ -1,3 +1,4 @@
+import { StructuredToolInterface } from '@langchain/core/tools';
 import EventEmitter from 'events';
 import { DataSource } from 'typeorm';
 
@@ -17,8 +18,8 @@ type HttpServer = {
     enabled?: boolean;
     maxAttempts?: number;
     delayMs?: number;
-  }
-}
+  };
+};
 type StdioServer = {
   transport: 'stdio';
   command: string;
@@ -28,7 +29,7 @@ type StdioServer = {
     maxAttempts: number;
     delayMs: number;
   };
-}
+};
 
 export const SYSTEM_MESSAGE_DEFAULT = `
   Given the following inputs, formulate a concise and relevant response:\n
@@ -103,7 +104,7 @@ export interface ILLMConfig {
   region?: string;
 }
 
-export interface IMcpServerConfig {
+export interface IMCPServerConfig {
   customizeSystemMessage?: string;
   throwOnLoadError?: boolean;
   prefixToolNameWithServerName?: boolean;
@@ -172,8 +173,21 @@ export interface IAgentConfig {
   vectorStoreConfig?: IVectorStoreConfig;
   dataSourceConfig?: IDataSourceConfig;
   openAPIConfig?: IOpenAPIConfig;
-  mcpServerConfig?: IMcpServerConfig;
+  mcpServerConfig?: IMCPServerConfig;
   monitor?: IMonitorConfig;
+}
+
+export interface IAgentExecutor {
+  name?: string;
+  debug?: boolean;
+  systemMesssage?: string;
+  llmConfig: ILLMConfig;
+  chatConfig: IChatConfig;
+  dbHistoryConfig?: IDatabaseConfig;
+  monitor?: IMonitorConfig;
+  tools?: StructuredToolInterface[];
+  mcpServerConfig?: IMCPServerConfig;
+  handleToolRuntimeErrors?: (error: Error) => string;
 }
 
 /**

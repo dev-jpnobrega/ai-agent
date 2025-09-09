@@ -30,6 +30,14 @@ class RedisChatHistory implements IChatHistory {
     return this._redisClientInstance;
   }
 
+  addMessages(messages: BaseMessage[]): Promise<void> {
+    return this._history?.addMessages(messages);
+  }
+
+  addMessage(message: BaseMessage): Promise<void> {
+    return this._history?.addMessage(message);
+  }
+
   addUserMessage(message: string): Promise<void> {
     return this._history?.addUserMessage(message);
   }

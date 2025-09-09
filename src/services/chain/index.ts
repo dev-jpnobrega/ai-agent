@@ -22,6 +22,7 @@ import {
   RunnableWithMessageHistory,
 } from '@langchain/core/runnables';
 import { StringOutputParser } from '@langchain/core/output_parsers';
+import { BaseListChatMessageHistory } from '@langchain/core/chat_history';
 
 interface IChain {
   create(
@@ -34,6 +35,11 @@ interface IChainService {
   build(
     llm: BaseLanguageModel,
     ...args: any
+  ): Promise<RunnableWithMessageHistory<any, any>>;
+
+  buildRunnableWithMessageHistory(
+    runnable: RunnableSequence<any, any> | Runnable,
+    chatHistory: BaseListChatMessageHistory
   ): Promise<RunnableWithMessageHistory<any, any>>;
 }
 
@@ -192,13 +198,10 @@ class ChainService {
     );
   }
 
-  public async build(
-    llm: BaseLanguageModel,
-    ...args: any
-  ): Promise<RunnableWithMessageHistory<any, any>> {
-    const [, chatHistory] = args;
-    const runnable = await this.buildChains(llm, ...args);
-
+  public async buildRunnableWithMessageHistory(
+    runnable: RunnableSequence<any, any> | Runnable,
+    chatHistory: BaseListChatMessageHistory
+  ) {
     const chainWithHistory = new RunnableWithMessageHistory({
       runnable,
       getMessageHistory: (_) => {
@@ -207,6 +210,21 @@ class ChainService {
       inputMessagesKey: 'question',
       historyMessagesKey: 'history',
     });
+
+    return chainWithHistory;
+  }
+
+  public async build(
+    llm: BaseLanguageModel,
+    ...args: any
+  ): Promise<RunnableWithMessageHistory<any, any>> {
+    const [, chatHistory] = args;
+    const runnable = await this.buildChains(llm, ...args);
+
+    const chainWithHistory = await this.buildRunnableWithMessageHistory(
+      runnable,
+      chatHistory
+    );
 
     return chainWithHistory;
   }
