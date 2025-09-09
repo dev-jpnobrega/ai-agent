@@ -52,9 +52,9 @@ class AgentBase extends EventEmitter {
   private setMonitor(settings: IAgentConfig): void {
     if (!settings?.monitor) {
       process.env.LANGCHAIN_TRACING_V2 = `false`;
-      process.env.LANGCHAIN_ENDPOINT = undefined;
-      process.env.LANGCHAIN_API_KEY = undefined;
-      process.env.LANGCHAIN_PROJECT = undefined;
+      delete process.env.LANGCHAIN_ENDPOINT;
+      delete process.env.LANGCHAIN_API_KEY;
+      delete process.env.LANGCHAIN_PROJECT;
 
       return;
     }
