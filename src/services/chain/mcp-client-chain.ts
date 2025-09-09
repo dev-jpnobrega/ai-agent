@@ -106,7 +106,7 @@ class McpChain implements IChain {
 
   public async getTools(): Promise<StructuredToolInterface[]> {
     if (this._tools.length === 0) {
-      return await this.getServersTools();
+      this._tools = await this.getServersTools();
     }
 
     return this._tools;

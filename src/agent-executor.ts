@@ -199,8 +199,11 @@ class AgentExecutor extends AgentBase implements IAgent {
       tools,
       verbose: this._settingsAgent?.debug ?? true,
       handleToolRuntimeErrors: (error: Error) => {
-        this._settingsAgent.handleToolRuntimeErrors(error);
+        if (this._settingsAgent.handleToolRuntimeErrors)
+          this._settingsAgent.handleToolRuntimeErrors(error);
+
         this._logger.error(error);
+
         return error.message;
       },
     });
