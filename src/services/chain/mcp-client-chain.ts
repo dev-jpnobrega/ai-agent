@@ -20,6 +20,7 @@ class McpChain implements IChain {
   private _settings: IAgentConfig;
   private _llm: BaseLanguageModel;
   private _outputKey = 'mcpToolsResult';
+  private _tools: StructuredToolInterface[] = [];
 
   constructor(settings: IAgentConfig) {
     this._settings = settings;
@@ -81,13 +82,19 @@ class McpChain implements IChain {
   private async buildMcpChain(): Promise<AgentExecutor> {
     const prompt = this.buildPromptTemplate(this.getMcpPrompt());
 
-    const tools = await this.getServersTools();
+    if (this._tools.length === 0) {
+      this._tools = await this.getTools();
+    }
 
-    const agent = createToolCallingAgent({ llm: this._llm, tools, prompt });
+    const agent = createToolCallingAgent({
+      llm: this._llm,
+      tools: this._tools,
+      prompt,
+    });
 
     const agentExecutor = new AgentExecutor({
       agent,
-      tools,
+      tools: this._tools,
       verbose: this._settings?.debug ?? true,
       handleToolRuntimeErrors: (error) => {
         return error.message;
@@ -96,6 +103,15 @@ class McpChain implements IChain {
 
     return agentExecutor;
   }
+
+  public async getTools(): Promise<StructuredToolInterface[]> {
+    if (this._tools.length === 0) {
+      this._tools = await this.getServersTools();
+    }
+
+    return this._tools;
+  }
+
   public async create(
     llm: BaseLanguageModel,
     ...args: any

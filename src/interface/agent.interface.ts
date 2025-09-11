@@ -1,3 +1,4 @@
+import { StructuredToolInterface } from '@langchain/core/tools';
 import EventEmitter from 'events';
 import { DataSource } from 'typeorm';
 
@@ -17,8 +18,8 @@ type HttpServer = {
     enabled?: boolean;
     maxAttempts?: number;
     delayMs?: number;
-  }
-}
+  };
+};
 type StdioServer = {
   transport: 'stdio';
   command: string;
@@ -28,7 +29,7 @@ type StdioServer = {
     maxAttempts: number;
     delayMs: number;
   };
-}
+};
 
 export const SYSTEM_MESSAGE_DEFAULT = `
   Given the following inputs, formulate a concise and relevant response:\n
@@ -103,7 +104,7 @@ export interface ILLMConfig {
   region?: string;
 }
 
-export interface IMcpServerConfig {
+export interface IMCPServerConfig {
   customizeSystemMessage?: string;
   throwOnLoadError?: boolean;
   prefixToolNameWithServerName?: boolean;
@@ -152,7 +153,7 @@ export interface IMonitorConfig {
  *
  * @property {string} [name] - Optional name of the agent.
  * @property {boolean} [debug] - Optional flag to enable debug mode.
- * @property {string} [systemMesssage] - Optional system message for the agent.
+ * @property {string} [systemMessage] - Optional system message for the agent.
  * @property {ILLMConfig} llmConfig - Configuration for the language model.
  * @property {IChatConfig} chatConfig - Configuration for the chat settings.
  * @property {IDatabaseConfig} [dbHistoryConfig] - Optional configuration for database history.
@@ -165,15 +166,28 @@ export interface IMonitorConfig {
 export interface IAgentConfig {
   name?: string;
   debug?: boolean;
-  systemMesssage?: string;
+  systemMessage?: string;
   llmConfig: ILLMConfig;
   chatConfig: IChatConfig;
   dbHistoryConfig?: IDatabaseConfig;
   vectorStoreConfig?: IVectorStoreConfig;
   dataSourceConfig?: IDataSourceConfig;
   openAPIConfig?: IOpenAPIConfig;
-  mcpServerConfig?: IMcpServerConfig;
+  mcpServerConfig?: IMCPServerConfig;
   monitor?: IMonitorConfig;
+}
+
+export interface IAgentExecutor {
+  name?: string;
+  debug?: boolean;
+  systemMessage?: string;
+  llmConfig: ILLMConfig;
+  chatConfig: IChatConfig;
+  dbHistoryConfig?: IDatabaseConfig;
+  monitor?: IMonitorConfig;
+  tools?: StructuredToolInterface[];
+  mcpServerConfig?: IMCPServerConfig;
+  handleToolRuntimeErrors?: (error: Error) => string;
 }
 
 /**
@@ -214,5 +228,7 @@ export interface IInputProps {
 export interface TModel extends Record<string, unknown> {}
 
 export interface IAgent extends EventEmitter {
+  name: string;
+  description?: string;
   call(input: IInputProps): Promise<void>;
 }

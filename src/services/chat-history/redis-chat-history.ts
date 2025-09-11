@@ -22,12 +22,20 @@ class RedisChatHistory implements IChatHistory {
     const client = new Redis({
       ...this._settings,
       db: this._settings.database as number,
-      tls: {},
+      tls: this._settings.ssl ? {} : undefined,
     });
 
     this._redisClientInstance = client;
 
     return this._redisClientInstance;
+  }
+
+  addMessages(messages: BaseMessage[]): Promise<void> {
+    return this._history?.addMessages(messages);
+  }
+
+  addMessage(message: BaseMessage): Promise<void> {
+    return this._history?.addMessage(message);
   }
 
   addUserMessage(message: string): Promise<void> {
