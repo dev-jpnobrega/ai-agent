@@ -82,7 +82,7 @@ class AgentExecutor extends AgentBase implements IAgent {
    * @param settings - The configuration settings for the agent.
    */
   private setup(settings: IAgentExecutor): void {
-    this._name = settings?.name || 'AssistentAgentExecutor';
+    this.name = settings?.name || 'AssistentAgentExecutor';
     this._llm = LLMFactory.create(settings.chatConfig, settings.llmConfig);
   }
 
@@ -249,7 +249,7 @@ class AgentExecutor extends AgentBase implements IAgent {
   ): Promise<string> {
     const stream = await chain.stream(input, {
       runId,
-      runName: this._name,
+      runName: this.name,
       configurable: { sessionId: input?.chatThreadID || uuid() },
     });
 
@@ -305,7 +305,7 @@ class AgentExecutor extends AgentBase implements IAgent {
         result = await this.stream(chain, input, runId);
       } else {
         result = await chain.invoke(input, {
-          runName: this._name,
+          runName: this.name,
           runId,
           configurable: { sessionId: args?.chatThreadID || uuid() },
         });

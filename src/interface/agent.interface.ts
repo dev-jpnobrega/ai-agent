@@ -228,5 +228,7 @@ export interface IInputProps {
 export interface TModel extends Record<string, unknown> {}
 
 export interface IAgent extends EventEmitter {
+  name: string;
+  description?: string;
   call(input: IInputProps): Promise<void>;
 }

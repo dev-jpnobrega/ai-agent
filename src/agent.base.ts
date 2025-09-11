@@ -16,7 +16,7 @@ class AgentBase extends EventEmitter {
   /**
    * The name of the agent.
    */
-  _name: string;
+  name: string;
 
   /**
    * The configuration settings for the agent.
@@ -30,7 +30,7 @@ class AgentBase extends EventEmitter {
 
   constructor(settings: IAgentConfig) {
     super();
-    this._name = settings.name;
+    this.name = settings.name;
     this._logger = console;
     this._settings = settings;
 
@@ -60,7 +60,7 @@ class AgentBase extends EventEmitter {
     }
 
     this._logger.log(
-      `Monitor enabled Agent ${this._name} project ${settings.monitor?.projectName}`
+      `Monitor enabled Agent ${this.name} project ${settings.monitor?.projectName}`
     );
 
     const { monitor } = settings;
