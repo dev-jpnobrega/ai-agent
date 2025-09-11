@@ -292,7 +292,7 @@ class AgentExecutor extends AgentBase implements IAgent {
         chat_thread_id: args?.chatThreadID,
         user_name: args?.userSessionId,
         user_context: args?.context,
-        user_prompt: this._settingsAgent?.systemMesssage,
+        user_prompt: this._settingsAgent?.systemMessage,
         history: chatMessages,
         format_chat_messages: await chatHistory.getFormatedMessages(
           chatMessages

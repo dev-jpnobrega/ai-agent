@@ -153,7 +153,7 @@ export interface IMonitorConfig {
  *
  * @property {string} [name] - Optional name of the agent.
  * @property {boolean} [debug] - Optional flag to enable debug mode.
- * @property {string} [systemMesssage] - Optional system message for the agent.
+ * @property {string} [systemMessage] - Optional system message for the agent.
  * @property {ILLMConfig} llmConfig - Configuration for the language model.
  * @property {IChatConfig} chatConfig - Configuration for the chat settings.
  * @property {IDatabaseConfig} [dbHistoryConfig] - Optional configuration for database history.
@@ -166,7 +166,7 @@ export interface IMonitorConfig {
 export interface IAgentConfig {
   name?: string;
   debug?: boolean;
-  systemMesssage?: string;
+  systemMessage?: string;
   llmConfig: ILLMConfig;
   chatConfig: IChatConfig;
   dbHistoryConfig?: IDatabaseConfig;
@@ -180,7 +180,7 @@ export interface IAgentConfig {
 export interface IAgentExecutor {
   name?: string;
   debug?: boolean;
-  systemMesssage?: string;
+  systemMessage?: string;
   llmConfig: ILLMConfig;
   chatConfig: IChatConfig;
   dbHistoryConfig?: IDatabaseConfig;
