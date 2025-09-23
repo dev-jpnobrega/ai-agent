@@ -12,6 +12,15 @@ class MemoryChatHistory implements IChatHistory {
   constructor(settings: IDatabaseConfig) {
     this._settings = settings;
   }
+
+  addMessages(messages: BaseMessage[]): Promise<void> {
+    return this._history?.addMessages(messages);
+  }
+
+  addMessage(message: BaseMessage): Promise<void> {
+    return this._history?.addMessage(message);
+  }
+
   addAIMessage(message: string): Promise<void> {
     return this._history?.addAIMessage(message);
   }
