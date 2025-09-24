@@ -56,14 +56,8 @@ describe('Agent test', () => {
     });
 
     agent.call({
-      // question: 'Quem ganhou a ultima copa do mundo?',
-      // question: 'Limpar o cache da pessoa a443bf0e-4c76-42f8-a084-c6544309f111?',
       question: 'Nível da CB 10363971, CL , 202513?',
-      // question: 'O que preciso fazer para reprocessear um pedido SAC?',
-      // question: 'qUAL MINHAS VISITAS AMANHA?',
-      chatThreadID: 'dwddwd',
-      // context: 'Eu me chamo Joao Paulo e sou Arquiteto de Software',
-      // context: 'Sou vendedor, meu telefone e o +5511970774145',
+      chatThreadID: 'id01',
     });
   });
 });
