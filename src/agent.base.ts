@@ -18,6 +18,8 @@ class AgentBase extends EventEmitter {
    */
   name: string;
 
+  description: string;
+
   /**
    * The configuration settings for the agent.
    */
@@ -31,6 +33,7 @@ class AgentBase extends EventEmitter {
   constructor(settings: IAgentConfig) {
     super();
     this.name = settings.name;
+    this.description = settings?.description;
     this._logger = console;
     this._settings = settings;
 

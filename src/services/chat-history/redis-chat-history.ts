@@ -1,4 +1,7 @@
 import { BaseListChatMessageHistory } from '@langchain/core/chat_history';
+import Redis from 'ioredis';
+import { RedisChatMessageHistory } from '@langchain/community/stores/message/ioredis';
+
 import { BaseMessage } from '@langchain/core/messages';
 import { IDatabaseConfig } from '../../interface/agent.interface';
 import { IChatHistory } from '.';
@@ -16,8 +19,6 @@ class RedisChatHistory implements IChatHistory {
     if (this._redisClientInstance) {
       return this._redisClientInstance;
     }
-
-    const { Redis } = await import('ioredis');
 
     const client = new Redis({
       ...this._settings,
@@ -72,10 +73,6 @@ class RedisChatHistory implements IChatHistory {
   }
 
   async build(): Promise<IChatHistory> {
-    const { RedisChatMessageHistory } = await import(
-      '@langchain/community/stores/message/ioredis'
-    );
-
     const client = await this.createClient();
 
     this._history = new RedisChatMessageHistory({

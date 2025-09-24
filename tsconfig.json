@@ -3,7 +3,7 @@
         "module": "commonjs",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
-        "target": "es2018",
+        "target": "es2022",
         "declaration": true,
         "noImplicitAny": true,
         "moduleResolution": "node",

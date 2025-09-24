@@ -165,6 +165,7 @@ export interface IMonitorConfig {
  */
 export interface IAgentConfig {
   name?: string;
+  description?: string;
   debug?: boolean;
   systemMessage?: string;
   llmConfig: ILLMConfig;
@@ -179,6 +180,7 @@ export interface IAgentConfig {
 
 export interface IAgentExecutor {
   name?: string;
+  description?: string;
   debug?: boolean;
   systemMessage?: string;
   llmConfig: ILLMConfig;
@@ -187,6 +189,20 @@ export interface IAgentExecutor {
   monitor?: IMonitorConfig;
   tools?: StructuredToolInterface[];
   mcpServerConfig?: IMCPServerConfig;
+  handleToolRuntimeErrors?: (error: Error) => string;
+}
+
+export interface IAgentSupervisor {
+  name?: string;
+  description?: string;
+  debug?: boolean;
+  systemMessage?: string;
+  llmConfig: ILLMConfig;
+  chatConfig: IChatConfig;
+  dbHistoryConfig?: IDatabaseConfig;
+  monitor?: IMonitorConfig;
+  agentsIndentifiers?: string[];
+  agents?: IAgent[];
   handleToolRuntimeErrors?: (error: Error) => string;
 }
 

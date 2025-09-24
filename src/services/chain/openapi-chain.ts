@@ -37,10 +37,11 @@ class OpenAPIChain implements IChain {
       
       ## Follow these rules to generate the curl command:\n
         1. Generate only the curl command: Output only the executable curl command, without any additional explanation or context.\n
-        2. Avoid duplicate requests:\n
+        2. Ensure that break line should ends with a single backslash\n
+        3. Avoid duplicate requests:\n
           - If the same question has already been answered in CHAT HISTORY and result is success, use the previous answer and do not generate a new request.\n
           - Only generate the request if the question is new.\n
-        3. Respond only if a question is asked: Ensure that a valid question is present before attempting to generate the curl command.\n
+        4. Respond only if a question is asked: Ensure that a valid question is present before attempting to generate the curl command.\n
 
       ## Input data:\n
         - USER PROMPT: {user_prompt}\n
@@ -147,7 +148,7 @@ class OpenAPIChain implements IChain {
         format_chat_messages: (input) => input.format_chat_messages,
       },
       prompt,
-      llm.bind({ stop: ['\nAPI ANSWER:'] }),
+      llm.withConfig({ stop: ['\nAPI ANSWER:'] }),
     ]);
 
     return openAPICurlChain;
