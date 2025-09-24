@@ -6,6 +6,8 @@ import RedisChatHistory from './redis-chat-history';
 import MemoryChatHistory from './memory-chat-history';
 
 interface IChatHistory {
+  addMessages(messages: BaseMessage[]): Promise<void>;
+  addMessage(message: BaseMessage): Promise<void>;
   addUserMessage(message: string): Promise<void>;
   addAIMessage(message: string): Promise<void>;
   getMessages(): Promise<BaseMessage[]>;

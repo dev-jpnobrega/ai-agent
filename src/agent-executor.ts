@@ -99,27 +99,9 @@ class AgentExecutor extends AgentBase implements IAgent {
       1. User Rules (from Input Data > USER RULES), if provided\n
       2. User Context (from Input Data > USER CONTEXT), if available\n\n\n
 
-      Response Guidelines:\n
-      - Prioritize User Rules and User Context if they are filled in.\n
-      - Do not generate or fabricate information:\n
-        Only use the data explicitly provided in the User Rules and User Context. If the necessary information is not available, inform the user that the data is missing or request more details. Do not speculate or make assumptions beyond the provided information.\n
-      - Ignore irrelevant conversation logs that dont pertain directly to the user's query.\n
-      - Only respond if a clear question is asked.\n
-      - The question must be a single sentence.\n
-      - Remove punctuation from the question.\n
-      - Remove any non-essential words or irrelevant information from the question.\n\n
-
-      Focus on Accuracy and Timeliness:\n
-      - Consider time relevance: Always take into account the temporal nature of information, prioritizing the most updated and contextually relevant data.\n\n
-      
       Input Data:\n
       - USER RULES: {user_prompt}\n
       - USER CONTEXT: {user_context}\n
-    `;
-
-    builtMessage += `
-      Question:\n
-      - {question}\n
     `;
 
     return builtMessage;
