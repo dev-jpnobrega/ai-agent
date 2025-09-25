@@ -5,7 +5,7 @@ import Agent from '../src/agent';
 import { DataSource } from 'typeorm';
 import { IAgentConfig } from '../src/interface/agent.interface';
 
-const agentConfig = {}; // require(`./agent-configs/agent-openapi.json`);
+const agentConfig = {}; //require(`./agent-configs/agent-code-reviwer.json`);
 
 describe('Agent test', () => {
   it('should Agent instance', (t, done) => {
@@ -59,6 +59,8 @@ describe('Agent test', () => {
       // question: 'Quem ganhou a ultima copa do mundo?',
       // question: 'Limpar o cache da pessoa a443bf0e-4c76-42f8-a084-c6544309f111?',
       question: 'Qual estoque do produto 2771?',
+      input: `dwdwdwdwd`,
+      element_descxription: `dwdwdwdw`,
       // question: 'O que preciso fazer para reprocessear um pedido SAC?',
       // question: 'qUAL MINHAS VISITAS AMANHA?',
       chatThreadID: '111',
