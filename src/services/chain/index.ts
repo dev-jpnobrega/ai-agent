@@ -144,6 +144,10 @@ class ChainService {
   }
 
   private buildPromptTemplate(): BasePromptTemplate {
+    if (this._settings?.prompt) {
+      return this._settings.prompt;
+    }
+
     const combine_messages = [
       SystemMessagePromptTemplate.fromTemplate(this.buildSystemMessages()),
       new MessagesPlaceholder('history'),
