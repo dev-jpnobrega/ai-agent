@@ -120,6 +120,10 @@ class AgentExecutor extends AgentBase implements IAgent {
    * @returns A `ChatPromptTemplate` composed of the specified messages and placeholders.
    */
   private buildPromptTemplate(systemMessages: string): ChatPromptTemplate {
+    if (this._settingsAgent?.prompt) {
+      return this._settingsAgent.prompt;
+    }
+
     const combine_messages = [
       SystemMessagePromptTemplate.fromTemplate(systemMessages),
       new MessagesPlaceholder('history'),
