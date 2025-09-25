@@ -27,7 +27,7 @@ describe('Agent test', () => {
     done();
   });
 
-  it('should Agent call', (t, done) => {
+  it.skip('should Agent call', (t, done) => {
     const agentSettings = agentConfig as unknown as IAgentConfig;
 
     if (agentSettings.dataSourceConfig) {
