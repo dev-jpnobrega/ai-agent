@@ -1,3 +1,4 @@
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import EventEmitter from 'events';
 import { DataSource } from 'typeorm';
@@ -169,6 +170,7 @@ export interface IAgentConfig {
   systemMessage?: string;
   llmConfig: ILLMConfig;
   chatConfig: IChatConfig;
+  prompt?: ChatPromptTemplate<any, any>;
   dbHistoryConfig?: IDatabaseConfig;
   vectorStoreConfig?: IVectorStoreConfig;
   dataSourceConfig?: IDataSourceConfig;
