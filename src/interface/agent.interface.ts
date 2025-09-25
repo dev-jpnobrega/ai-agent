@@ -193,7 +193,7 @@ export interface IAgentExecutor {
 /**
  * Interface representing the input properties for an agent.
  */
-export interface IInputProps {
+export interface IInputProps extends Record<string, unknown> {
   /**
    * The question to be asked.
    * @optional

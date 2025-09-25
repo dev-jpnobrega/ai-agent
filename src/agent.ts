@@ -112,6 +112,7 @@ class Agent extends AgentBase implements IAgent {
       const chatMessages = await chatHistory.getMessages();
 
       const input: any = {
+        ...args,
         question: args?.question,
         chat_thread_id: args?.chatThreadID,
         user_name: args?.userSessionId,
