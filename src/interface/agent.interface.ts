@@ -183,6 +183,7 @@ export interface IAgentExecutor {
   name?: string;
   debug?: boolean;
   systemMessage?: string;
+  prompt?: ChatPromptTemplate<any, any>;
   llmConfig: ILLMConfig;
   chatConfig: IChatConfig;
   dbHistoryConfig?: IDatabaseConfig;
