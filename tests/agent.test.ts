@@ -5,7 +5,7 @@ import Agent from '../src/agent';
 import { DataSource } from 'typeorm';
 import { IAgentConfig } from '../src/interface/agent.interface';
 
-const agentConfig = require(`./agent-configs/agent-code-reviwer.json`);
+const agentConfig = {}; //require(`./agent-configs/agent-code-reviwer.json`);
 
 describe('Agent test', () => {
   it('should Agent instance', (t, done) => {
