@@ -191,7 +191,7 @@ class ChainService {
 
     const chains = await this.createChains(enabledChains, llm, ...args);
 
-    if (chains instanceof Runnable) return chains;
+    if (!Array.isArray(chains)) return chains;
 
     return RunnableSequence.from(
       chains as [
