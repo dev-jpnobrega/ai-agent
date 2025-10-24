@@ -342,46 +342,6 @@ class ImageGenrationChain implements IChain {
     });
   }
 
-  private async executeAsRetrieval(input: any) {
-    const prompt = this.buildPromptTemplate(this.getVectorStorePrompt());
-
-    return new Promise(async (resolve, reject) => {
-      try {
-        const combineDocsChain = await createStuffDocumentsChain({
-          llm: this._llm,
-          prompt,
-        });
-
-        const chain = await createRetrievalChain({
-          retriever: this._service.asRetriever({
-            verbose: true,
-            k: this._settings.vectorStoreConfig?.top || 10,
-            filter: this._settings.vectorStoreConfig?.customFilters
-              ? interpolate<IInputProps>(
-                  this._settings.vectorStoreConfig?.customFilters,
-                  input
-                )
-              : '',
-          }),
-          combineDocsChain,
-        });
-
-        const response = await chain.invoke({
-          verbose: true,
-          input: input.question,
-          question: input.question,
-          history: input.history,
-          ...input,
-        });
-
-        return resolve(response);
-      } catch (error) {
-        console.error('Error executing as retrieval', error);
-        return reject(error);
-      }
-    });
-  }
-
   private async buildImageGenerationChain(): Promise<
     RunnableSequence<any, any>
   > {
