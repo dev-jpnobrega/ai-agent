@@ -129,12 +129,6 @@ class AgentSupervisor extends AgentBase implements IAgent {
 
       ## Available Tools\n
         {available_tools}\n\n
-      - **code_agent** → Technical requests: programming, testing, code quality.  
-      - **product_agent** → PRD, business opportunities, requirements, metrics.  
-      - **payments_agent** → Payment integrations, financial workflows.  
-      - **promotions_agent** → Eligibility rules, incentives, campaigns.  
-      - **ai900_agent** → Study support, summaries, exercises, AI-900 certification.  
-      - **profile_agent** → LinkedIn/profile evaluation, professional summaries.  
 
       --- \n\n
 
