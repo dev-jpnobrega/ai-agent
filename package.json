@@ -34,8 +34,10 @@
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
+    "@aws-sdk/credential-provider-ini": "^3.972.2",
     "@aws-sdk/credential-provider-node": "^3.744.0",
     "@aws-sdk/types": "^3.521.0",
+    "@langchain/aws": "^1.1.1",
     "@langchain/community": "^0.3.49",
     "@langchain/core": "^0.3.66",
     "@langchain/google-genai": "^0.0.10",
@@ -47,10 +49,10 @@
     "@smithy/protocol-http": "^3.2.0",
     "@smithy/signature-v4": "^2.1.2",
     "@smithy/util-utf8": "^2.1.1",
-    "uuid": "^9.0.1",
     "ioredis": "^5.3.2",
     "langchain": "^0.3.30",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "uuid": "^9.0.1"
   },
   "overrides": {
     "@langchain/core": "^0.3.66"
@@ -63,6 +65,7 @@
     "@types/ioredis": "^5.0.0",
     "@types/lodash": "^4.14.198",
     "@types/node": "^20.16.5",
+    "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^6.7.2",
     "@typescript-eslint/parser": "^6.7.2",
     "babel-jest": "^29.7.0",

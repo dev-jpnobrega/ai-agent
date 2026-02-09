@@ -1,5 +1,6 @@
 import { VectorStore } from '@langchain/core/vectorstores';
-import { AzureOpenAIEmbeddings, OpenAIEmbeddings } from '@langchain/openai';
+import { AzureOpenAIEmbeddings } from '@langchain/openai';
+import { BedrockEmbeddings } from '@langchain/aws';
 
 import { AzureCogSearch } from './azure/azure-vector-store';
 import { AWSCogSearch } from './aws/opensearch-vector-store';
@@ -16,20 +17,23 @@ const ServiceVectores = {
 class VectorStoreFactory {
   public static create(
     settings: IVectorStoreConfig,
-    llmSettings: ILLMConfig
+    llmSettings: ILLMConfig,
   ): VectorStore {
     const embedding = this.instantiateEmbeddings(settings, llmSettings);
 
     const service = new ServiceVectores[settings.type](
       embedding,
-      settings
+      settings,
     ) as VectorStore;
 
     return service;
   }
 
-  private static instantiateEmbeddings(settings: IVectorStoreConfig, llmSettings: ILLMConfig): OpenAIEmbeddings{
-    if (settings.type === 'azure') {
+  private static instantiateEmbeddings(
+    settings: IVectorStoreConfig,
+    llmSettings: ILLMConfig,
+  ) {
+    if (settings.type === 'azure' && llmSettings.type === 'azure') {
       return new AzureOpenAIEmbeddings({
         azureOpenAIApiDeploymentName: settings.model,
         azureOpenAIApiVersion: llmSettings.apiVersion,
@@ -38,9 +42,9 @@ class VectorStoreFactory {
         model: settings.model,
       });
     }
-    if (settings.type === 'aws') {
-      return new OpenAIEmbeddings({
-        ...llmSettings,
+    if (settings.type === 'aws' && llmSettings.type === 'aws') {
+      return new BedrockEmbeddings({
+        region: llmSettings.region,
         model: settings.model,
       });
     }
