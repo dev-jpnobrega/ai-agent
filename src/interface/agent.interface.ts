@@ -230,8 +230,29 @@ export interface IInputProps extends Record<string, unknown> {
 
 export interface TModel extends Record<string, unknown> {}
 
+/**
+ * Represents an agent that can process inputs and emit events.
+ *
+ * @interface IAgent
+ * @extends {EventEmitter}
+ *
+ * @property {string} name - The unique identifier name of the agent.
+ * @property {string} [description] - An optional description of the agent's purpose or behavior.
+ *
+ * @method call - Executes the agent's main functionality with the provided input.
+ * @param {IInputProps} input - The input properties required for the agent's execution.
+ * @returns {Promise<void>} A promise that resolves when the agent completes its execution.
+ *
+ * @emits EVENTS_NAME.onMessage - Emitted with the concatenated final message once the stream is complete.
+ * @emits EVENTS_NAME.onToken - If stream enable, emitted for each chunk of data received from the stream.
+ * @emits EVENTS_NAME.onEnd - Emitted when the streaming process is terminated.
+ *
+ * @method dispose - Cleans up resources and performs necessary teardown operations.
+ * @returns {void}
+ */
 export interface IAgent extends EventEmitter {
   name: string;
   description?: string;
   call(input: IInputProps): Promise<void>;
+  dispose(): void;
 }

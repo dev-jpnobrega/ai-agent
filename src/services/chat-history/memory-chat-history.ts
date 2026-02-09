@@ -13,6 +13,10 @@ class MemoryChatHistory implements IChatHistory {
     this._settings = settings;
   }
 
+  closeConnection(): void {
+    // No connection to close for in-memory chat history
+  }
+
   addMessages(messages: BaseMessage[]): Promise<void> {
     return this._history?.addMessages(messages);
   }
@@ -39,7 +43,7 @@ class MemoryChatHistory implements IChatHistory {
   getFormatedMessages(messages: BaseMessage[]): string {
     const formated = messages
       .map(
-        (message) => `${message._getType().toUpperCase()}: ${message.content}`
+        (message) => `${message._getType().toUpperCase()}: ${message.content}`,
       )
       .join('\n');
 
@@ -59,9 +63,8 @@ class MemoryChatHistory implements IChatHistory {
   }
 
   async build(): Promise<IChatHistory> {
-    const { ChatMessageHistory } = await import(
-      '@langchain/community/stores/message/in_memory'
-    );
+    const { ChatMessageHistory } =
+      await import('@langchain/community/stores/message/in_memory');
 
     this._history = new ChatMessageHistory();
 
