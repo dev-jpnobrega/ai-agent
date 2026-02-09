@@ -14,6 +14,7 @@ interface IChatHistory {
   getFormatedMessages(messages: BaseMessage[]): string;
   clear(): Promise<void>;
   getChatHistory(): BaseListChatMessageHistory;
+  closeConnection(): void;
 }
 
 const Services = {

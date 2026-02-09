@@ -60,7 +60,7 @@ class AgentBase extends EventEmitter {
     }
 
     this._logger.log(
-      `Monitor enabled Agent ${this.name} project ${settings.monitor?.projectName}`
+      `Monitor enabled Agent ${this.name} project ${settings.monitor?.projectName}`,
     );
 
     const { monitor } = settings;
@@ -79,7 +79,7 @@ class AgentBase extends EventEmitter {
    */
   async buildHistory(
     userSessionId: string,
-    settings: IDatabaseConfig
+    settings: IDatabaseConfig,
   ): Promise<IChatHistory> {
     if (this._chatHistory) return this._chatHistory;
 
@@ -94,8 +94,16 @@ class AgentBase extends EventEmitter {
   async call(args: IInputProps): Promise<void> {
     throw new Error('Method not implemented.');
   }
+
   execute(args: any): Promise<void> {
     throw new Error('Method not implemented.');
+  }
+
+  dispose(): void {
+    if (this._chatHistory) {
+      this._chatHistory.closeConnection();
+      this._chatHistory = null;
+    }
   }
 }
 

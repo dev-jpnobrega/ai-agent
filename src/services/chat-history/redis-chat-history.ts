@@ -30,6 +30,13 @@ class RedisChatHistory implements IChatHistory {
     return this._redisClientInstance;
   }
 
+  closeConnection(): void {
+    if (this._redisClientInstance) {
+      this._redisClientInstance.quit();
+      this._redisClientInstance = null;
+    }
+  }
+
   addMessages(messages: BaseMessage[]): Promise<void> {
     return this._history?.addMessages(messages);
   }
@@ -56,7 +63,7 @@ class RedisChatHistory implements IChatHistory {
   getFormatedMessages(messages: BaseMessage[]): string {
     const formated = messages
       .map(
-        (message) => `${message._getType().toUpperCase()}: ${message.content}`
+        (message) => `${message._getType().toUpperCase()}: ${message.content}`,
       )
       .join('\n');
 
@@ -72,9 +79,8 @@ class RedisChatHistory implements IChatHistory {
   }
 
   async build(): Promise<IChatHistory> {
-    const { RedisChatMessageHistory } = await import(
-      '@langchain/community/stores/message/ioredis'
-    );
+    const { RedisChatMessageHistory } =
+      await import('@langchain/community/stores/message/ioredis');
 
     const client = await this.createClient();
 
