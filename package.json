@@ -36,7 +36,7 @@
     "@aws-crypto/sha256-js": "^5.2.0",
     "@aws-sdk/credential-provider-node": "^3.744.0",
     "@aws-sdk/types": "^3.521.0",
-    "@langchain/community": "^0.3.49",
+    "@langchain/community": "^1.1.14",
     "@langchain/core": "^0.3.66",
     "@langchain/google-genai": "^0.0.10",
     "@langchain/mcp-adapters": "^0.6.0",
