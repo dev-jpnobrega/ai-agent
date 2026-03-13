@@ -2,7 +2,7 @@ import { BaseListChatMessageHistory } from '@langchain/core/chat_history';
 import { BaseMessage } from '@langchain/core/messages';
 import { IDatabaseConfig } from '../../interface/agent.interface';
 import { IChatHistory } from '.';
-import { BufferMemory } from 'langchain/memory';
+import { BufferMemory } from '@langchain/classic/memory';
 
 class MemoryChatHistory implements IChatHistory {
   private _settings: IDatabaseConfig;

@@ -1,4 +1,8 @@
-import { BaseChain, ChainInputs, createOpenAPIChain } from 'langchain/chains';
+import {
+  BaseChain,
+  ChainInputs,
+  createOpenAPIChain,
+} from '@langchain/classic/chains';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import {
   BasePromptTemplate,
@@ -63,7 +67,7 @@ export class OpenApiBaseChain extends BaseChain {
     ];
 
     const CHAT_COMBINE_PROMPT =
-      ChatPromptTemplate.fromPromptMessages(combine_messages);
+      ChatPromptTemplate.fromMessages(combine_messages);
 
     return CHAT_COMBINE_PROMPT;
   }

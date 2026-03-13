@@ -18,7 +18,7 @@ import { RunnableWithMessageHistory } from '@langchain/core/runnables';
 import {
   AgentExecutor as AgentExecutorLangchain,
   createToolCallingAgent,
-} from 'langchain/agents';
+} from '@langchain/classic/agents';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import {
   ChatPromptTemplate,
