@@ -1,4 +1,4 @@
-import { Document } from 'langchain/document';
+import { Document } from '@langchain/core/documents';
 
 import { RequestFilter, AWSSearchConfig } from './aws-vector-types';
 import { Callbacks } from '@langchain/core/callbacks/manager';
@@ -17,7 +17,7 @@ import { Hit } from '@opensearch-project/opensearch/api/_types/_core.search';
 import { generateId } from '../../../helpers/string.helpers';
 
 export class AWSCogSearch<
-  TModel extends Record<string, unknown>
+  TModel extends Record<string, unknown>,
 > extends OpenSearchVectorStore {
   private _config: AWSSearchConfig;
   private _client: Client;
@@ -105,7 +105,7 @@ export class AWSCogSearch<
   private getSearchBody(
     filter: RequestFilter,
     k: number,
-    query?: number[]
+    query?: number[],
   ): Search_RequestBody {
     const fields = filter.fields || [
       'CD_VENDA_PRODUTO',
@@ -147,7 +147,7 @@ export class AWSCogSearch<
     let result: string = '';
 
     Object.keys(record).map(
-      (elem) => (result += `${elem}: ${record[elem]} \n `)
+      (elem) => (result += `${elem}: ${record[elem]} \n `),
     );
 
     return result;
@@ -179,7 +179,7 @@ export class AWSCogSearch<
 
   async addVectors(
     vectors: number[][],
-    documents: Document<TModel>[]
+    documents: Document<TModel>[],
   ): Promise<void> {
     const indexes: Array<any> = [];
 
@@ -216,7 +216,7 @@ export class AWSCogSearch<
           index: this._config.indexes[0],
           id,
         });
-      })
+      }),
     );
 
     return results;
@@ -225,7 +225,7 @@ export class AWSCogSearch<
   async similaritySearch(
     query: string,
     k?: number,
-    filter?: RequestFilter
+    filter?: RequestFilter,
   ): Promise<Document<TModel>[]> {
     const filterWithQuery = {
       ...filter,
@@ -235,7 +235,7 @@ export class AWSCogSearch<
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k,
-      filterWithQuery
+      filterWithQuery,
     );
 
     return results.map(([doc, _score]) => doc);
@@ -245,7 +245,7 @@ export class AWSCogSearch<
     query: string,
     k?: number,
     filter?: RequestFilter,
-    _callbacks: Callbacks | undefined = undefined
+    _callbacks: Callbacks | undefined = undefined,
   ): Promise<[Document<TModel>, number][]> {
     const filterWithQuery = {
       ...filter,
@@ -261,7 +261,7 @@ export class AWSCogSearch<
     query: number[],
     k?: number,
     filter?: RequestFilter,
-    index?: string
+    index?: string,
   ): Promise<[Document<TModel>, number][]> {
     try {
       const resp = await this._client.search({

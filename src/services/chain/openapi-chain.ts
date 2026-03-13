@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 
-import { JsonSpec } from 'langchain/tools';
+import { JsonSpec } from '@langchain/classic/tools';
 import {
   RunnablePassthrough,
   RunnableSequence,
@@ -132,7 +132,7 @@ class OpenAPIChain implements IChain {
 
   private async buildCurlChain(
     spec: JsonSpec,
-    llm: BaseLanguageModel
+    llm: BaseLanguageModel,
   ): Promise<RunnableSequence<any, any>> {
     const prompt = this.buildPromptTemplate(this.getOpenApiPrompt());
 
@@ -147,7 +147,7 @@ class OpenAPIChain implements IChain {
         format_chat_messages: (input) => input.format_chat_messages,
       },
       prompt,
-      llm.bind({ stop: ['\nAPI ANSWER:'] }),
+      llm,
     ]);
 
     return openAPICurlChain;

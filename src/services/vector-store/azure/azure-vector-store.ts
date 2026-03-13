@@ -1,4 +1,4 @@
-import { Document } from 'langchain/document';
+import { Document } from '@langchain/core/documents';
 import { VectorStore } from '@langchain/core/vectorstores';
 import { v4 as uuid } from 'uuid';
 
@@ -13,7 +13,7 @@ import {
 import { Callbacks } from '@langchain/core/callbacks/manager';
 
 export class AzureCogSearch<
-  TModel extends Record<string, unknown>
+  TModel extends Record<string, unknown>,
 > extends VectorStore {
   private _config: AzureSearchConfig;
 
@@ -45,7 +45,7 @@ export class AzureCogSearch<
 
   async addVectors(
     vectors: number[][],
-    documents: Document<TModel>[]
+    documents: Document<TModel>[],
   ): Promise<string[]> {
     const indexes: Array<any> = [];
 
@@ -79,14 +79,14 @@ export class AzureCogSearch<
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
-      documents
+      documents,
     );
   }
 
   async similaritySearch(
     query: string,
     k?: number,
-    filter?: AzureCogFilter
+    filter?: AzureCogFilter,
   ): Promise<Document<TModel>[]> {
     const filterWithQuery = {
       ...filter,
@@ -96,7 +96,7 @@ export class AzureCogSearch<
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k,
-      filterWithQuery
+      filterWithQuery,
     );
 
     return results.map(([doc, _score]) => doc);
@@ -106,7 +106,7 @@ export class AzureCogSearch<
     query: string,
     k?: number,
     filter?: AzureCogFilter,
-    _callbacks: Callbacks | undefined = undefined
+    _callbacks: Callbacks | undefined = undefined,
   ): Promise<[Document<TModel>, number][]> {
     const filterWithQuery = {
       ...filter,
@@ -122,7 +122,7 @@ export class AzureCogSearch<
     query: number[],
     k?: number,
     filter?: AzureCogFilter,
-    index?: string
+    index?: string,
   ): Promise<[Document<TModel>, number][]> {
     // TODO: indexes
     const url = `${this.baseUrl}/${
@@ -132,14 +132,14 @@ export class AzureCogSearch<
     const resultDocuments = (await fetcher(
       url,
       this.getSearchBody(filter, k || 10, query),
-      this.apiKey
+      this.apiKey,
     )) as DocumentSearchResponseModel<Document<TModel> & DocumentSearchModel>;
 
     const formatDocs: [Document<TModel>, number][] = resultDocuments.value.map(
       (doc) => [
         doc as Document<TModel>,
         doc['@search.rerankerScore'] || doc['@search.score'] || 0,
-      ]
+      ],
     );
 
     return formatDocs;
@@ -148,7 +148,7 @@ export class AzureCogSearch<
   private getSearchBody(
     filter: AzureCogFilter,
     k: number,
-    query?: number[]
+    query?: number[],
   ): AzureCogRequestObject {
     // TODO: break-change, implementation for 2023-07-01-preview
     if (this.apiVersion === '2023-07-01-preview') {

@@ -1,6 +1,6 @@
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
 
-import { SqlDatabase } from 'langchain/sql_db';
+import { SqlDatabase } from '@langchain/classic/sql_db';
 import { RunnableSequence } from '@langchain/core/runnables';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import {
@@ -58,7 +58,7 @@ class SqlDatabaseChain {
   constructor(
     fields: SqlDatabaseChainInput,
     customMessage?: string,
-    includeTables?: string[]
+    includeTables?: string[],
   ) {
     this.llm = fields.llm;
     this.database = fields.database;
@@ -153,7 +153,7 @@ class SqlDatabaseChain {
       SystemMessagePromptTemplate.fromTemplate(systemMessages),
       new MessagesPlaceholder('history'),
       AIMessagePromptTemplate.fromTemplate(
-        'Wait! We are searching our database.'
+        'Wait! We are searching our database.',
       ),
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ];
@@ -165,7 +165,7 @@ class SqlDatabaseChain {
   }
 
   private async buildSqlQueryChain(
-    tableSchema: string
+    tableSchema: string,
   ): Promise<RunnableSequence<any, any>> {
     const prompt = this.buildPromptTemplate(this.getSQLPrompt());
 
@@ -179,7 +179,7 @@ class SqlDatabaseChain {
         format_chat_messages: (input) => input.format_chat_messages,
       },
       prompt,
-      this.llm.bind({ stop: ['\nSQLResult:'] }),
+      this.llm,
     ]);
 
     return sqlQueryChain;

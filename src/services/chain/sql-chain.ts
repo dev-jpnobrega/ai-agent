@@ -1,6 +1,6 @@
 import { IDataSourceConfig } from '../../interface/agent.interface';
 import SqlDatabaseChain from './sql-database-chain';
-import { SqlDatabase } from 'langchain/sql_db';
+import { SqlDatabase } from '@langchain/classic/sql_db';
 import { IChain } from './';
 import {
   RunnablePassthrough,
@@ -58,7 +58,7 @@ class SqlChain implements IChain {
   ): Promise<RunnableSequence<any, any>> {
     const database = await this.getDataSourceInstance();
     const systemTemplate = this.getSystemMessage(
-      this._settings.customizeSystemMessage
+      this._settings.customizeSystemMessage,
     );
 
     const chainSQL = await new SqlDatabaseChain(
@@ -83,7 +83,7 @@ class SqlChain implements IChain {
         topK: this._settings.maxResult,
       },
       this._settings?.customizeSystemMessage,
-      this._settings?.includesTables
+      this._settings?.includesTables,
     ).build(...args);
 
     return RunnableSequence.from([

@@ -1,5 +1,5 @@
 import { BaseLanguageModel } from '@langchain/core/language_models/base';
-import { Document } from 'langchain/document';
+import { Document } from '@langchain/core/documents';
 import { v4 as uuid } from 'uuid';
 
 import {
@@ -64,7 +64,7 @@ class Agent extends AgentBase implements IAgent {
   private async stream(
     chain: RunnableWithMessageHistory<any, any>,
     input: any,
-    runId: string
+    runId: string,
   ): Promise<string> {
     const stream = await chain.stream(input, {
       runId,
@@ -97,7 +97,7 @@ class Agent extends AgentBase implements IAgent {
     try {
       const chatHistory = await this.buildHistory(
         args?.chatThreadID,
-        this._settings.dbHistoryConfig
+        this._settings.dbHistoryConfig,
       );
 
       const chain = await this._chainService.build(
@@ -106,7 +106,7 @@ class Agent extends AgentBase implements IAgent {
         chatHistory.getChatHistory(),
         args?.context,
         runId,
-        this.name
+        this.name,
       );
 
       const chatMessages = await chatHistory.getMessages();
@@ -119,9 +119,8 @@ class Agent extends AgentBase implements IAgent {
         user_context: args?.context,
         user_prompt: this._settings?.systemMessage,
         history: chatMessages,
-        format_chat_messages: await chatHistory.getFormatedMessages(
-          chatMessages
-        ),
+        format_chat_messages:
+          await chatHistory.getFormatedMessages(chatMessages),
       };
 
       let result = '';
@@ -149,7 +148,7 @@ class Agent extends AgentBase implements IAgent {
   async tranning(documents: Document<TModel>[]) {
     const service = VectorStoreFactory.create(
       this._settings.vectorStoreConfig,
-      this._settings.llmConfig
+      this._settings.llmConfig,
     );
 
     await service.addDocuments(documents);

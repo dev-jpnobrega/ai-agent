@@ -11,7 +11,10 @@ import {
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
 } from '@langchain/core/prompts';
-import { AgentExecutor, createToolCallingAgent } from 'langchain/agents';
+import {
+  AgentExecutor,
+  createToolCallingAgent,
+} from '@langchain/classic/agents';
 
 import { IChain } from '.';
 import { IAgentConfig } from '../../interface/agent.interface';

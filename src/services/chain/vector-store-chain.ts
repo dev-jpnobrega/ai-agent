@@ -12,8 +12,8 @@ import {
   MessagesPlaceholder,
   SystemMessagePromptTemplate,
 } from '@langchain/core/prompts';
-import { createStuffDocumentsChain } from 'langchain/chains/combine_documents';
-import { createRetrievalChain } from 'langchain/chains/retrieval';
+import { createStuffDocumentsChain } from '@langchain/classic/chains/combine_documents';
+import { createRetrievalChain } from '@langchain/classic/chains/retrieval';
 
 import { IAgentConfig, IInputProps } from '../../interface/agent.interface';
 import { IChain } from '.';
@@ -68,7 +68,7 @@ class VectorStoreChain implements IChain {
       SystemMessagePromptTemplate.fromTemplate(systemMessages),
       new MessagesPlaceholder('history'),
       AIMessagePromptTemplate.fromTemplate(
-        'Wait! We are searching our VectorStore API.'
+        'Wait! We are searching our VectorStore API.',
       ),
       HumanMessagePromptTemplate.fromTemplate('{input}'),
     ];
@@ -96,7 +96,7 @@ class VectorStoreChain implements IChain {
             filter: this._settings.vectorStoreConfig?.customFilters
               ? interpolate<IInputProps>(
                   this._settings.vectorStoreConfig?.customFilters,
-                  input
+                  input,
                 )
               : '',
           }),
@@ -111,10 +111,8 @@ class VectorStoreChain implements IChain {
             ...input,
           },
           {
-            runName: this._runName,
-            runId: this._runId,
             configurable: { sessionId: input?.chat_thread_id },
-          }
+          },
         );
 
         return resolve(response);
@@ -167,7 +165,7 @@ class VectorStoreChain implements IChain {
     this._llm = llm;
     this._service = VectorStoreFactory.create(
       this._settings.vectorStoreConfig,
-      this._settings.llmConfig
+      this._settings.llmConfig,
     );
 
     const vectorStoreChain = await this.buildVectorStoreChain();
