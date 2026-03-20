@@ -42,6 +42,7 @@
     "@langchain/core": "^1.1.31",
     "@langchain/google-genai": "^0.0.10",
     "@langchain/langgraph": "^1.2.2",
+    "@langchain/langgraph-checkpoint-redis": "^1.0.4",
     "@langchain/mcp-adapters": "^1.1.2",
     "@langchain/openai": "^1.2.12",
     "@langchain/redis": "^0.1.0",
@@ -53,7 +54,8 @@
     "ioredis": "^5.3.2",
     "langchain": "^1.2.30",
     "typeorm": "^0.3.20",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "zod": "^4.3.6"
   },
   "overrides": {
     "@langchain/core": "^1.1.31"
