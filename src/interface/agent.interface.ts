@@ -195,6 +195,7 @@ export interface IAgentConfig {
   openAPIConfig?: IOpenAPIConfig;
   mcpServerConfig?: IMCPServerConfig;
   checkpointerConfig?: ICheckpointerConfig;
+  tools?: StructuredToolInterface[];
   monitor?: IMonitorConfig;
 }
 

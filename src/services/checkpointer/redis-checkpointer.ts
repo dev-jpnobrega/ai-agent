@@ -23,8 +23,6 @@ class RedisCheckpointer {
         tls: this._settings.ssl ? true : false,
         port: this._settings.port,
       },
-      username: this._settings.username,
-      password: this._settings.password,
     });
 
     await this._redisClientInstance.connect();
@@ -37,7 +35,9 @@ class RedisCheckpointer {
 
     const redisClient = await this.initRedisClient();
 
-    this._checkpointer = new RedisSaver(redisClient as any);
+    this._checkpointer = new RedisSaver(redisClient, {
+      defaultTTL: this._settings?.sessionTTL || 60 * 60 * 24,
+    });
 
     return this._checkpointer;
   }

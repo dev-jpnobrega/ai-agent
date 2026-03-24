@@ -2,8 +2,6 @@ import {
   ICheckpointerConfig,
   IDatabaseConfig,
 } from '../../interface/agent.interface';
-import { BaseListChatMessageHistory } from '@langchain/core/chat_history';
-import { BaseMessage } from '@langchain/core/messages';
 
 import { BaseCheckpointSaver } from '@langchain/langgraph/dist';
 
