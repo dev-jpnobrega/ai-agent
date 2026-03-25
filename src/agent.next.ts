@@ -122,16 +122,17 @@ class AgentNext extends AgentBase implements IAgent {
   }
 
   private async buildTools(
-    mcpConfig: IMCPServerConfig,
+    settings: IAgentConfig,
+    llm: BaseLanguageModel,
   ): Promise<StructuredTool[]> {
     if (this._tools && this._tools.length > 0) return this._tools;
 
-    if (mcpConfig) {
-      const mcpTools = await new MCPChain(this._settings).getTools();
+    if (settings?.mcpServerConfig) {
+      const mcpTools = await new MCPChain(settings).getTools();
       this._tools.push(...(mcpTools as StructuredTool[]));
     }
 
-    const customTools = await CapabilitiesFactory.create(this._settings);
+    const customTools = await CapabilitiesFactory.create(settings, llm);
     this._tools.push(...customTools);
 
     return this._tools;
@@ -198,7 +199,7 @@ class AgentNext extends AgentBase implements IAgent {
         user_prompt: this._settings?.systemMessage,
       };
 
-      const tools = await this.buildTools(this._settings?.mcpServerConfig);
+      const tools = await this.buildTools(this._settings, this._llm);
 
       this._agent = createAgent({
         systemPrompt: this.buildSystemMessages(input),
