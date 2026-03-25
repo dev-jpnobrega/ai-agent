@@ -37,6 +37,7 @@ class RedisCheckpointer {
 
     this._checkpointer = new RedisSaver(redisClient, {
       defaultTTL: this._settings?.sessionTTL || 60 * 60 * 24,
+      refreshOnRead: true,
     });
 
     return this._checkpointer;

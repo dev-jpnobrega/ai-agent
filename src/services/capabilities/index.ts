@@ -1,26 +1,20 @@
 import * as zod from 'zod';
 
-import {
-  IAgent,
-  IAgentConfig,
-  ICheckpointerConfig,
-  IDatabaseConfig,
-} from '../../interface/agent.interface';
+import { IAgentConfig } from '../../interface/agent.interface';
 
-import { BaseCheckpointSaver } from '@langchain/langgraph/dist';
-
-import RetrievalTool from './retrieval-tool';
+import RetrievalTool from './retrieval-capabilities';
 import { StructuredTool } from '@langchain/core/tools';
 import VectorStoreFactory from '../vector-store';
 
-interface ITool {
+interface ICapability {
   name: string;
   description: string;
   schema: zod.ZodObject<any>;
   func: (input: any) => Promise<string>;
+  getTool: () => StructuredTool;
 }
 
-class ToolsFactory {
+class CapabilitiesFactory {
   public static async create(
     settings: IAgentConfig,
   ): Promise<StructuredTool[]> {
@@ -40,4 +34,4 @@ class ToolsFactory {
   }
 }
 
-export { ToolsFactory, ITool };
+export { CapabilitiesFactory, ICapability };

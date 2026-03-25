@@ -1,12 +1,11 @@
 import * as zod from 'zod';
-import { ITool } from '.';
+import { ICapability } from '.';
 import { VectorStore } from '@langchain/core/vectorstores';
 import { StructuredTool, tool } from '@langchain/core/tools';
+import { DocumentInterface } from '@langchain/core/documents';
 
 const TOOL_NAME = 'retrieval-tool';
 const TOOL_DESCRIPTION = `
-MANDATORY TOOL.
-
 This tool MUST be used to retrieve relevant documents from the vector database 
 for ANY user question that requires factual, technical, or domain-specific information.
 
@@ -40,7 +39,7 @@ const TOOL_SCHEMA = zod.object({
     .describe('A concise semantic search query derived from the users request'),
 });
 
-class RetrievalTool implements ITool {
+class RetrievalTool implements ICapability {
   name: string;
   description: string;
   schema: zod.ZodObject<any>;
@@ -55,11 +54,28 @@ class RetrievalTool implements ITool {
     this._vectorStore = vectorStore;
   }
 
+  private formatResult(
+    docs: DocumentInterface[],
+  ): [string, DocumentInterface[]] {
+    const formatDoc = (doc: DocumentInterface): string => `
+      Document ID: ${doc.metadata?.id || 'N/A'}\n
+      Snippet:
+      ${doc.pageContent}
+
+      \n\nMetadata:
+      ${JSON.stringify(doc.metadata, null, 2)}
+    `;
+
+    const formattedDocs = docs.map(formatDoc).join('\n\n---\n');
+
+    return [formattedDocs, docs];
+  }
+
   async func(input: any): Promise<any> {
     const { query } = input;
     const docs = await this._vectorStore.similaritySearch(query, 5);
 
-    return Promise.resolve(docs.map((doc) => doc.pageContent).join('\n---\n'));
+    return Promise.resolve(this.formatResult(docs));
   }
 
   getTool(): StructuredTool {
@@ -69,6 +85,7 @@ class RetrievalTool implements ITool {
       name: this.name,
       description: this.description,
       schema: this.schema,
+      responseFormat: 'content_and_artifact',
     });
 
     return this._tool;

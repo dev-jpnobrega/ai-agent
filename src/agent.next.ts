@@ -29,7 +29,7 @@ import VectorStoreFactory from './services/vector-store';
 import MCPChain from './services/chain/mcp-client-chain';
 import { BaseCheckpointSaver } from '@langchain/langgraph/dist';
 import { CheckpointerFactory } from './services/checkpointer';
-import { ToolsFactory } from './services/tools';
+import { CapabilitiesFactory } from './services/capabilities';
 
 /**
  * Represents an Agent that extends the AgentBaseCommand and implements the IAgent interface.
@@ -131,7 +131,7 @@ class AgentNext extends AgentBase implements IAgent {
       this._tools.push(...(mcpTools as StructuredTool[]));
     }
 
-    const customTools = await ToolsFactory.create(this._settings);
+    const customTools = await CapabilitiesFactory.create(this._settings);
     this._tools.push(...customTools);
 
     return this._tools;
