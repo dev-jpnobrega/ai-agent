@@ -1,48 +1,67 @@
 import * as zod from 'zod';
+import { BaseLanguageModel } from '@langchain/core/language_models/base';
+import { StructuredTool } from '@langchain/core/tools';
 
 import { IAgentConfig } from '../../interface/agent.interface';
-
-import RetrievalTool from './retrieval-capabilities';
-import OpenAPITool from './openapi-capabilities';
-import { StructuredTool } from '@langchain/core/tools';
+import RetrievalCapability from './retrieval-capability';
+import OpenAPICapability from './openapi-capability';
 import VectorStoreFactory from '../vector-store';
-import { BaseLanguageModel } from '@langchain/core/language_models/base';
+import SQLCapability from './sql-capability';
 
 interface ICapability {
   name: string;
   description: string;
   schema: zod.ZodObject<any>;
-  func: (input: any) => Promise<string>;
+  func: (input: Record<string, any>) => Promise<string>;
   getTool: () => StructuredTool;
 }
 
 class CapabilitiesFactory {
-  public static async create(
+  private static enabledCapabilities(
     settings: IAgentConfig,
     model: BaseLanguageModel,
-  ): Promise<StructuredTool[]> {
+  ): StructuredTool[] {
     const tools: StructuredTool[] = [];
 
     if (settings?.vectorStoreConfig) {
-      const vectorStore = await VectorStoreFactory.create(
+      const vectorStore = VectorStoreFactory.create(
         settings.vectorStoreConfig,
         settings.llmConfig,
       );
 
-      const retrievalTool = new RetrievalTool(vectorStore).getTool();
-      tools.push(retrievalTool);
+      const retrievalCapability = new RetrievalCapability(
+        vectorStore,
+      ).getTool();
+      tools.push(retrievalCapability);
     }
 
     if (settings?.openAPIConfig) {
-      const openAPITool = new OpenAPITool(
+      const openAPICapability = new OpenAPICapability(
         settings.openAPIConfig,
         model,
       ).getTool();
 
-      tools.push(openAPITool);
+      tools.push(openAPICapability);
+    }
+
+    if (settings?.dataSourceConfig) {
+      const { dataSourceConfig } = settings;
+
+      const sqlCapability = new SQLCapability(
+        dataSourceConfig,
+        model,
+      ).getTool();
+      tools.push(sqlCapability);
     }
 
     return tools;
+  }
+
+  public static async create(
+    settings: IAgentConfig,
+    model: BaseLanguageModel,
+  ): Promise<StructuredTool[]> {
+    return this.enabledCapabilities(settings, model);
   }
 }
 

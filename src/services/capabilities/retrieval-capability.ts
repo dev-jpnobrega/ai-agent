@@ -39,7 +39,7 @@ const TOOL_SCHEMA = zod.object({
     .describe('A concise semantic search query derived from the users request'),
 });
 
-class RetrievalTool implements ICapability {
+class RetrievalCapability implements ICapability {
   name: string;
   description: string;
   schema: zod.ZodObject<any>;
@@ -92,4 +92,4 @@ class RetrievalTool implements ICapability {
   }
 }
 
-export default RetrievalTool;
+export default RetrievalCapability;

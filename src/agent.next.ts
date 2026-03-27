@@ -27,7 +27,7 @@ import EVENTS_NAME from './helpers/events.name';
 import LLMFactory from './services/llm';
 import VectorStoreFactory from './services/vector-store';
 import MCPChain from './services/chain/mcp-client-chain';
-import { BaseCheckpointSaver } from '@langchain/langgraph/dist';
+import { BaseCheckpointSaver, Messages } from '@langchain/langgraph/dist';
 import { CheckpointerFactory } from './services/checkpointer';
 import { CapabilitiesFactory } from './services/capabilities';
 
@@ -50,11 +50,13 @@ class AgentNext extends AgentBase implements IAgent {
   /**
    * An array of tools that implement the StructuredTool.
    * These tools are used internally by the agent executor to perform specific actions or operations.
-   *
-   * @private
    */
   private _tools: StructuredTool[] = [];
 
+  /**
+   * The service responsible for saving and restoring checkpoints of the agent's state and workflow.
+   * Used to persist progress across interactions or executions.
+   */
   private _checkpointer: BaseCheckpointSaver;
 
   /**
@@ -157,13 +159,16 @@ class AgentNext extends AgentBase implements IAgent {
    */
   private async stream(
     agent: ReactAgent,
-    input: any,
-    _runId: string,
+    messages: Messages[],
+    chatThreadId: string,
   ): Promise<string> {
-    const stream = await agent.stream(input, {
-      streamMode: 'updates',
-      configurable: { sessionId: input?.chatThreadID || uuid() },
-    });
+    const stream = await (agent as any).stream(
+      { messages },
+      {
+        streamMode: 'updates',
+        configurable: { thread_id: chatThreadId || uuid() },
+      },
+    );
 
     let finalMessage: string[] = [];
     for await (const chunk of stream) {
@@ -193,7 +198,7 @@ class AgentNext extends AgentBase implements IAgent {
       const input: any = {
         ...args,
         question: args?.question,
-        chat_thread_id: args?.chatThreadID,
+        chat_thread_id: args?.chatThreadID || uuid(),
         user_name: args?.userSessionId,
         user_context: args?.context,
         user_prompt: this._settings?.systemMessage,
@@ -213,20 +218,24 @@ class AgentNext extends AgentBase implements IAgent {
 
       let result: any;
 
-      // const messages: Messages[] = this.buildPromptTemplate(input);
+      const messages: Messages[] = this.buildPromptTemplate(input);
 
       if (args?.stream) {
-        result = await this.stream(this._agent, input, runId);
+        result = await this.stream(
+          this._agent,
+          messages,
+          input?.chat_thread_id,
+        );
       } else {
         result = await (this._agent as any).invoke(
           {
-            messages: this.buildPromptTemplate(input),
+            messages,
           },
           {
             runName: this.name,
             runId,
             context: input,
-            configurable: { thread_id: args?.chatThreadID || uuid() },
+            configurable: { thread_id: input?.chat_thread_id },
           },
         );
       }

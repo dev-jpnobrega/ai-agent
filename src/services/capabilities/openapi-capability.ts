@@ -13,8 +13,8 @@ import { StructuredTool, tool } from '@langchain/core/tools';
 import { ICapability } from '.';
 import { IOpenAPIConfig } from '../../interface/agent.interface';
 
-const TOOL_NAME = 'openapi-tool';
-const TOOL_DESCRIPTION = `
+const CAPABILITY_NAME = 'openapi-tool';
+const CAPABILITY_DESCRIPTION = `
 This tool MUST be used to execute API calls based on an OpenAPI/Swagger schema.
 Given a user question, it generates the appropriate curl command from the API schema and executes it.
 
@@ -34,7 +34,7 @@ Returns:
 - The API response data from executing the generated curl command
 `;
 
-const TOOL_SCHEMA = zod.object({
+const CAPABILITY_SCHEMA = zod.object({
   question: zod
     .string()
     .describe(
@@ -47,7 +47,7 @@ const MESSAGES = {
   apiError: `The execution made for API returned error, this is the return data:`,
 };
 
-class OpenAPITool implements ICapability {
+class OpenAPICapability implements ICapability {
   name: string;
   description: string;
   schema: zod.ZodObject<any>;
@@ -57,9 +57,9 @@ class OpenAPITool implements ICapability {
   private _tool: StructuredTool;
 
   constructor(settings: IOpenAPIConfig, llm: BaseLanguageModel) {
-    this.name = TOOL_NAME;
-    this.description = TOOL_DESCRIPTION;
-    this.schema = TOOL_SCHEMA;
+    this.name = CAPABILITY_NAME;
+    this.description = CAPABILITY_DESCRIPTION;
+    this.schema = CAPABILITY_SCHEMA;
     this._settings = settings;
     this._llm = llm;
   }
@@ -186,4 +186,4 @@ class OpenAPITool implements ICapability {
   }
 }
 
-export default OpenAPITool;
+export default OpenAPICapability;
