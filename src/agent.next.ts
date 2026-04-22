@@ -10,14 +10,12 @@ import {
   tool,
 } from 'langchain';
 import { v4 as uuid } from 'uuid';
-import * as z from 'zod';
 
 import {
   IAgent,
   IAgentConfig,
   ICheckpointerConfig,
   IInputProps,
-  IMCPServerConfig,
   TModel,
 } from './interface/agent.interface';
 
@@ -40,12 +38,12 @@ class AgentNext extends AgentBase implements IAgent {
   /**
    * The language model used by the agent.
    */
-  private _llm: BaseLanguageModel;
+  private _llm?: BaseLanguageModel;
 
   /**
    * The service responsible for building chains of interactions.
    */
-  private _agent: ReactAgent;
+  private _agent?: ReactAgent;
 
   /**
    * An array of tools that implement the StructuredTool.
@@ -57,7 +55,7 @@ class AgentNext extends AgentBase implements IAgent {
    * The service responsible for saving and restoring checkpoints of the agent's state and workflow.
    * Used to persist progress across interactions or executions.
    */
-  private _checkpointer: BaseCheckpointSaver;
+  private _checkpointer?: BaseCheckpointSaver;
 
   /**
    * Creates an instance of the Agent class.
@@ -140,12 +138,37 @@ class AgentNext extends AgentBase implements IAgent {
     return this._tools;
   }
 
-  private async buildCheckpointer(settings: ICheckpointerConfig) {
+  private async buildCheckpointer(settings?: ICheckpointerConfig) {
+    if (!settings) return undefined;
     if (this._checkpointer) return this._checkpointer;
 
     this._checkpointer = await CheckpointerFactory.create(settings);
 
     return this._checkpointer;
+  }
+
+  private async buildAgent(
+    model: BaseLanguageModel,
+    settings: IAgentConfig,
+    input: any,
+  ): Promise<ReactAgent> {
+    if (this._agent) return this._agent;
+
+    const checkpointer = await this.buildCheckpointer(
+      settings?.checkpointerConfig,
+    );
+
+    const tools = await this.buildTools(settings, model);
+
+    this._agent = createAgent({
+      systemPrompt: this.buildSystemMessages(input),
+      model,
+      tools,
+      name: this.name,
+      checkpointer,
+    });
+
+    return this._agent;
   }
 
   /**
@@ -204,30 +227,16 @@ class AgentNext extends AgentBase implements IAgent {
         user_prompt: this._settings?.systemMessage,
       };
 
-      const tools = await this.buildTools(this._settings, this._llm);
-
-      this._agent = createAgent({
-        systemPrompt: this.buildSystemMessages(input),
-        model: this._llm,
-        tools,
-        name: this.name,
-        checkpointer: await this.buildCheckpointer(
-          this._settings?.checkpointerConfig,
-        ),
-      });
+      const agent = await this.buildAgent(this._llm!, this._settings, input);
 
       let result: any;
 
       const messages: Messages[] = this.buildPromptTemplate(input);
 
       if (args?.stream) {
-        result = await this.stream(
-          this._agent,
-          messages,
-          input?.chat_thread_id,
-        );
+        result = await this.stream(agent, messages, input?.chat_thread_id);
       } else {
-        result = await (this._agent as any).invoke(
+        result = await (agent as any).invoke(
           {
             messages,
           },
@@ -261,8 +270,13 @@ class AgentNext extends AgentBase implements IAgent {
   }
 
   async tranning(documents: Document<TModel>[]) {
+    if (!this._settings?.vectorStoreConfig) {
+      this._logger.error('Vector store configuration is missing');
+      throw new Error('Vector store configuration is missing');
+    }
+
     const service = VectorStoreFactory.create(
-      this._settings.vectorStoreConfig,
+      this._settings?.vectorStoreConfig,
       this._settings.llmConfig,
     );
 

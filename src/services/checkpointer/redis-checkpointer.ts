@@ -6,8 +6,8 @@ import { ICheckpointerConfig } from '../../interface/agent.interface';
 
 class RedisCheckpointer {
   private _settings: ICheckpointerConfig;
-  private _checkpointer: BaseCheckpointSaver;
-  private _redisClientInstance: ReturnType<typeof createClient>;
+  private _checkpointer?: BaseCheckpointSaver;
+  private _redisClientInstance?: ReturnType<typeof createClient>;
 
   constructor(settings: ICheckpointerConfig) {
     this._settings = settings;
@@ -17,7 +17,7 @@ class RedisCheckpointer {
     if (this._redisClientInstance) return this._redisClientInstance;
 
     this._redisClientInstance = createClient({
-      url: `redis://${this._settings.host}:${this._settings.port}`,
+      url: `redis://${this._settings.password ? `:${this._settings.password}@` : ''}${this._settings.host}:${this._settings.port}`,
       database: (this._settings?.database as unknown as number) || 0,
       socket: {
         tls: this._settings.ssl ? true : false,
