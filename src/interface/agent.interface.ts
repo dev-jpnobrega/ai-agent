@@ -3,11 +3,13 @@ import { StructuredToolInterface } from '@langchain/core/tools';
 import EventEmitter from 'events';
 import { DataSource } from 'typeorm';
 
-export type MONITOR_TYPE =
-  | 'langchain-smith'
-  | 'smith-shared'
-  | 'aws-cloudwatch'
-  | 'google-stackdriver';
+export enum MONITOR_TYPE {
+  LANGCHAIN_SMITH = 'langchain-smith',
+  SMITH_SHARED = 'smith-shared',
+  AWS_CLOUDWATCH = 'aws-cloudwatch',
+  GOOGLE_STACKDRIVER = 'google-stackdriver',
+  DYNATRACE = 'dynatrace',
+}
 
 export type LLM_TYPE = 'azure' | 'gpt' | 'aws' | 'google';
 export type DATABASE_TYPE = 'cosmos' | 'redis' | 'postgres';
