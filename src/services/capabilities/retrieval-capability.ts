@@ -45,7 +45,7 @@ class RetrievalCapability implements ICapability {
   schema: zod.ZodObject<any>;
 
   private _vectorStore: VectorStore;
-  private _tool: StructuredTool;
+  private _tool?: StructuredTool;
 
   constructor(vectorStore: VectorStore) {
     this.name = TOOL_NAME;
