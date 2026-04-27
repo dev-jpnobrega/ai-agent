@@ -3,14 +3,23 @@ import { StructuredToolInterface } from '@langchain/core/tools';
 import EventEmitter from 'events';
 import { DataSource } from 'typeorm';
 
-export type MONITOR_TYPE =
-  | 'langchain-smith'
-  | 'smith-shared'
-  | 'aws-cloudwatch'
-  | 'google-stackdriver';
+export enum MONITOR_TYPE {
+  LANGCHAIN_SMITH = 'langchain-smith',
+  SMITH_SHARED = 'smith-shared',
+  AWS_CLOUDWATCH = 'aws-cloudwatch',
+  GOOGLE_STACKDRIVER = 'google-stackdriver',
+  DYNATRACE = 'dynatrace',
+}
+
+export enum CHECKPOINTER_TYPE {
+  POSTGRES = 'postgres',
+  REDIS = 'redis',
+}
+
 export type LLM_TYPE = 'azure' | 'gpt' | 'aws' | 'google';
 export type DATABASE_TYPE = 'cosmos' | 'redis' | 'postgres';
 export type VECTOR_SERVICE_TYPE = 'aoss' | 'es';
+
 type HttpServer = {
   url: string;
   headers?: { [key: string]: string };
@@ -21,6 +30,7 @@ type HttpServer = {
     delayMs?: number;
   };
 };
+
 type StdioServer = {
   transport: 'stdio';
   command: string;
@@ -54,6 +64,22 @@ export const SYSTEM_MESSAGE_DEFAULT = `
     - Check for inconsistencies: If there are contradictions between different sources (e.g., documents, database, or user context), prioritize the most reliable information or request clarification from the user.\n
     - Consider time relevance: Always take into account the temporal nature of information, prioritizing the most updated and contextually relevant data.\n\n
 `;
+
+export interface ICheckpointerConfig {
+  type: CHECKPOINTER_TYPE;
+  host: string;
+  port: number;
+  ssl?: boolean;
+  sessionId?: string;
+  sessionTTL?: number;
+  username?: string;
+  password?: string;
+  database?: string | number;
+  schema?: string;
+  container?: string;
+  synchronize?: boolean;
+  limit?: number;
+}
 
 export interface IDatabaseConfig {
   type: DATABASE_TYPE;
@@ -176,6 +202,8 @@ export interface IAgentConfig {
   dataSourceConfig?: IDataSourceConfig;
   openAPIConfig?: IOpenAPIConfig;
   mcpServerConfig?: IMCPServerConfig;
+  checkpointerConfig?: ICheckpointerConfig;
+  tools?: StructuredToolInterface[];
   monitor?: IMonitorConfig;
 }
 
