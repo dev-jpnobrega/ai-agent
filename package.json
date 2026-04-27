@@ -42,6 +42,7 @@
     "@langchain/core": "^1.1.31",
     "@langchain/google-genai": "^0.0.10",
     "@langchain/langgraph": "^1.2.2",
+    "@langchain/langgraph-checkpoint-postgres": "^1.0.1",
     "@langchain/langgraph-checkpoint-redis": "^1.0.4",
     "@langchain/mcp-adapters": "^1.1.2",
     "@langchain/openai": "^1.2.12",

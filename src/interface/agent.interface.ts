@@ -11,6 +11,11 @@ export enum MONITOR_TYPE {
   DYNATRACE = 'dynatrace',
 }
 
+export enum CHECKPOINTER_TYPE {
+  POSTGRES = 'postgres',
+  REDIS = 'redis',
+}
+
 export type LLM_TYPE = 'azure' | 'gpt' | 'aws' | 'google';
 export type DATABASE_TYPE = 'cosmos' | 'redis' | 'postgres';
 export type VECTOR_SERVICE_TYPE = 'aoss' | 'es';
@@ -61,7 +66,7 @@ export const SYSTEM_MESSAGE_DEFAULT = `
 `;
 
 export interface ICheckpointerConfig {
-  type: DATABASE_TYPE;
+  type: CHECKPOINTER_TYPE;
   host: string;
   port: number;
   ssl?: boolean;
@@ -70,6 +75,7 @@ export interface ICheckpointerConfig {
   username?: string;
   password?: string;
   database?: string | number;
+  schema?: string;
   container?: string;
   synchronize?: boolean;
   limit?: number;
