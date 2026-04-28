@@ -172,6 +172,24 @@ class AgentNext extends AgentBase implements IAgent {
   }
 
   /**
+   * Extracts and formats the output text from the last message in a message array.
+   *
+   * @param messages - Array of base messages to extract text from
+   * @returns The text content from the last message. If the content is a string, returns it directly.
+   *          If the content is an object, returns its JSON stringified representation.
+   *          Returns an empty string if no messages are provided or the last message has no content.
+   */
+  private outputText(messages: BaseMessage[]): string {
+    const last = messages?.at(-1);
+    const text =
+      typeof last?.content === 'string'
+        ? last.content
+        : JSON.stringify(last?.content ?? '');
+
+    return text;
+  }
+
+  /**
    * Streams data from a given chain and emits events for each chunk of data received.
    *
    * @param chain - The runnable chain that processes the input and returns a stream of data.
@@ -183,7 +201,7 @@ class AgentNext extends AgentBase implements IAgent {
   private async stream(
     agent: ReactAgent,
     messages: Messages[],
-    chatThreadId: string,
+    chatThreadId?: string,
   ): Promise<string> {
     const stream = await (agent as any).stream(
       { messages },
@@ -205,36 +223,17 @@ class AgentNext extends AgentBase implements IAgent {
     return ''.concat(...finalMessage);
   }
 
-  /**
-   * Calls the agent with the provided input properties.
-   * @param args - The input properties for the agent call.
-   * @returns A promise that resolves when the call is complete.
-   *
-   * @emits EVENTS_NAME.onMessage - Emitted with the concatenated final message once the stream is complete.
-   * @emits EVENTS_NAME.onToken - If stream enable, emitted for each chunk of data received from the stream.
-   * @emits EVENTS_NAME.onEnd - Emitted when the streaming process is terminated.
-   */
-  async call(args: IInputProps): Promise<void> {
+  private async invoke(
+    agent: ReactAgent,
+    messages: Messages[],
+    args: IInputProps,
+  ): Promise<void> {
+    let result: any;
     const runId = uuid();
 
     try {
-      const input: any = {
-        ...args,
-        question: args?.question,
-        chat_thread_id: args?.chatThreadID || uuid(),
-        user_name: args?.userSessionId,
-        user_context: args?.context,
-        user_prompt: this._settings?.systemMessage,
-      };
-
-      const agent = await this.buildAgent(this._llm!, this._settings, input);
-
-      let result: any;
-
-      const messages: Messages[] = this.buildPromptTemplate(input);
-
       if (args?.stream) {
-        result = await this.stream(agent, messages, input?.chat_thread_id);
+        result = await this.stream(agent, messages, args?.chatThreadID);
       } else {
         result = await (agent as any).invoke(
           {
@@ -243,8 +242,8 @@ class AgentNext extends AgentBase implements IAgent {
           {
             runName: this.name,
             runId,
-            context: input,
-            configurable: { thread_id: input?.chat_thread_id },
+            context: args,
+            configurable: { thread_id: args?.chatThreadID },
           },
         );
       }
@@ -259,14 +258,69 @@ class AgentNext extends AgentBase implements IAgent {
     }
   }
 
-  private outputText(messages: BaseMessage[]): string {
-    const last = messages?.at(-1);
-    const text =
-      typeof last?.content === 'string'
-        ? last.content
-        : JSON.stringify(last?.content ?? '');
+  private async executeWithMonitor(
+    agent: ReactAgent,
+    messages: Messages[],
+    args: IInputProps,
+  ): Promise<void> {
+    let result: any;
 
-    return text;
+    if (!this.monitor) {
+      return await this.invoke(agent, messages, args);
+    }
+
+    await this.monitor.withWorkflow(
+      {
+        name: this.name,
+        conversationId: args?.chatThreadID,
+        associationProperties: {
+          chatThreadID: args?.chatThreadID || 'without_thread_id',
+          userSessionId: args?.userSessionId || 'without_user_session_id',
+          context: args?.context || 'without_context',
+          question: args?.question || 'without_question',
+        },
+      },
+      async () => {
+        return await this.invoke(agent, messages, args);
+      },
+    );
+  }
+
+  /**
+   * Calls the agent with the provided input properties.
+   * @param args - The input properties for the agent call.
+   * @returns A promise that resolves when the call is complete.
+   *
+   * @emits EVENTS_NAME.onMessage - Emitted with the concatenated final message once the stream is complete.
+   * @emits EVENTS_NAME.onToken - If stream enable, emitted for each chunk of data received from the stream.
+   * @emits EVENTS_NAME.onEnd - Emitted when the streaming process is terminated.
+   */
+  async call(args: IInputProps): Promise<void> {
+    try {
+      const chatThreadID = args?.chatThreadID || uuid();
+
+      const input: any = {
+        ...args,
+        question: args?.question,
+        chatThreadID,
+        chat_thread_id: chatThreadID,
+        user_name: args?.userSessionId,
+        user_context: args?.context,
+        user_prompt: this._settings?.systemMessage,
+      };
+
+      const agent = await this.buildAgent(this._llm!, this._settings, input);
+
+      let result: any;
+
+      const messages: Messages[] = this.buildPromptTemplate(input);
+
+      await this.executeWithMonitor(agent, messages, args);
+    } catch (error) {
+      this._logger.error(error);
+    } finally {
+      return;
+    }
   }
 
   async tranning(documents: Document<TModel>[]) {
