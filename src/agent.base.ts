@@ -3,9 +3,10 @@ import {
   IAgentConfig,
   IDatabaseConfig,
   IInputProps,
+  IMonitorConfig,
 } from './interface/agent.interface';
 import { ChatHistoryFactory, IChatHistory } from './services/chat-history';
-import Monitor from './services/monitor';
+import { IMonitor, MonitorFactory } from './services/monitor';
 
 class AgentBase extends EventEmitter {
   /**
@@ -17,6 +18,8 @@ class AgentBase extends EventEmitter {
    * The name of the agent.
    */
   name: string;
+
+  monitor?: IMonitor | null;
 
   /**
    * The configuration settings for the agent.
@@ -34,7 +37,15 @@ class AgentBase extends EventEmitter {
     this._logger = console;
     this._settings = settings;
 
-    Monitor.add(settings?.monitor);
+    this.setupMonitor(this._settings?.monitor);
+  }
+
+  setupMonitor(settings?: IMonitorConfig): void {
+    this.monitor = MonitorFactory.create(settings);
+
+    if (this.monitor) {
+      this.monitor.add();
+    }
   }
 
   /**
