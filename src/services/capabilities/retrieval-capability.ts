@@ -37,6 +37,10 @@ const TOOL_SCHEMA = zod.object({
   query: zod
     .string()
     .describe('A concise semantic search query derived from the users request'),
+  top: zod
+    .number()
+    .optional()
+    .describe('The number (Optional) of relevant documents to retrieve'),
 });
 
 class RetrievalCapability implements ICapability {
@@ -72,8 +76,8 @@ class RetrievalCapability implements ICapability {
   }
 
   async func(input: any): Promise<any> {
-    const { query } = input;
-    const docs = await this._vectorStore.similaritySearch(query, 5);
+    const { query, top } = input;
+    const docs = await this._vectorStore.similaritySearch(query, top);
 
     return Promise.resolve(this.formatResult(docs));
   }

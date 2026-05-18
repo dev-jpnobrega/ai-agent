@@ -1,6 +1,7 @@
 export interface AzureSearchConfig {
   name: string;
   indexes: string[];
+  top?: number;
   apiKey: string;
   apiVersion: string;
   vectorFieldName: string;

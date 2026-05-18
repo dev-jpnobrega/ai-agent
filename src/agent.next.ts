@@ -114,7 +114,7 @@ class AgentNext extends AgentBase implements IAgent {
     return builtMessage;
   }
 
-  private buildPromptTemplate(input: any): BaseMessage[] {
+  private buildPromptTemplate(input: any): Messages {
     return [
       new AIMessage('Hello! How can I help?'),
       new HumanMessage(input.question),
@@ -200,10 +200,10 @@ class AgentNext extends AgentBase implements IAgent {
    */
   private async stream(
     agent: ReactAgent,
-    messages: Messages[],
+    messages: Messages,
     chatThreadId?: string,
   ): Promise<string> {
-    const stream = await (agent as any).stream(
+    const stream = await agent.stream(
       { messages },
       {
         streamMode: 'updates',
@@ -225,7 +225,7 @@ class AgentNext extends AgentBase implements IAgent {
 
   private async invoke(
     agent: ReactAgent,
-    messages: Messages[],
+    messages: Messages,
     args: IInputProps,
   ): Promise<void> {
     let result: any;
@@ -235,7 +235,7 @@ class AgentNext extends AgentBase implements IAgent {
       if (args?.stream) {
         result = await this.stream(agent, messages, args?.chatThreadID);
       } else {
-        result = await (agent as any).invoke(
+        result = await agent.invoke(
           {
             messages,
           },
@@ -260,11 +260,9 @@ class AgentNext extends AgentBase implements IAgent {
 
   private async executeWithMonitor(
     agent: ReactAgent,
-    messages: Messages[],
+    messages: Messages,
     args: IInputProps,
   ): Promise<void> {
-    let result: any;
-
     if (!this.monitor) {
       return await this.invoke(agent, messages, args);
     }
@@ -311,9 +309,7 @@ class AgentNext extends AgentBase implements IAgent {
 
       const agent = await this.buildAgent(this._llm!, this._settings, input);
 
-      let result: any;
-
-      const messages: Messages[] = this.buildPromptTemplate(input);
+      const messages: Messages = this.buildPromptTemplate(input);
 
       await this.executeWithMonitor(agent, messages, args);
     } catch (error) {

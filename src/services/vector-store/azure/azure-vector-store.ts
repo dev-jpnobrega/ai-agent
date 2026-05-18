@@ -96,7 +96,7 @@ export class AzureCogSearch<
     const results = await this.similaritySearchVectorWithScore(
       await this.embeddings.embedQuery(query),
       k,
-      filterWithQuery,
+      filterWithQuery as AzureCogFilter,
     );
 
     return results.map(([doc, _score]) => doc);
@@ -115,7 +115,11 @@ export class AzureCogSearch<
 
     const embeddings = await this.embeddings.embedQuery(query);
 
-    return this.similaritySearchVectorWithScore(embeddings, k, filterWithQuery);
+    return this.similaritySearchVectorWithScore(
+      embeddings,
+      k,
+      filterWithQuery as AzureCogFilter,
+    );
   }
 
   async similaritySearchVectorWithScore(
@@ -131,7 +135,11 @@ export class AzureCogSearch<
 
     const resultDocuments = (await fetcher(
       url,
-      this.getSearchBody(filter, k || 10, query),
+      this.getSearchBody(
+        filter as AzureCogFilter,
+        k || this._config.top || 10,
+        query,
+      ),
       this.apiKey,
     )) as DocumentSearchResponseModel<Document<TModel> & DocumentSearchModel>;
 
@@ -158,7 +166,7 @@ export class AzureCogSearch<
         facets: filter?.facets || [],
         filter: filter?.filter || '',
         vectors: [{ value: query, fields: filter?.vectorFields || '', k: k }],
-        top: filter?.top || k,
+        top: k,
       } as AzureCogRequestObject;
     }
 

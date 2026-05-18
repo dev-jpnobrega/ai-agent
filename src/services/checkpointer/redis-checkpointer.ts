@@ -33,12 +33,15 @@ class RedisCheckpointer {
   async build(): Promise<BaseCheckpointSaver> {
     if (this._checkpointer) return this._checkpointer;
 
-    const redisClient = await this.initRedisClient();
+    // const redisClient = await this.initRedisClient();
 
-    this._checkpointer = new RedisSaver(redisClient, {
-      defaultTTL: this._settings?.sessionTTL || 60 * 60 * 24,
-      refreshOnRead: true,
-    });
+    this._checkpointer = await RedisSaver.fromUrl(
+      `redis://${this._settings.password ? `:${this._settings.password}@` : ''}${this._settings.host}:${this._settings.port}`,
+      {
+        defaultTTL: this._settings?.sessionTTL || 60 * 60 * 24,
+        refreshOnRead: true,
+      },
+    );
 
     return this._checkpointer;
   }

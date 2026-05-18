@@ -20,8 +20,8 @@ export class AWSCogSearch<
   TModel extends Record<string, unknown>,
 > extends OpenSearchVectorStore {
   private _config: AWSSearchConfig;
-  private _client: Client;
-  private _vectorStore: OpenSearchVectorStore;
+  private _client?: Client;
+  private _vectorStore?: OpenSearchVectorStore;
 
   constructor(embeddings: any, vectorStoreConfig: AWSSearchConfig) {
     embeddings.azureOpenAIApiDeploymentName = vectorStoreConfig.model;
@@ -102,47 +102,6 @@ export class AWSCogSearch<
     console.error(`doc`, doc);
   }
 
-  private getSearchBody(
-    filter: RequestFilter,
-    k: number,
-    query?: number[],
-  ): Search_RequestBody {
-    const fields = filter.fields || [
-      'CD_VENDA_PRODUTO',
-      'DC_VENDA_PRODUTO',
-      'TAGS',
-    ];
-
-    if (filter?.vectorSearch) {
-      return {
-        query: {
-          knn: {
-            [this._config.vectorFieldName]: {
-              vector: query,
-              k,
-            },
-          },
-        },
-      } as Search_RequestBody;
-    }
-
-    return {
-      _source: filter.source || false,
-      fields,
-      min_score: filter?.minScore || 0.5,
-      size: k,
-      query: {
-        bool: {
-          must: [
-            {
-              match_all: { query: filter?.query, fields },
-            },
-          ],
-        },
-      },
-    } as Search_RequestBody;
-  }
-
   private getRecordToString(record: Record<string, any>): string {
     let result: string = '';
 
@@ -157,7 +116,7 @@ export class AWSCogSearch<
     const formatDocs: [Document<TModel>, number][] = hits.map((hit) => {
       const pageContent: string = hit.fields
         ? this.getRecordToString(hit.fields)
-        : this.getRecordToString(hit._source);
+        : this.getRecordToString(hit._source || {});
 
       const metadata = hit.fields ? { ...hit.fields } : { ...hit._source };
 
@@ -192,7 +151,7 @@ export class AWSCogSearch<
     });
 
     try {
-      const resp1 = await this._client.helpers.bulk({
+      const resp1 = await this._client?.helpers.bulk({
         datasource: indexes,
         onDocument: this.onDocument.bind(this),
         onDrop: this.onDrop.bind(this),
@@ -209,10 +168,12 @@ export class AWSCogSearch<
     await this.deleteDocuments([..._params?.id]);
   }
 
-  async deleteDocuments(ids: string[]): Promise<Delete_Response[]> {
+  async deleteDocuments(
+    ids: string[],
+  ): Promise<(Delete_Response | undefined)[] | undefined> {
     const results = await Promise.all(
       ids.map(async (id) => {
-        return this._client.delete({
+        return this._client?.delete({
           index: this._config.indexes[0],
           id,
         });
@@ -264,9 +225,13 @@ export class AWSCogSearch<
     index?: string,
   ): Promise<[Document<TModel>, number][]> {
     try {
-      const resp = await this._client.search({
+      const resp = await this._client?.search({
         index: index || this._config.indexes[0],
-        body: this.getSearchBody(filter, k || 10, query),
+        body: this.getSearchBody(
+          filter as RequestFilter,
+          k || this._config?.top || 10,
+          query,
+        ),
       });
 
       const hits: Hit[] = resp?.body?.hits?.hits || [];
@@ -276,5 +241,46 @@ export class AWSCogSearch<
       console.error('error', error);
       throw error;
     }
+  }
+
+  private getSearchBody(
+    filter: RequestFilter,
+    k: number,
+    query?: number[],
+  ): Search_RequestBody {
+    const fields = filter.fields || [
+      'CD_VENDA_PRODUTO',
+      'DC_VENDA_PRODUTO',
+      'TAGS',
+    ];
+
+    if (filter?.vectorSearch) {
+      return {
+        query: {
+          knn: {
+            [this._config.vectorFieldName]: {
+              vector: query,
+              k,
+            },
+          },
+        },
+      } as Search_RequestBody;
+    }
+
+    return {
+      _source: filter.source || false,
+      fields,
+      min_score: filter?.minScore || 0.5,
+      size: k,
+      query: {
+        bool: {
+          must: [
+            {
+              match_all: { query: filter?.query, fields },
+            },
+          ],
+        },
+      },
+    } as Search_RequestBody;
   }
 }

@@ -6,6 +6,7 @@ export interface AWSSearchConfig {
   apiKey: string;
   apiVersion: string;
   vectorFieldName: string;
+  top?: number;
   model?: string;
   region?: string;
   user: string;
